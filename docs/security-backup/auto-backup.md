@@ -17,8 +17,8 @@ Variabel `SUPABASE_DB_URL` sangat penting untuk proses *dumping* database. Forma
 
 **Cara mendapatkan URL ini:**
 1. Masuk ke dashboard **Supabase**.
-2. Buka menu **Settings > Database**.
-3. Cari bagian **Connection String** dan pilih tab **URI**.
+2. Pilih database Anda dan klik tombol **Connect**.
+3. Pilih tab **Direct (Connecting String)**.
 4. **Penting**: Gunakan mode **Transaction Pooler** (Port 6543) jika GitHub Actions Anda mengalami kendala koneksi IPv6. Pastikan opsi "Display connection pooler" aktif.
 5. Salin URL tersebut dan ganti `[YOUR-PASSWORD]` dengan password database Anda.
 
