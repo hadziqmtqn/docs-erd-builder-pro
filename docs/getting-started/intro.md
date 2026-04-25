@@ -6,6 +6,8 @@ slug: /getting-started/intro
 
 ERD Builder Pro adalah alat desain database modern yang mengintegrasikan pembuatan _Entity Relationship Diagram (ERD)_ dengan SQL generator otomatis, sistem catatan teknis berbasis Tiptap, serta fitur _flowchart_ dan desain bebas menggunakan Excalidraw dalam satu platform dokumentasi yang terpadu.
 
+![ERD Builder Pro Overview](/img/docs/erd-intro.png)
+
 ## Teknologi Utama
 
 Aplikasi ini dibangun dengan tumpukan teknologi modern:
