@@ -1,41 +1,44 @@
-# Website
+# ERD Builder Pro Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Repositori ini berisi dokumentasi resmi untuk **ERD Builder Pro**, sebuah alat desain database modern yang mengintegrasikan ERD, SQL Generator, dan dokumentasi teknis dalam satu platform.
 
-## Installation
+## Fitur Utama
+- **ERD Builder**: Desain database visual dengan fitur drag-and-drop.
+- **SQL Generator**: Ekspor ke PostgreSQL, MySQL, SQLite, dan berbagai framework (Laravel, Prisma, Zod).
+- **Rich Text Notes**: Dokumentasi proyek menggunakan editor Tiptap.
+- **Drawings & Flowcharts**: Visualisasi alur aplikasi menggunakan Excalidraw.
+- **Cloud Integration**: Penyimpanan aset gambar melalui Cloudflare R2 dan database via Supabase.
 
-```bash
-yarn
-```
+## Teknologi Dokumentasi
+Situs dokumentasi ini dibangun menggunakan **Docusaurus 3**.
 
-## Local Development
+## Cara Menjalankan Lokal
 
-```bash
-yarn start
-```
+1. **Instal Dependensi**:
+   ```bash
+   npm install
+   ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+2. **Jalankan Server Pengembangan**:
+   ```bash
+   npm run start
+   ```
+   Buka `http://localhost:3000` di browser Anda.
 
-## Build
+3. **Build Produksi**:
+   ```bash
+   npm run build
+   ```
 
-```bash
-yarn build
-```
+## Struktur Modul
+Dokumentasi dibagi menjadi beberapa modul utama:
+1. Pendahuluan & Instalasi
+2. Fitur Utama
+3. Konfigurasi Environment
+4. Manajemen Workspace
+5. Integrasi Cloud Storage
+6. Keamanan & Backup
+7. Troubleshooting & FAQ
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-## Deployment
-
-Using SSH:
-
-```bash
-USE_SSH=true yarn deploy
-```
-
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
-
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+---
+Dibuat oleh [Bekenweb](https://bekenweb.com)

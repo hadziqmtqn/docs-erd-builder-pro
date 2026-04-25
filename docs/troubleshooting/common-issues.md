@@ -6,7 +6,14 @@ slug: /troubleshooting/common-issues
 
 Berikut adalah beberapa masalah teknis yang sering ditemui dan cara mengatasinya.
 
-## 1. Koneksi Database Gagal (GitHub Actions)
+## 1. Masalah Sinkronisasi (Offline First)
+**Gejala**: Perubahan yang Anda buat saat offline tidak muncul di perangkat lain setelah kembali online.
+**Solusi**: 
+- Pastikan aplikasi tetap terbuka beberapa saat setelah koneksi internet kembali terdeteksi untuk memberi waktu proses sinkronisasi.
+- Cek tab **Network** di browser (Developer Tools) untuk memastikan tidak ada error 403 atau 401 saat aplikasi mencoba melakukan *push* data ke Supabase.
+- Jika sinkronisasi tetap gagal, lakukan *refresh* halaman (pastikan data sudah tersimpan di *local storage* browser Anda).
+
+## 2. Koneksi Database Gagal (GitHub Actions)
 **Gejala**: Error `psql: error: could not connect to server: Connection timed out` saat backup otomatis.
 **Solusi**: 
 - Pastikan Anda menggunakan **Transaction Pooler** (Port 6543) dan bukan koneksi langsung (5432).

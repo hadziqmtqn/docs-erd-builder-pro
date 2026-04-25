@@ -23,11 +23,14 @@ Salin file `.env.example` menjadi `.env` dan isi dengan kredensial Anda.
 ```bash
 cp .env.example .env
 ```
-*Detail pengisian variabel environment dapat dilihat pada [Modul 6](../configuration/env-variables.md).*
+*Detail pengisian variabel environment dapat dilihat pada [Modul Konfigurasi](../configuration/env-variables.md).*
+
+> [!TIP]
+> Secara default, server backend berjalan pada port `3000`. Jika Anda perlu menggunakan port berbeda (terutama di lingkungan produksi), Anda dapat mengaturnya melalui variabel `PORT` di file `.env`.
 
 ## 4. Menjalankan Aplikasi
 Jalankan perintah berikut untuk memulai server pengembangan:
 ```bash
 npm run dev
 ```
-Aplikasi akan tersedia di `http://localhost:5173`.
+Aplikasi akan tersedia di `http://localhost:3000`.
