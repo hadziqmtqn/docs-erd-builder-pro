@@ -6,7 +6,7 @@ slug: /core-features/sql-generator
 
 Setelah selesai merancang ERD, Anda dapat mengekspor rancangan tersebut ke berbagai format skema database dan kode pemrograman.
 
-## <span id="available-export-formats"></span>Format Ekspor yang Tersedia
+## Format Ekspor yang Tersedia
 ERD Builder Pro mendukung berbagai generator:
 - **PostgreSQL**: Skema SQL standar.
 - **MySQL**: Skema SQL yang kompatibel dengan MySQL.
@@ -14,7 +14,7 @@ ERD Builder Pro mendukung berbagai generator:
 - **Zod Schema**: Untuk validasi data di sisi aplikasi.
 - **Laravel Migration**: File migrasi PHP untuk framework Laravel.
 
-## <span id="how-to-export"></span>Cara Mengekspor
+## Cara Mengekspor
 1. Klik tombol **"Export"** di pojok kanan atas.
 2. Pilih format yang diinginkan dari menu dropdown.
 3. Salin kode yang dihasilkan atau unduh file skemanya.
