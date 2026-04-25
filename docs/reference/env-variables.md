@@ -1,4 +1,10 @@
+---
+sidebar_position: 1
+slug: /reference/env-variables
+---
 # Konfigurasi Environment Variables
+
+<span id="env-reference"></span>Referensi Variabel
 
 *Halaman ini adalah draf. Detail variabel akan ditambahkan pada Modul 6.*
 

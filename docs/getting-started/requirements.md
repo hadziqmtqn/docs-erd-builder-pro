@@ -1,12 +1,16 @@
+---
+sidebar_position: 2
+slug: /getting-started/requirements
+---
 # Persyaratan Sistem
 
 Sebelum menginstal ERD Builder Pro, pastikan sistem Anda memenuhi persyaratan berikut.
 
-## Perangkat Lunak
+## <span id="software-requirements"></span>Perangkat Lunak
 - **Node.js**: Versi 20.x atau lebih baru.
 - **npm**: Versi 9.x atau lebih baru.
 
-## Akun Layanan Cloud
+## <span id="cloud-accounts"></span>Akun Layanan Cloud
 Untuk menjalankan fitur penuh (termasuk penyimpanan gambar dan backup otomatis), Anda memerlukan:
 
 1. **Supabase**: 
