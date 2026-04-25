@@ -2,7 +2,7 @@
 sidebar_position: 2
 slug: /configuration/supabase-setup
 ---
-# Konfigurasi Supabase
+# Supabase
 
 ERD Builder Pro menggunakan Supabase sebagai database PostgreSQL dan sistem autentikasi. Ikuti langkah berikut untuk menyiapkan proyek Supabase Anda.
 
