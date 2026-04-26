@@ -4,18 +4,23 @@ slug: /security-backup/manual-backup
 ---
 # Backup Manual
 
-Anda dapat melakukan backup database secara instan kapan pun diperlukan melalui dashboard ERD Builder Pro.
+ERD Builder Pro menyediakan antarmuka **Database Backup** yang intuitif untuk melakukan pencadangan data secara instan dan mengelola riwayat backup Anda.
 
-## Cara Melakukan Backup
-1. Buka halaman **Settings** atau **System Settings** di dashboard.
-2. Klik tombol **"Run Backup Now"**.
-3. Sistem akan melakukan *dumping* database PostgreSQL dan mengompresnya menjadi file `.sql.gz`.
-4. File tersebut akan diunggah secara otomatis ke bucket Cloudflare R2 yang telah Anda konfigurasi.
+## Cara Membuat Backup Baru
+1. Klik pada **User Profile** (ikon profil di pojok kiri bawah) dan pilih menu **Database Backup**.
+2. Klik tombol **"+ Create Backup"** di pojok kanan atas.
+3. Sistem akan mulai memproses pencadangan database Anda.
+
+## Memahami Status Backup
+Daftar backup akan menampilkan status real-time untuk setiap proses:
+- **Processing**: Sistem sedang melakukan *dumping* database dan mengunggahnya ke Cloudflare R2. Anda tidak bisa mengunduh file selama status ini aktif.
+- **Completed**: Backup telah berhasil dibuat dan disimpan di cloud storage Anda.
+
+## Manajemen File Backup
+Pada tabel riwayat backup, Anda dapat melakukan beberapa aksi:
+- **Download**: Klik ikon unduh pada kolom **Action** untuk menyimpan file `.sql.gz` ke komputer lokal Anda.
+- **Refresh**: Gunakan tombol *refresh* (ikon putar) di sebelah kanan atas tabel untuk memperbarui status backup terbaru.
+- **Identitas**: Setiap backup diberi nama otomatis berdasarkan stempel waktu (contoh: `Backup_20260425_1837`) untuk memudahkan pelacakan.
 
 > [!IMPORTANT]
-> Fitur ini membutuhkan konfigurasi variabel **Cloudflare R2** yang benar pada file `.env`. Lihat panduan lengkapnya di halaman **[Konfigurasi Environment](/configuration/env-variables)**.
-
-## Kapan Harus Melakukan Backup Manual?
-- Sebelum melakukan perubahan besar pada skema database.
-- Sebelum melakukan update versi aplikasi.
-- Saat Anda ingin mengambil snapshot data terkini untuk keperluan pengembangan lokal.
+> Fitur ini bergantung sepenuhnya pada koneksi ke **Cloudflare R2**. Pastikan variabel `R2_ACCESS_KEY_ID` dan `R2_SECRET_ACCESS_KEY` sudah terkonfigurasi dengan benar di server agar proses unggah tidak gagal (status tertahan di Processing).

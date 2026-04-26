@@ -3,6 +3,7 @@
   "position": 5,
   "link": {
     "type": "generated-index",
-    "description": "Panduan integrasi Cloudflare R2 untuk penyimpanan aset gambar dan file pendukung dokumentasi."
+    "slug": "/cloud-storage",
+    "description": "Panduan menghubungkan Cloudflare R2 untuk penyimpanan aset gambar dan file backup."
   }
 }

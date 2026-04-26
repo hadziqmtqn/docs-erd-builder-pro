@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 slug: /core-features/notes
 ---
 # Notes & Documentation
@@ -17,3 +17,7 @@ Gunakan fitur Notes ini untuk mencatat:
 - Aturan bisnis (*Business Rules*).
 - Penjelasan alur API.
 - Panduan teknis bagi anggota tim lainnya.
+
+## Import Dokumentasi (Eksperimental)
+> [!WARNING]
+> Fitur **Import** file eksternal (seperti `.md` atau `.docx`) ke dalam Notes saat ini masih dalam tahap **Eksperimental**. Format dokumen mungkin tidak sepenuhnya presisi setelah diimpor.

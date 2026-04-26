@@ -3,6 +3,7 @@
   "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "Panduan mendalam mengenai fitur utama ERD Builder Pro untuk desain database dan dokumentasi."
+    "slug": "/core-features",
+    "description": "Eksplorasi kemampuan inti aplikasi seperti ERD Builder, SQL Generator, Flowchart, dan sistem dokumentasi."
   }
 }

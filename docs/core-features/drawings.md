@@ -1,15 +1,19 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 slug: /core-features/drawings
 ---
-# Drawings & Flowcharts
+# Drawings (Excalidraw)
 
-Untuk visualisasi alur logika aplikasi di luar skema database, Anda dapat menggunakan fitur **Drawings** yang ditenagai oleh **Excalidraw**.
+Fitur **Drawings** ditenagai oleh **Excalidraw**, memberikan Anda kebebasan penuh untuk membuat sketsa, desain antarmuka (mockup), atau catatan visual apa pun di atas kanvas tak terbatas.
 
-## Cara Penggunaan
-1. Buat file baru dengan tipe **"Drawing"**.
-2. Gunakan berbagai bentuk (kotak, lingkaran, panah) untuk membuat diagram alir (*flowchart*).
-3. Anda dapat menggambar secara bebas (*freehand*) atau menggunakan elemen UI yang tersedia.
+## Fitur Utama
+- **Freehand Drawing**: Gambar bebas menggunakan kursor atau stylus.
+- **Library Shapes**: Koleksi bentuk siap pakai yang bisa dikustomisasi.
+- **Collaboration Style**: Tampilan sketsa tangan yang memberikan kesan profesional namun santai.
+- **Canvas Tak Terbatas**: Ruang kerja yang luas untuk ide-ide besar Anda.
 
-## Sinkronisasi Otomatis
-Setiap perubahan pada gambar akan disimpan secara otomatis ke workspace Anda. Gambar-gambar ini juga dapat diekspor menjadi file PNG atau SVG untuk digunakan di presentasi atau dokumen lain.
+## Kegunaan
+Gunakan modul Drawings untuk:
+- Membuat *wireframe* aplikasi.
+- Sketsa arsitektur sistem tingkat tinggi.
+- *Mind mapping* atau sesi *brainstorming* visual.

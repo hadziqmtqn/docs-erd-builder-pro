@@ -3,6 +3,7 @@
   "position": 4,
   "link": {
     "type": "generated-index",
-    "description": "Panduan pengelolaan proyek, sistem tempat sampah, dan efisiensi pencarian dalam workspace Anda."
+    "slug": "/project-management",
+    "description": "Pelajari cara mengelola proyek, struktur workspace, dan sistem pemulihan data (Trash)."
   }
 }

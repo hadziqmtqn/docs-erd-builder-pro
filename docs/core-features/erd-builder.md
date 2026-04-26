@@ -22,3 +22,9 @@ Untuk membuat relasi antar tabel (Foreign Key):
 1. Arahkan kursor ke handle (titik putih) di samping kolom.
 2. Klik dan tarik garis ke kolom di tabel tujuan.
 3. Anda dapat mengatur tipe relasi (*one-to-one*, *one-to-many*) melalui garis konektor tersebut.
+
+## Export Diagram (Eksperimental)
+> [!CAUTION]
+> Fitur ekspor diagram ke dalam format gambar (PNG/SVG) atau PDF saat ini masih dalam tahap **Eksperimental**. Anda mungkin menemui sedikit perbedaan visual pada file hasil ekspor dibanding tampilan di editor.
+
+Untuk mengekspor diagram, klik ikon **Download** pada toolbar editor.

@@ -3,6 +3,7 @@
   "position": 1,
   "link": {
     "type": "generated-index",
-    "description": "Pelajari cara memulai dengan ERD Builder Pro dari awal hingga aplikasi berjalan."
+    "slug": "/getting-started",
+    "description": "Pelajari cara memulai ERD Builder Pro, dari pengenalan hingga proses instalasi dan deployment."
   }
 }
