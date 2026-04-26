@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-slug: /getting-started/intro
+slug: /
 ---
 # Pengenalan
 
@@ -30,3 +30,12 @@ Kami berterima kasih kepada pengembang di balik teknologi utama berikut:
 - **[React Flow](https://reactflow.dev/)**: Digunakan sebagai mesin utama untuk membangun antarmuka ERD yang interaktif.
 - **[Tiptap](https://tiptap.dev/)**: Editor teks kaya (*Rich Text Editor*) yang ditenagai oleh ProseMirror untuk fitur Notes.
 - **[Excalidraw](https://excalidraw.com/)**: Digunakan untuk fitur desain bebas (*Drawings*) dan diagram alir.
+
+## Roadmap Mendatang
+Kami terus berupaya untuk mengembangkan ERD Builder Pro menjadi alat yang lebih kuat bagi pengembang. Berikut adalah beberapa fitur besar yang direncanakan untuk masa depan:
+
+- **AI-Powered ERD Generation**: Membuat draf skema database secara otomatis berdasarkan deskripsi teks menggunakan kecerdasan buatan.
+- **Kolaborasi Tim & Role-Based Access**: Berbagi proyek dengan anggota tim lainnya dan mengatur izin akses secara spesifik.
+- **Dukungan SQL Dialects Lebih Luas**: Menambahkan generator untuk Microsoft SQL Server, Oracle, dan MariaDB.
+- **Enhanced Export**: Penyempurnaan sistem ekspor PDF dan gambar resolusi tinggi untuk kebutuhan dokumen resmi yang lebih presisi.
+- **Desktop Application**: Versi aplikasi desktop (Windows/Mac/Linux) untuk performa yang lebih optimal.

@@ -27,7 +27,7 @@ Fitur dengan label Eksperimental (seperti Import Notes atau Export PDF) adalah f
 ERD Builder Pro saat ini dioptimalkan untuk **Dark Mode** guna memberikan pengalaman perancangan yang fokus dan elegan. Dukungan tema terang (Light Mode) sedang dalam peta jalan pengembangan kami.
 
 ### Di mana saya bisa melihat riwayat perubahan aplikasi?
-Anda dapat melihat daftar fitur baru, perbaikan bug, dan pembaruan versi secara langsung melalui menu **[Changelog](/docs/changelog)** yang terhubung langsung dengan rilis GitHub kami.
+Anda dapat melihat daftar fitur baru, perbaikan bug, dan pembaruan versi secara langsung melalui menu **[Changelog](/changelog)** yang terhubung langsung dengan rilis GitHub kami.
 
 ### Bagaimana jika saya lupa password Supabase?
 Karena autentikasi menggunakan Supabase, Anda dapat mereset password atau mengelola akun pengguna melalui dashboard **Supabase > Authentication > Users**.

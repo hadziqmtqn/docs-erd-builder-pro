@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'ERD Builder Pro Docs',
   tagline: 'Premium ERD Builder for Modern Developers',
-  favicon: 'img/favicon.svg',
+  favicon: 'img/app-logo.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -41,6 +41,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
+          routeBasePath: '/', // Menjadikan docs sebagai halaman utama
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
@@ -64,14 +65,13 @@ const config: Config = {
       title: 'ERD Builder Pro',
       logo: {
         alt: 'ERD Builder Pro Logo',
-        src: 'img/favicon.svg',
+        src: 'img/app-logo.svg',
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
-          position: 'left',
-          label: 'Docs',
+          href: 'https://erd.bkn.my.id',
+          label: 'Demo App',
+          position: 'right',
         },
         {
           href: 'https://github.com/hadziqmtqn/erd-builder-pro',
@@ -82,40 +82,13 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      links: [
-        {
-          title: 'Docs',
-          items: [
-            {
-              label: 'Introduction',
-              to: '/docs/getting-started/intro',
-            },
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
-            {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
-            },
-          ],
-        },
-        {
-          title: 'More',
-          items: [
-            {
-              label: 'GitHub',
-              href: 'https://github.com/hadziqmtqn/erd-builder-pro',
-            },
-          ],
-        },
-      ],
-      copyright: `Copyright © ${new Date().getFullYear()} Bekenweb. Built with Docusaurus.`,
+      logo: {
+        alt: 'ERD Builder Pro Logo',
+        src: 'img/app-logo.svg',
+        width: 48,
+        height: 48,
+      },
+      copyright: `ERD Builder Pro | Copyright © ${new Date().getFullYear()} Bekenweb.`,
     },
     prism: {
       theme: prismThemes.github,

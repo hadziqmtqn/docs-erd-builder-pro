@@ -1,30 +1,130 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  /* shadcn/ui Slate Palette */
+  --ifm-color-primary: #0f172a;
+  --ifm-color-primary-dark: #020617;
+  --ifm-color-primary-darker: #020617;
+  --ifm-color-primary-darkest: #000000;
+  --ifm-color-primary-light: #1e293b;
+  --ifm-color-primary-lighter: #334155;
+  --ifm-color-primary-lightest: #475569;
+  
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --ifm-navbar-background-color: #ffffff;
+  --ifm-background-color: #ffffff;
+  
+  /* shadcn variables */
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --muted-foreground: #64748b;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-color-primary: #f8fafc;
+  --ifm-background-color: #020617;
+  --ifm-navbar-background-color: #020617;
+  --ifm-card-background-color: #020617;
+  
+  --border-color: #1e293b;
+  --card-bg: #020617;
+  --muted-foreground: #94a3b8;
 }
+
+/* Base UI Improvements */
+.navbar {
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: none;
+  padding: 0.5rem 1.5rem;
+}
+
+.navbar__brand {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* --- ELEGANT SHADCN CARD --- */
+[class*='cardContainer'] {
+  border: 1px solid var(--border-color);
+  background: transparent;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.5rem;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100%;
+  box-shadow: none !important;
+}
+
+[class*='cardContainer']:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-2px);
+}
+
+/* Hide ALL Default Icons, SVGs, and Decorative Elements in Cards */
+[class*='cardContainer'] svg,
+[class*='cardContainer'] [class*='cardIcon'],
+[class*='cardContainer'] [class*='cardTitle']::before,
+[class*='cardContainer'] [class*='cardTitle'] span:first-child:not(:only-child) {
+  display: none !important;
+}
+
+/* Ensure only Title and Description remain */
+[class*='cardContainer'] [class*='cardTitle'] {
+  display: block !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  color: var(--ifm-heading-color) !important;
+  margin: 0 0 0.5rem 0 !important; /* Hapus margin top, sisakan margin bottom */
+  letter-spacing: -0.01em;
+  border: none !important;
+}
+
+/* Adjust Card Padding for more compact look */
+[class*='cardContainer'] {
+  padding: 1rem 1.25rem !important;
+}
+
+/* Sidebar Modernization */
+.menu__link {
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  transition: all 0.1s;
+}
+
+.menu__link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ifm-color-primary);
+}
+
+.menu__link--active {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--ifm-color-primary) !important;
+  font-weight: 600;
+}
+
+/* Typography */
+h1 { font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.5rem; }
+h2 { border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 2.5rem; font-weight: 600; letter-spacing: -0.02em; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+/* Footer Minimalist */
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: var(--ifm-background-color);
+  border-top: 1px solid var(--border-color);
+  padding: 4rem 0;
+}
+
+.footer__logo { margin-bottom: 1rem; opacity: 0.8; }
+.footer__copyright { font-size: 0.875rem; color: var(--muted-foreground); }
