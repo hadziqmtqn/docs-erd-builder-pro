@@ -31,8 +31,8 @@ Berikut adalah daftar variabel yang wajib diisi berdasarkan tempat Anda menjalan
 
 | Nama Variabel | Lokal / VPS | Vercel | GitHub Actions |
 | :--- | :---: | :---: | :---: |
-| `VITE_SUPABASE_URL` | ✅ | ✅ | ❌ |
-| `VITE_SUPABASE_ANON_KEY` | ✅ | ✅ | ❌ |
+| `VITE_SUPABASE_URL` | ✅ | ❌ | ❌ |
+| `VITE_SUPABASE_ANON_KEY` | ✅ | ❌ | ❌ |
 | `SUPABASE_URL` | ✅ | ✅ | ✅ |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | ✅ | ✅ |
 | `SUPABASE_DB_URL` | ✅ | ❌ | ✅ |
