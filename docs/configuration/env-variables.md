@@ -25,6 +25,11 @@ Variabel ini hanya digunakan oleh sisi server (Express/Vercel Functions).
 - `R2_BUCKET_NAME`: Nama bucket yang digunakan.
 - `R2_PUBLIC_URL`: URL publik atau domain kustom untuk mengakses file (CDN).
 
+## GitHub (Backup Manual/Otomatis)
+- `GITHUB_TOKEN`: Personal Access Token GitHub untuk memicu workflow backup.
+- `GITHUB_REPO_OWNER`: Nama pemilik repositori GitHub.
+- `GITHUB_REPO_NAME`: Nama repositori GitHub.
+
 ## Matriks Kebutuhan Platform
 
 Berikut adalah daftar variabel yang wajib diisi berdasarkan tempat Anda menjalankan aplikasi:
@@ -41,6 +46,9 @@ Berikut adalah daftar variabel yang wajib diisi berdasarkan tempat Anda menjalan
 | `R2_SECRET_ACCESS_KEY` | ✅ | ✅ | ✅ |
 | `R2_BUCKET_NAME` | ✅ | ✅ | ✅ |
 | `R2_PUBLIC_URL` | ✅ | ✅ | ❌ |
+| `GITHUB_TOKEN` | ✅ | ✅ | ❌ |
+| `GITHUB_REPO_OWNER` | ✅ | ✅ | ❌ |
+| `GITHUB_REPO_NAME` | ✅ | ✅ | ❌ |
 
 ## Panduan Pemasangan (Setup)
 
@@ -51,7 +59,7 @@ Salin file `.env.example` menjadi `.env` di root folder proyek Anda, lalu isi va
 
 ### 2. Vercel (Frontend & API)
 - Buka dashboard **Vercel > Project Settings > Environment Variables**.
-- Masukkan semua variabel dari daftar **Frontend** dan **Backend** di atas.
+- Masukkan semua variabel dari daftar **Supabase**, **Storage**, dan **GitHub** di atas.
 - Pastikan mencentang lingkungan *Production*, *Preview*, dan *Development*.
 
 ### 3. GitHub Actions (Backup Otomatis)
