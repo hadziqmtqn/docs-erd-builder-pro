@@ -12,6 +12,10 @@ Variabel ini digunakan oleh sisi client (browser) dan wajib menggunakan prefix `
 - `VITE_SUPABASE_ANON_KEY`: Kunci anonim untuk akses frontend.
 - `VITE_ENABLE_GUEST_MODE`: (Opsional) Set ke `true` untuk mengizinkan penggunaan tanpa login.
 
+> Catatan: `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` dipakai oleh client-side Supabase di browser. Jika aplikasi Anda dibangun di Vercel/VPS dan frontend-nya dijalankan sebagai web app, kedua variabel tersebut tetap harus diatur di environment deployment.
+> 
+> `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` adalah kredensial server-side untuk backend dan backup, bukan pengganti `VITE_` frontend.
+
 ## Supabase
 Variabel ini hanya digunakan oleh sisi server (Express/Vercel Functions).
 - `SUPABASE_URL`: URL API proyek Supabase Anda.
@@ -34,10 +38,10 @@ Variabel ini hanya digunakan oleh sisi server (Express/Vercel Functions).
 
 Berikut adalah daftar variabel yang wajib diisi berdasarkan tempat Anda menjalankan aplikasi:
 
-| Nama Variabel | Lokal / VPS | Vercel | GitHub Actions |
+| Nama Variabel | Lokal / Dev | Vercel / VPS | GitHub Actions |
 | :--- | :---: | :---: | :---: |
-| `VITE_SUPABASE_URL` | ✅ | ❌ | ❌ |
-| `VITE_SUPABASE_ANON_KEY` | ✅ | ❌ | ❌ |
+| `VITE_SUPABASE_URL` | ✅ | ✅ | ❌ |
+| `VITE_SUPABASE_ANON_KEY` | ✅ | ✅ | ❌ |
 | `SUPABASE_URL` | ✅ | ✅ | ✅ |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | ✅ | ✅ |
 | `SUPABASE_DB_URL` | ✅ | ❌ | ✅ |
@@ -57,10 +61,11 @@ Setelah Anda memiliki nilai untuk variabel di atas, Anda harus memasukkannya ke 
 ### 1. Lokal (`.env`)
 Salin file `.env.example` menjadi `.env` di root folder proyek Anda, lalu isi variabelnya.
 
-### 2. Vercel (Frontend & API)
-- Buka dashboard **Vercel > Project Settings > Environment Variables**.
-- Masukkan semua variabel dari daftar **Supabase**, **Storage**, dan **GitHub** di atas.
-- Pastikan mencentang lingkungan *Production*, *Preview*, dan *Development*.
+### 2. Deployment (Vercel / VPS)
+- Buka dashboard **Vercel > Project Settings > Environment Variables** atau konfigurasi environment pada server VPS Anda.
+- Masukkan semua variabel dari daftar **Frontend**, **Supabase**, **Storage**, dan **GitHub** di atas.
+- Karena frontend dan backend dideploy dari satu repo, `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` tetap diperlukan di deployment.
+- Pastikan mencentang lingkungan *Production*, *Preview*, dan *Development* jika menggunakan Vercel.
 
 ### 3. GitHub Actions (Backup Otomatis)
 Jika Anda menggunakan fitur backup otomatis, masukkan variabel dari daftar **Backup** di atas ke:
