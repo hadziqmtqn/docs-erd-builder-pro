@@ -15,7 +15,7 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://erd.bekenweb.com',
+  url: 'https://www.erdbuilderpro.com',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -84,7 +84,7 @@ const config: Config = {
       },
       items: [
         {
-          href: 'https://erd.bkn.my.id',
+          href: 'https://demo.erdbuilderpro.com',
           label: 'Demo App',
           position: 'right',
         },
