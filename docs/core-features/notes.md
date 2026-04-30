@@ -44,9 +44,14 @@ Editor Notes mendukung berbagai shortcut keyboard untuk mempercepat proses penul
 | **Badge** | `⌘ ⌥ B` | `Ctrl Alt B` |
 | **Insert Table** | `⌘ ⌥ T` | `Ctrl Alt T` |
 | **Lucide Icon** | `⌘ ⌥ I` | `Ctrl Alt I` |
+| **Insert Calendar** | `/` (Slash Menu) | `/` (Slash Menu) |
 
 ### Slash Menu (`/`)
-Ketik `/` pada baris baru untuk membuka menu cepat. Semua perintah di atas juga tersedia melalui menu ini, memudahkan Anda menyisipkan komponen tanpa harus menghafal shortcut.
+Ketik `/` pada baris baru untuk membuka menu cepat. Menu ini sekarang menyertakan kategori **Insert Calendar** dengan pilihan:
+- **Time/Now**: Menyisipkan waktu atau tanggal sekarang sebagai teks.
+- **Today/Tomorrow/Yesterday**: Menyisipkan kalendar interaktif dengan tanggal terkait.
+- **In a week/A week ago**: Menyisipkan kalendar dengan jeda satu minggu.
+- **Date Range**: Menyisipkan pemilih rentang tanggal interaktif.
 
 ## Kegunaan
 Gunakan fitur Notes ini untuk mencatat:
