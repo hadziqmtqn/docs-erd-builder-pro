@@ -24,9 +24,25 @@ Anda dapat melakukan perhitungan dalam satu kolom dengan mengetikkan shortcut kh
 - **Format Otomatis**: Angka yang dimasukkan atau dihasilkan akan diformat secara otomatis mengikuti standar mata uang Indonesia (Rupiah) dengan pemisah ribuan titik (misal: `1.500.000`).
 
 ### Tipe Baris Khusus
-Gunakan **Bubble Menu** saat sel tabel terpilih untuk mengubah tipe baris:
-- **Header Row (Subtotal)**: Gunakan ikon **Heading** pada menu tabel untuk menandai baris sebagai sub-total fitur tertentu. Baris ini akan menjadi pembatas jangkauan kalkulasi `=sum` atau `=avg` di bawahnya.
-- **Footer Row (Grand Total)**: Gunakan ikon **Sigma (Σ)** pada menu tabel untuk baris total keseluruhan. Baris ini akan menjumlahkan seluruh nilai komponen di tabel tanpa menghitung ulang baris subtotal (menghindari *double counting*).
+Gunakan **Table Bubble Menu** yang muncul saat Anda mengklik di dalam sel tabel untuk mengubah tipe baris:
+- **Header Row (Subtotal)**: Terletak di dalam sub-menu **Rows > Header Row**. Menandai baris sebagai sub-total yang membatasi jangkauan kalkulasi `=sum` atau `=avg` di bawahnya.
+- **Footer Row (Grand Total)**: Terletak di dalam sub-menu **Rows > Footer Row**. Baris ini akan menjumlahkan seluruh nilai komponen di tabel tanpa menghitung ulang baris subtotal.
+
+## Manajemen Tabel Lanjutan
+
+Editor Notes kini mendukung manajemen tabel yang lebih fleksibel untuk dokumen yang kompleks:
+
+### Responsive Tables (Horizontal Scroll)
+Tabel yang memiliki banyak kolom atau konten yang sangat lebar kini mendukung **Horizontal Scroll**. Anda tidak perlu khawatir tabel meluap keluar dari kontainer dokumen; cukup geser tabel ke samping menggunakan *scrollbar* kustom yang tersedia di bagian bawah tabel.
+
+### Table Bubble Menu & Sub-menus
+Untuk menjaga area kerja tetap bersih, menu aksi tabel kini dikelompokkan ke dalam sub-menu:
+- **Alignment**: Tombol cepat untuk mengatur perataan teks (Kiri, Tengah, Kanan) di baris utama menu.
+- **Table Actions**: Menu utama yang berisi:
+    - **Rows**: Menambah/menghapus baris serta mengatur tipe Header/Footer.
+    - **Columns**: Menambah/menghapus kolom serta fitur **Move Left** dan **Move Right** untuk mengatur ulang urutan kolom dengan mudah.
+    - **Insert Line Above**: Solusi praktis untuk menyisipkan baris paragraf baru di atas tabel, terutama jika tabel berada di posisi paling atas dokumen.
+    - **Delete Table**: Menghapus seluruh tabel secara instan.
 
 ## Keyboard Shortcuts & Slash Menu
 
