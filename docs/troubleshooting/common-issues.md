@@ -26,7 +26,30 @@ Halaman ini merangkum beberapa kendala teknis yang mungkin Anda temui dan solusi
 - Cek apakah `R2_ACCOUNT_ID` dan `R2_BUCKET_NAME` di file `.env` sudah sesuai.
 - Pastikan **CORS** di dashboard Cloudflare R2 sudah diizinkan untuk domain resmi aplikasi Anda.
 
-## 4. Perubahan .env Tidak Terdeteksi
-**Gejala**: Fitur baru tetap menggunakan konfigurasi lama meskipun file `.env` sudah diubah.
+## 4. Masalah AI Tidak Merespon
+**Gejala**: Chat AI berhenti di tengah jalan atau menampilkan pesan error koneksi.
 **Solusi**:
-- Jika Anda menjalankan aplikasi menggunakan Docker, Anda harus melakukan *rebuild* image atau merestart kontainer agar variabel lingkungan yang baru dimuat ke dalam sistem.
+- Cek **API Key** di menu Settings > AI Configuration. Pastikan key masih aktif dan memiliki kuota yang cukup.
+- Jika menggunakan **Custom/OpenAI Compatible**, pastikan **Base URL** sudah benar dan menyertakan `/v1` di akhir (contoh: `http://localhost:20128/v1`).
+- Periksa log di terminal (jika menjalankan di lokal) atau cek tab Network di browser untuk melihat detail error dari API provider.
+
+## 5. Error Parsing SQL
+**Gejala**: SQL yang dimasukkan tidak berubah menjadi diagram atau terjadi error saat parsing.
+**Solusi**:
+- Pastikan syntax SQL menggunakan dialek **PostgreSQL** (dialek utama yang didukung).
+- Periksa apakah ada karakter khusus yang tidak didukung atau syntax yang terlalu kompleks. Cobalah untuk mem-parse tabel per tabel jika file SQL terlalu besar.
+
+## 6. Masalah Docker (Deployment)
+**Gejala**: Kontainer Docker tidak bisa diakses di port 3000.
+**Solusi**:
+- Pastikan port 3000 tidak digunakan oleh aplikasi lain di komputer host.
+- Periksa log kontainer dengan perintah `docker logs erd-app` untuk melihat pesan error saat startup.
+- Pastikan file `.env` sudah disertakan saat menjalankan kontainer (`--env-file .env`).
+
+## 7. Canvas Terasa Berat/Lag Setelah Generate
+**Gejala**: Setelah Anda menekan tombol aksi di bawah balasan AI pada Chat Panel (seperti tombol *Replace All*, *Append*, *Create or Update ERD from SQL*, atau *Create or Update Flowchart*) untuk pertama kalinya, pergerakan tabel atau simbol di canvas terasa berat atau "patah-patah".
+
+**Penyebab**: Ini adalah kendala teknis pada sinkronisasi state awal canvas saat menerima data baru dalam jumlah besar dari AI.
+
+**Solusi**:
+- Cukup lakukan **Reload/Refresh halaman browser** Anda satu kali. Setelah di-refresh, canvas akan kembali lancar dan normal.
