@@ -14,8 +14,26 @@ ERD Builder adalah fitur inti yang memungkinkan Anda merancang skema database se
 ## Mengatur Kolom
 Setiap kolom mendukung berbagai properti:
 - **Primary Key (PK)**: Identitas unik baris.
-- **Data Type**: Pilih tipe data seperti `uuid`, `varchar`, `integer`, dll.
+- **Data Type**: Pilih tipe data yang sesuai dengan kebutuhan database Anda.
 - **Constraints**: Seperti `not null`, `unique`, atau `default value`.
+
+### Tipe Data yang Didukung
+ERD Builder Pro mendukung berbagai tipe data standar MySQL dan PostgreSQL. Tabel di bawah ini menunjukkan kategori tipe data beserta dukungan sistem databasenya:
+
+| Kategori | Tipe Data | Database |
+| :--- | :--- | :--- |
+| **Numeric** | `INT`, `BIGINT`, `SMALLINT`, `TINYINT`, `MEDIUMINT`, `DECIMAL`, `NUMERIC`, `FLOAT`, `DOUBLE`, `REAL` | MySQL / PostgreSQL |
+| | `INTEGER`, `SERIAL`, `BIGSERIAL`, `SMALLSERIAL`, `MONEY` | PostgreSQL |
+| **String** | `VARCHAR`, `CHAR`, `TEXT` | MySQL / PostgreSQL |
+| | `TINYTEXT`, `MEDIUMTEXT`, `LONGTEXT` | MySQL |
+| **Date & Time** | `DATE`, `TIME`, `DATETIME`, `TIMESTAMP`, `YEAR` | MySQL / PostgreSQL |
+| | `TIMESTAMPTZ`, `TIMETZ`, `INTERVAL` | PostgreSQL |
+| **Boolean** | `BOOLEAN` | MySQL / PostgreSQL |
+| **Binary/Blob** | `BINARY`, `VARBINARY`, `BLOB`, `TINYBLOB`, `MEDIUMBLOB`, `LONGBLOB` | MySQL |
+| | `BYTEA` | PostgreSQL |
+| **Identitas & Spesial** | `BIT`, `ENUM`, `JSON` | MySQL / PostgreSQL |
+| | `UUID`, `JSONB` | PostgreSQL |
+| **Network & Search** | `INET`, `CIDR`, `MACADDR`, `MACADDR8`, `TSVECTOR`, `TSQUERY` | PostgreSQL |
 
 ## Membuat Relasi
 Untuk membuat relasi antar tabel (Foreign Key):
