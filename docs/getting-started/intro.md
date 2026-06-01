@@ -34,8 +34,16 @@ Kami berterima kasih kepada pengembang di balik teknologi utama berikut:
 ## Roadmap Mendatang
 Kami terus berupaya untuk mengembangkan ERD Builder Pro menjadi alat yang lebih kuat bagi pengembang. Berikut adalah beberapa fitur besar yang direncanakan untuk masa depan:
 
-- **AI-Powered ERD Generation**: Membuat draf skema database secara otomatis berdasarkan deskripsi teks menggunakan kecerdasan buatan.
-- **Kolaborasi Tim & Role-Based Access**: Berbagi proyek dengan anggota tim lainnya dan mengatur izin akses secara spesifik.
-- **Dukungan SQL Dialects Lebih Luas**: Menambahkan generator untuk Microsoft SQL Server, Oracle, dan MariaDB.
-- **Enhanced Export**: Penyempurnaan sistem ekspor PDF dan gambar resolusi tinggi untuk kebutuhan dokumen resmi yang lebih presisi.
-- **Desktop Application**: Versi aplikasi desktop (Windows/Mac/Linux) untuk performa yang lebih optimal.
+| Fitur | Status |
+| :--- | :--- |
+| **AI-Powered ERD Generation** | ✅ Sudah Tersedia |
+| **Kolaborasi Tim & Role-Based Access** | 🔜 Dalam Rencana |
+| **Dukungan SQL Dialects Lebih Luas** | 🔜 Dalam Rencana |
+| **Enhanced Export** | 🔜 Dalam Rencana |
+| **Desktop Application** | 🔜 Dalam Rencana |
+| **Mindmap** | 🔜 Dalam Rencana |
+| **API Mapper** | 🔜 Dalam Rencana |
+| **Task Workspace** | 🔜 Dalam Rencana |
+
+> [!NOTE]
+> Seluruh fitur di atas dirancang untuk saling terintegrasi dalam satu ekosistem. **Mindmap** adalah tempat merencanakan ide, **ERD & Flowchart** adalah visualisasi struktur, **Task Workspace** mengatur eksekusi, dan **API Mapper** mendokumentasikan jalur data — semuanya terhubung satu sama lain. Dengan hadirnya **Kolaborasi Tim**, seluruh tim dapat berkontribusi secara real-time.

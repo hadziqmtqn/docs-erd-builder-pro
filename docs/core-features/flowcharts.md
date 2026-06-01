@@ -4,6 +4,8 @@ slug: /core-features/flowcharts
 ---
 # Flowcharts
 
+![Flowchart Toolbar](/img/docs/flowchart-toolbar.png)
+
 Fitur **Flowchart** dirancang khusus untuk memvisualisasikan alur logika, proses bisnis, atau urutan algoritma dalam aplikasi Anda.
 
 ## Komponen Flowchart
@@ -17,6 +19,11 @@ Anda dapat menggunakan berbagai simbol standar industri:
 1. Tambahkan simbol melalui menu **Add Symbol**.
 2. Hubungkan simbol dengan menarik garis konektor.
 3. Klik pada konektor untuk menambahkan teks label.
+
+## Auto Layout
+Jika simbol-simbol flowchart Anda mulai berantakan atau saling tumpang tindih, Anda dapat menggunakan fitur **Auto Layout**:
+1. Klik ikon **"Auto Layout"** (ikon grid/susunan) pada toolbar.
+2. Sistem akan secara otomatis menata ulang posisi simbol berdasarkan alur koneksinya agar lebih rapi dan mudah dibaca.
 
 ## Export Flowchart (Eksperimental)
 > [!CAUTION]

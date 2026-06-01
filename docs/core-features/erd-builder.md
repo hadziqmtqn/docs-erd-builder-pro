@@ -4,6 +4,8 @@ slug: /core-features/erd-builder
 ---
 # ERD Builder
 
+![ERD Toolbar](/img/docs/erd-toolbar.png)
+
 ERD Builder adalah fitur inti yang memungkinkan Anda merancang skema database secara visual dengan antarmuka *drag-and-drop*.
 
 ## Cara Membuat Tabel
@@ -31,7 +33,7 @@ ERD Builder Pro mendukung berbagai tipe data standar MySQL dan PostgreSQL. Tabel
 | **Boolean** | `BOOLEAN` | MySQL / PostgreSQL |
 | **Binary/Blob** | `BINARY`, `VARBINARY`, `BLOB`, `TINYBLOB`, `MEDIUMBLOB`, `LONGBLOB` | MySQL |
 | | `BYTEA` | PostgreSQL |
-| **Identitas & Spesial** | `BIT`, `ENUM`, `JSON` | MySQL / PostgreSQL |
+| **Identitas & Spesial** | `BIT`, `ENUM`, `JSON`, `ULID` | MySQL / PostgreSQL |
 | | `UUID`, `JSONB` | PostgreSQL |
 | **Network & Search** | `INET`, `CIDR`, `MACADDR`, `MACADDR8`, `TSVECTOR`, `TSQUERY` | PostgreSQL |
 
@@ -40,6 +42,11 @@ Untuk membuat relasi antar tabel (Foreign Key):
 1. Arahkan kursor ke handle (titik putih) di samping kolom.
 2. Klik dan tarik garis ke kolom di tabel tujuan.
 3. Anda dapat mengatur tipe relasi (*one-to-one*, *one-to-many*) melalui garis konektor tersebut.
+
+## Auto Layout
+Jika diagram Anda mulai terlihat berantakan atau tabel saling tumpang tindih, Anda dapat menggunakan fitur **Auto Layout**:
+1. Klik ikon **"Auto Layout"** (ikon grid/susunan) pada toolbar.
+2. Sistem akan secara otomatis menghitung posisi optimal setiap tabel berdasarkan relasi yang ada untuk meminimalisir garis yang saling silang (*edge crossing*).
 
 ## Export Diagram (Eksperimental)
 > [!CAUTION]
