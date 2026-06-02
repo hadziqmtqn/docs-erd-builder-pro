@@ -1,0 +1,10 @@
+{
+  "copyright": {
+    "message": "ERD Builder Pro | Copyright © 2026 Bekenweb.",
+    "description": "The footer copyright"
+  },
+  "logo.alt": {
+    "message": "ERD Builder Pro Logo",
+    "description": "The alt text of footer logo"
+  }
+}

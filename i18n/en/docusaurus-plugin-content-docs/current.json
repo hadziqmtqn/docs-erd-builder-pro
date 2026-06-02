@@ -1,0 +1,62 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.Pendahuluan": {
+    "message": "Getting Started",
+    "description": "The label for category 'Pendahuluan' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Pendahuluan.link.generated-index.description": {
+    "message": "Learn how to get started with ERD Builder Pro, from introduction to installation and deployment.",
+    "description": "The generated-index page description for category 'Pendahuluan' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Fitur Utama": {
+    "message": "Core Features",
+    "description": "The label for category 'Fitur Utama' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Fitur Utama.link.generated-index.description": {
+    "message": "Explore the core capabilities of the app including ERD Builder, SQL Generator, Flowchart, and documentation system.",
+    "description": "The generated-index page description for category 'Fitur Utama' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Konfigurasi": {
+    "message": "Configuration",
+    "description": "The label for category 'Konfigurasi' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Konfigurasi.link.generated-index.description": {
+    "message": "Guide to setting up environment variables, Supabase, and other platform integrations.",
+    "description": "The generated-index page description for category 'Konfigurasi' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Manajemen Proyek": {
+    "message": "Project Management",
+    "description": "The label for category 'Manajemen Proyek' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Manajemen Proyek.link.generated-index.description": {
+    "message": "Learn how to manage projects, workspace structure, and the data recovery (Trash) system.",
+    "description": "The generated-index page description for category 'Manajemen Proyek' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Integrasi Cloud Storage": {
+    "message": "Cloud Storage Integration",
+    "description": "The label for category 'Integrasi Cloud Storage' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Integrasi Cloud Storage.link.generated-index.description": {
+    "message": "Guide to connecting Cloudflare R2 for image asset storage and backup files.",
+    "description": "The generated-index page description for category 'Integrasi Cloud Storage' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Keamanan & Backup": {
+    "message": "Security & Backup",
+    "description": "The label for category 'Keamanan & Backup' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Keamanan & Backup.link.generated-index.description": {
+    "message": "Protect your data with automatic and manual backup systems via GitHub Actions.",
+    "description": "The generated-index page description for category 'Keamanan & Backup' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Troubleshooting & FAQ": {
+    "message": "Troubleshooting & FAQ",
+    "description": "The label for category 'Troubleshooting & FAQ' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Troubleshooting & FAQ.link.generated-index.description": {
+    "message": "Solutions for common technical issues and answers to frequently asked questions.",
+    "description": "The generated-index page description for category 'Troubleshooting & FAQ' in sidebar 'tutorialSidebar'"
+  }
+}
