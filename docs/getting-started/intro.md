@@ -41,6 +41,7 @@ Kami terus berupaya untuk mengembangkan ERD Builder Pro menjadi alat yang lebih 
 | **Dukungan SQL Dialects Lebih Luas** | 🔜 Dalam Rencana |
 | **Enhanced Export** | 🔜 Dalam Rencana |
 | **Desktop Application** | 🔜 Dalam Rencana |
+| **Local Database Runner** ⚡ | 🔜 Dalam Rencana |
 | **Mindmap** | 🔜 Dalam Rencana |
 | **API Mapper** | 🔜 Dalam Rencana |
 | **Task Workspace** | 🔜 Dalam Rencana |

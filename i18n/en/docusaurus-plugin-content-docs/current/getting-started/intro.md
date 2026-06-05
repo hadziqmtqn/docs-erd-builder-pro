@@ -43,6 +43,7 @@ We are continuously working to develop ERD Builder Pro into an even more powerfu
 | **Broader SQL Dialect Support** | 🔜 Planned |
 | **Enhanced Export** | 🔜 Planned |
 | **Desktop Application** | 🔜 Planned |
+| **Local Database Runner** ⚡ | 🔜 Planned |
 | **Mindmap** | 🔜 Planned |
 | **API Mapper** | 🔜 Planned |
 | **Task Workspace** | 🔜 Planned |
