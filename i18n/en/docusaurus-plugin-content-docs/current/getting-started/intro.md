@@ -23,7 +23,7 @@ This application is built on a modern technology ecosystem and outstanding *open
 ### Core Infrastructure
 - **Frontend**: React + Vite for a fast and responsive interface.
 - **Backend**: Express.js for server logic and APIs.
-- **Database**: Supabase (PostgreSQL) for data storage.
+- **Database**: PostgreSQL (Supabase / Local) for data storage.
 - **Storage**: Cloudflare R2 for image asset storage.
 
 ### Core Libraries (Credits)

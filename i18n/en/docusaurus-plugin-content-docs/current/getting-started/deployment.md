@@ -12,9 +12,12 @@ ERD Builder Pro is designed to be flexible for deployment on various platforms, 
 This is the fastest way to run ERD Builder Pro on your own server (self-hosted). We provide official images on Docker Hub.
 
 :::warning Important
-Although the Vite variables are baked into the image, you are **still required** to set up a `.env` file containing the **Cloudflare R2** and **Supabase Service Role** configuration. If R2 configuration is not set up, the file/image upload feature (such as in the *Notes* or *Drawings* module) will encounter errors when used.
+You **must** prepare a `.env` file containing the **Database** and **Cloudflare R2** configuration:
+- `DATABASE_URL` — PostgreSQL connection string (required, both Supabase and Local PG)
+- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — only required when using **Supabase** mode
+- R2 vars — recommended for full file/image upload functionality
 
-If you do not plan to use the image upload feature, you can leave those variables empty, but it is highly recommended to set them up for full application functionality.
+If R2 is not configured, the file/image upload feature will error. For **Local PostgreSQL** mode, ensure the PostgreSQL database is reachable from the container.
 :::
 
 ### Steps (Pull from Docker Hub):

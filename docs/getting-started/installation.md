@@ -23,14 +23,40 @@ Salin file `.env.example` menjadi `.env` dan isi dengan kredensial Anda.
 ```bash
 cp .env.example .env
 ```
-*Detail pengisian variabel environment dapat dilihat pada [Modul Konfigurasi](../configuration/env-variables.md).*
+*Detail pengisian variabel environment dapat dilihat pada [Environment Variables](../configuration/env-variables.md).*
 
 > [!TIP]
 > Secara default, server backend berjalan pada port `3000`. Jika Anda perlu menggunakan port berbeda (terutama di lingkungan produksi), Anda dapat mengaturnya melalui variabel `PORT` di file `.env`.
 
+## 3a. Setup Database
+Siapkan database sesuai mode yang Anda pilih. ERD Builder Pro mendukung dua mode PostgreSQL — lihat [Setup Database](../configuration/supabase-setup) untuk perbandingan lengkap.
+
+### Opsi A: Supabase PostgreSQL
+1. Buka dashboard Supabase → **SQL Editor**.
+2. Jalankan isi file `supabase_schema.sql` dari root proyek.
+3. Konfigurasi `DATABASE_URL`, `SUPABASE_URL`, dan `SUPABASE_SERVICE_ROLE_KEY` di `.env`.
+
+### Opsi B: Local PostgreSQL
+```bash
+# Buat database
+createdb erd_builder_pro
+
+# Push schema & seed
+npm run db:push:pg:local
+npm run db:seed:pg:local
+```
+
 ## 4. Menjalankan Aplikasi
-Jalankan perintah berikut untuk memulai server pengembangan:
+Jalankan perintah berikut untuk memulai server pengembangan — sesuaikan dengan mode database Anda:
+
+**Supabase:**
 ```bash
 npm run dev
 ```
+
+**Local PostgreSQL:**
+```bash
+npm run dev:pg:local
+```
+
 Aplikasi akan tersedia di `http://localhost:3000`.

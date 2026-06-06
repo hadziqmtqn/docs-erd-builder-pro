@@ -22,7 +22,7 @@ Aplikasi ini dibangun di atas ekosistem teknologi modern dan pustaka *open-sourc
 ### Infrastruktur Utama
 - **Frontend**: React + Vite untuk antarmuka yang cepat dan responsif.
 - **Backend**: Express.js untuk logika server dan API.
-- **Database**: Supabase (PostgreSQL) untuk penyimpanan data.
+- **Database**: PostgreSQL (Supabase / Local) untuk penyimpanan data.
 - **Storage**: Cloudflare R2 untuk penyimpanan aset gambar.
 
 ### Pustaka Inti (Credits)
