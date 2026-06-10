@@ -109,8 +109,8 @@ Seeding database...
 ```
 
 **Default credentials**:
-- Email: `admin@local.dev` (override dengan `ADMIN_EMAIL`)
-- Password: `admin123` (override dengan `ADMIN_PASSWORD`)
+- Email: `admin@local.dev`
+- Password: `admin123`
 
 ### 5. Jalankan Aplikasi
 ```bash
