@@ -29,7 +29,7 @@ cp .env.example .env
 > By default, the backend server runs on port `3000`. If you need to use a different port (especially in production), you can set it via the `PORT` variable in the `.env` file.
 
 ## 3a. Database Setup
-Set up the database according to your chosen mode. ERD Builder Pro supports two PostgreSQL modes — see [Database Setup](../configuration/supabase-setup) for a full comparison.
+Set up the database according to your chosen mode. ERD Builder Pro supports three database modes — see [Database Setup](../configuration/database-setup) for a full comparison.
 
 ### Option A: Supabase PostgreSQL
 1. Open Supabase dashboard → **SQL Editor**.

@@ -5,7 +5,7 @@ title: Database Schema
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import ERDEmbed from '@site/src/components/ERDEmbed';
+import FullscreenERD from '@site/src/components/ERDEmbed/FullscreenERD';
 import { supabaseNodes, supabaseEdges } from '@site/src/components/ERDEmbed/schema-data-supabase';
 import { purePgNodes, purePgEdges } from '@site/src/components/ERDEmbed/schema-data-purepg';
 
@@ -27,12 +27,12 @@ Gunakan diagram interaktif di bawah ini untuk memahami alur data antar tabel. Pi
 <Tabs>
   <TabItem value="supabase" label="Supabase" default>
 
-<ERDEmbed height="550px" nodes={supabaseNodes} edges={supabaseEdges} />
+<FullscreenERD height="600px" nodes={supabaseNodes} edges={supabaseEdges} />
 
   </TabItem>
   <TabItem value="purepg" label="Pure PostgreSQL">
 
-<ERDEmbed height="550px" nodes={purePgNodes} edges={purePgEdges} />
+<FullscreenERD height="600px" nodes={purePgNodes} edges={purePgEdges} />
 
   </TabItem>
 </Tabs>
@@ -1078,8 +1078,7 @@ CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
 | `ai_system_prompts` | `public` | AI | Prompt sistem untuk AI (built-in & kustom) |
 | `user_ai_rules` | `public` | AI | Aturan AI per view (misal: aturan untuk ERD, flowchart, dll.) |
 | `user_preferences` | `public` | Utilitas | Preferensi aplikasi desktop per pengguna |
-| `db_accounts` | `public` | Integrasi | Kredensial koneksi database eksternal (desktop-only) |
-| `db_catalogs` | `public` | Integrasi | Database spesifik dalam sebuah db_account |
+
 
 ### Perbedaan Utama Antara Supabase dan Pure PostgreSQL
 

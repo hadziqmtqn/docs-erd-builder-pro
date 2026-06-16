@@ -11,7 +11,7 @@ ERD Builder Pro mendukung **dua mode database PostgreSQL**:
 - **Supabase (Production/Cloud)**: PostgreSQL via Supabase pooler, autentikasi Supabase Auth (JWT), ID tipe `BigInt`.
 - **Local PostgreSQL (Development/Self-hosted)**: PostgreSQL langsung di mesin lokal/server, autentikasi lokal (email + password), ID tipe `Int`.
 
-Panduan lengkap untuk masing-masing mode ada di [Setup Database](./supabase-setup).
+Panduan lengkap untuk masing-masing mode ada di [Setup Database](./database-setup).
 
 ## Core (Wajib)
 Variabel ini wajib diatur agar aplikasi dapat berfungsi.
@@ -83,4 +83,4 @@ Isi nilai variabel sesuai dengan dashboard penyedia layanan masing-masing.
 - Jika menggunakan Docker, masukkan variabel melalui file `.env` atau flag `-e` saat `docker run`.
 
 ---
-*Informasi lebih lanjut tentang setup database dapat dilihat di [Setup Database](./supabase-setup).*
+*Informasi lebih lanjut tentang setup database dapat dilihat di [Setup Database](./database-setup).*

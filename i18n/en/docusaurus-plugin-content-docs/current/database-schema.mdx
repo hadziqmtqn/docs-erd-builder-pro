@@ -5,7 +5,7 @@ title: Database Schema
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import ERDEmbed from '@site/src/components/ERDEmbed';
+import FullscreenERD from '@site/src/components/ERDEmbed/FullscreenERD';
 import { supabaseNodes, supabaseEdges } from '@site/src/components/ERDEmbed/schema-data-supabase';
 import { purePgNodes, purePgEdges } from '@site/src/components/ERDEmbed/schema-data-purepg';
 
@@ -27,12 +27,12 @@ Use the interactive diagram below to understand the data flow between tables. Se
 <Tabs>
   <TabItem value="supabase" label="Supabase" default>
 
-<ERDEmbed height="550px" nodes={supabaseNodes} edges={supabaseEdges} />
+<FullscreenERD height="600px" nodes={supabaseNodes} edges={supabaseEdges} />
 
   </TabItem>
   <TabItem value="purepg" label="Pure PostgreSQL">
 
-<ERDEmbed height="550px" nodes={purePgNodes} edges={purePgEdges} />
+<FullscreenERD height="600px" nodes={purePgNodes} edges={purePgEdges} />
 
   </TabItem>
 </Tabs>
@@ -1078,8 +1078,7 @@ CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
 | `ai_system_prompts` | `public` | AI | System prompts for AI (built-in & custom) |
 | `user_ai_rules` | `public` | AI | Per-view AI rules (e.g., rules for ERD, flowchart, etc.) |
 | `user_preferences` | `public` | Utility | Desktop app user preferences |
-| `db_accounts` | `public` | Integration | External database connection credentials (desktop-only) |
-| `db_catalogs` | `public` | Integration | Specific database within a db_account |
+
 
 ### Key Differences Between Supabase and Pure PostgreSQL
 
