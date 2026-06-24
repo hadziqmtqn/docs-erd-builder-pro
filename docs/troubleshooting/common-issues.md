@@ -46,6 +46,29 @@ Halaman ini merangkum beberapa kendala teknis yang mungkin Anda temui dan solusi
 - Periksa log kontainer dengan perintah `docker logs erd-app` untuk melihat pesan error saat startup.
 - Pastikan file `.env` sudah disertakan saat menjalankan kontainer (`--env-file .env`).
 
+## 8. Error 403 Forbidden saat Mengelola Model Catalog
+
+**Gejala**: Muncul error 403 Forbidden saat membuat atau mengedit data di menu **Settings > Model Catalog**.
+
+**Penyebab**: Akun Supabase Anda tidak memiliki flag `is_super_admin` di metadata pengguna. Aplikasi memeriksa flag ini untuk memberikan akses ke fitur Model Catalog.
+
+**Solusi**:
+1. Buka Dashboard Supabase Anda.
+2. Masuk ke menu **SQL Editor**.
+3. Buat query baru dan jalankan perintah berikut, sesuaikan email dengan akun admin yang Anda gunakan:
+
+```sql
+UPDATE auth.users
+    SET raw_app_meta_data = raw_app_meta_data || '{"is_super_admin": true}'::jsonb
+    WHERE email = 'admin@example.com';
+```
+
+   Ganti `admin@example.com` dengan email akun admin yang Anda gunakan.
+
+4. Setelah menjalankan query, **logout** dan **login kembali** ke aplikasi ERD Builder Pro.
+
+> **Catatan**: Masalah ini khusus untuk mode **Supabase (PostgreSQL)**. Mode Local PostgreSQL dan Desktop (SQLite) tidak terpengaruh karena semua akun lokal otomatis menjadi admin.
+
 ## 7. Canvas Terasa Berat/Lag Setelah Generate
 **Gejala**: Setelah Anda menekan tombol aksi di bawah balasan AI pada Chat Panel (seperti tombol *Replace All*, *Append*, *Create or Update ERD from SQL*, atau *Create or Update Flowchart*) untuk pertama kalinya, pergerakan tabel atau simbol di canvas terasa berat atau "patah-patah".
 

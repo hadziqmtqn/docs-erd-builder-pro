@@ -46,6 +46,29 @@ This page summarizes several technical issues you may encounter and practical so
 - Check container logs with the `docker logs erd-app` command for startup error messages.
 - Ensure the `.env` file is included when running the container (`--env-file .env`).
 
+## 8. 403 Forbidden Error When Managing Model Catalog
+
+**Symptoms**: A 403 Forbidden error appears when creating or editing data in **Settings > Model Catalog**.
+
+**Cause**: Your Supabase account is missing the `is_super_admin` flag in user metadata. The application checks this flag to grant access to the Model Catalog feature.
+
+**Solution**:
+1. Open your Supabase Dashboard.
+2. Navigate to **SQL Editor**.
+3. Create a new query and run the following command, adjusting the email to match your admin account:
+
+```sql
+UPDATE auth.users
+    SET raw_app_meta_data = raw_app_meta_data || '{"is_super_admin": true}'::jsonb
+    WHERE email = 'admin@example.com';
+```
+
+   Replace `admin@example.com` with your actual admin account email.
+
+4. After running the query, **logout** and **login again** to the ERD Builder Pro application.
+
+> **Note**: This issue is specific to **Supabase (PostgreSQL)** mode. Local PostgreSQL and Desktop (SQLite) modes are not affected because all local accounts are automatically admin.
+
 ## 7. Canvas Feels Heavy/Laggy After Generate
 **Symptoms**: After you click the action button below the AI response in the Chat Panel (such as *Replace All*, *Append*, *Create or Update ERD from SQL*, or *Create or Update Flowchart*) for the first time, moving tables or symbols on the canvas feels heavy or "janky".
 
