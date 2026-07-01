@@ -87,7 +87,7 @@ erdbpro
 - **Email:** `admin@local.dev`
 - **Password:** `admin123`
 
-Data stored in `~/.erdbpro/`. SQLite by default, PostgreSQL supported.
+Data stored in `~/.erdbpro/` (SQLite). Zero config, always ready.
 
 ### CLI Commands
 
@@ -104,12 +104,14 @@ erdbpro status                   # Check server status
 
 ### Database
 
-**SQLite (default):** Zero config, database auto-created at `~/.erdbpro/data.db`.
+**SQLite only.** Database auto-created at `~/.erdbpro/data.db`. No configuration needed.
 
-**PostgreSQL:**
+Need PostgreSQL? Use the Docker image instead:
 ```bash
-erdbpro start --db-url postgresql://user:pass@localhost:5432/erdbpro
+docker run -p 3101:3101 -e DATABASE_URL=postgresql://... bekenweb/erd-builder-pro
 ```
+
+The CLI distribution keeps things simple — SQLite is fast, portable, and requires zero setup. Docker and desktop (Tauri) builds support PostgreSQL for production use.
 
 ### Interactive Menu
 

@@ -87,7 +87,7 @@ erdbpro
 - **Email:** `admin@local.dev`
 - **Password:** `admin123`
 
-Data tersimpan di `~/.erdbpro/`. SQLite sebagai default, PostgreSQL juga didukung.
+Data tersimpan di `~/.erdbpro/` (SQLite). Zero config, selalu siap pakai.
 
 ### Perintah CLI
 
@@ -104,12 +104,14 @@ erdbpro status                   # Cek status server
 
 ### Database
 
-**SQLite (default):** Zero config, database otomatis di `~/.erdbpro/data.db`.
+**SQLite only.** Database dibuat otomatis di `~/.erdbpro/data.db`. Tanpa konfigurasi.
 
-**PostgreSQL:**
+Butuh PostgreSQL? Gunakan image Docker:
 ```bash
-erdbpro start --db-url postgresql://user:pass@localhost:5432/erdbpro
+docker run -p 3101:3101 -e DATABASE_URL=postgresql://... bekenweb/erd-builder-pro
 ```
+
+CLI distribution dibuat simpel — SQLite cepat, portabel, dan zero setup. Docker dan desktop (Tauri) mendukung PostgreSQL untuk production.
 
 ### Interactive Menu
 
