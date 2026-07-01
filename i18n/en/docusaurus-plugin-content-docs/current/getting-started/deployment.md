@@ -66,6 +66,91 @@ This application is compatible with Vercel for simpler deployment:
 3. Set the *Output Directory*: `dist`.
 4. Enter all *Environment Variables* in the Vercel dashboard.
 
+## 3. CLI Installer (One-Command Setup)
+
+The easiest way to run ERD Builder Pro locally — no clone, no Docker, no database setup.
+
+```bash
+npx erdbpro
+```
+
+Just Node.js 18+. Browser opens at `http://localhost:3101`.
+
+### Global Install
+
+```bash
+npm install -g erdbpro
+erdbpro
+```
+
+**Login:**
+- **Email:** `admin@local.dev`
+- **Password:** `admin123`
+
+Data stored in `~/.erdbpro/`. SQLite by default, PostgreSQL supported.
+
+### CLI Commands
+
+```bash
+erdbpro                          # Start server + interactive menu
+erdbpro start                    # Same as above
+erdbpro start --background       # Run in background (detached)
+erdbpro start --open             # Skip menu, open browser immediately
+erdbpro start --port 4000        # Custom port
+erdbpro start --force            # Restart if already running
+erdbpro stop                     # Stop background server
+erdbpro status                   # Check server status
+```
+
+### Database
+
+**SQLite (default):** Zero config, database auto-created at `~/.erdbpro/data.db`.
+
+**PostgreSQL:**
+```bash
+erdbpro start --db-url postgresql://user:pass@localhost:5432/erdbpro
+```
+
+### Interactive Menu
+
+After running `erdbpro`, a navigable menu appears:
+
+```
+▶ Web UI (Open in Browser)
+  Hide to Background
+  Exit
+```
+
+- **↑↓** — move selector
+- **Enter** — execute action
+- **q** — quit
+
+### Background Mode
+
+```bash
+erdbpro start --background
+erdbpro status              # → ✅ Server running (PID: 12345)
+erdbpro stop                # → 🛑 Server stopped
+```
+
+PID file at `~/.erdbpro/server.pid`.
+
+### Update
+
+```bash
+npm update -g erdbpro
+erdbpro start --force       # Stop old + start new
+```
+
+### Uninstall
+
+```bash
+npm uninstall -g erdbpro
+rm -rf ~/.erdbpro
+```
+
+---
+
 ## 4. Coolify / Other PaaS
 
 If you are using **Coolify**, you can use the **Dockerfile** method.

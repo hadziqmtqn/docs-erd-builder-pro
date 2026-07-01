@@ -66,6 +66,91 @@ Aplikasi ini kompatibel dengan Vercel untuk deployment yang lebih sederhana:
 3. Atur *Output Directory*: `dist`.
 4. Masukkan semua *Environment Variables* di dashboard Vercel.
 
+## 3. CLI Installer (One-Command Setup)
+
+Cara termudah untuk menjalankan ERD Builder Pro di mesin lokal — tanpa clone repo, tanpa Docker, tanpa setup database.
+
+```bash
+npx erdbpro
+```
+
+Cukup Node.js 18+. Browser akan terbuka di `http://localhost:3101`.
+
+### Instalasi Global
+
+```bash
+npm install -g erdbpro
+erdbpro
+```
+
+**Login:**
+- **Email:** `admin@local.dev`
+- **Password:** `admin123`
+
+Data tersimpan di `~/.erdbpro/`. SQLite sebagai default, PostgreSQL juga didukung.
+
+### Perintah CLI
+
+```bash
+erdbpro                          # Start server + menu interaktif
+erdbpro start                    # Sama seperti di atas
+erdbpro start --background       # Run di background (detached)
+erdbpro start --open             # Skip menu, buka browser langsung
+erdbpro start --port 4000        # Port kustom
+erdbpro start --force            # Restart jika sudah berjalan
+erdbpro stop                     # Hentikan server background
+erdbpro status                   # Cek status server
+```
+
+### Database
+
+**SQLite (default):** Zero config, database otomatis di `~/.erdbpro/data.db`.
+
+**PostgreSQL:**
+```bash
+erdbpro start --db-url postgresql://user:pass@localhost:5432/erdbpro
+```
+
+### Interactive Menu
+
+Setelah `erdbpro` dijalankan, muncul menu navigasi dengan arrow key:
+
+```
+▶ Web UI (Open in Browser)
+  Hide to Background
+  Exit
+```
+
+- **↑↓** — pindah selector
+- **Enter** — jalankan aksi
+- **q** — keluar
+
+### Background Mode
+
+```bash
+erdbpro start --background
+erdbpro status              # → ✅ Server running (PID: 12345)
+erdbpro stop                # → 🛑 Server stopped
+```
+
+PID file di `~/.erdbpro/server.pid`.
+
+### Update
+
+```bash
+npm update -g erdbpro
+erdbpro start --force       # Stop old + start new
+```
+
+### Uninstall
+
+```bash
+npm uninstall -g erdbpro
+rm -rf ~/.erdbpro
+```
+
+---
+
 ## 4. Coolify / PaaS Lainnya
 
 Jika Anda menggunakan **Coolify**, Anda bisa menggunakan metode **Dockerfile**. 
