@@ -31,3 +31,17 @@ You can view the list of new features, bug fixes, and version updates directly t
 
 ### What if I forget my Supabase password?
 Since authentication uses Supabase, you can reset your password or manage user accounts through the dashboard **Supabase > Authentication > Users**.
+
+### What if I forget my password in self-hosted mode (Local PostgreSQL / Docker)?
+For self-hosted mode using local authentication (not Supabase), use the following CLI script from the project directory:
+
+```bash
+npm run reset-password -- --email admin@local.dev --password newpassword123
+```
+
+This script will:
+- Find the user by email
+- Hash the new password using the `scrypt` algorithm (same as normal login)
+- Update the password in the database
+
+No application restart required. The user can log in immediately with the new password.

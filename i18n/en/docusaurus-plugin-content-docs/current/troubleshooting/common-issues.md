@@ -69,6 +69,25 @@ UPDATE auth.users
 
 > **Note**: This issue is specific to **Supabase (PostgreSQL)** mode. Local PostgreSQL and Desktop (SQLite) modes are not affected because all local accounts are automatically admin.
 
+## 9. Forgot Password in Self-Hosted Mode (Local PostgreSQL / Docker)
+
+**Symptoms**: Cannot log in to a self-hosted ERD Builder Pro deployment using Local PostgreSQL or Docker mode.
+
+**Cause**: Self-hosted mode uses local authentication, not Supabase. There is no "Forgot Password" feature in the UI.
+
+**Solution**:
+1. Open a terminal in the server or ERD Builder Pro project directory.
+2. Run the following command, replacing the email and password:
+
+```bash
+npm run reset-password -- --email admin@local.dev --password newpassword123
+```
+
+3. The script will find the user, hash the password, and update the database.
+4. No application restart required — the user can log in immediately with the new password.
+
+> **Note**: This solution is specific to **Local PostgreSQL** and **Docker** modes. Supabase mode uses the Supabase dashboard for password reset. Desktop mode (SQLite/Tauri) uses the default credentials `admin@local.dev` / `admin123`.
+
 ## 7. Canvas Feels Heavy/Laggy After Generate
 **Symptoms**: After you click the action button below the AI response in the Chat Panel (such as *Replace All*, *Append*, *Create or Update ERD from SQL*, or *Create or Update Flowchart*) for the first time, moving tables or symbols on the canvas feels heavy or "janky".
 

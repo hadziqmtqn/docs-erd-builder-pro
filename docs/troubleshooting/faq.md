@@ -31,3 +31,17 @@ Anda dapat melihat daftar fitur baru, perbaikan bug, dan pembaruan versi secara 
 
 ### Bagaimana jika saya lupa password Supabase?
 Karena autentikasi menggunakan Supabase, Anda dapat mereset password atau mengelola akun pengguna melalui dashboard **Supabase > Authentication > Users**.
+
+### Bagaimana jika saya lupa password di mode self-hosted (Local PostgreSQL / Docker)?
+Untuk mode self-hosted yang menggunakan autentikasi lokal (bukan Supabase), gunakan script CLI berikut dari direktori proyek:
+
+```bash
+npm run reset-password -- --email admin@local.dev --password passwordbaru123
+```
+
+Script ini akan:
+- Mencari user berdasarkan email
+- Meng-hash password baru dengan algoritma `scrypt` (sama seperti login normal)
+- Memperbarui password di database
+
+Tidak perlu restart aplikasi. User bisa langsung login dengan password baru.
