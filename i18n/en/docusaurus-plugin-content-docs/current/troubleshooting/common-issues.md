@@ -88,7 +88,7 @@ npm run reset-password -- --email admin@local.dev --password newpassword123
 
 > **Note**: This solution is specific to **Local PostgreSQL** and **Docker** modes. Supabase mode uses the Supabase dashboard for password reset. Desktop mode (SQLite/Tauri) uses the default credentials `admin@local.dev` / `admin123`.
 
-## 7. Canvas Feels Heavy/Laggy After Generate
+## 10. Canvas Feels Heavy/Laggy After Generate
 **Symptoms**: After you click the action button below the AI response in the Chat Panel (such as *Replace All*, *Append*, *Create or Update ERD from SQL*, or *Create or Update Flowchart*) for the first time, moving tables or symbols on the canvas feels heavy or "janky".
 
 **Cause**: This is a technical limitation with the initial canvas state synchronization when receiving a large amount of new data from AI.

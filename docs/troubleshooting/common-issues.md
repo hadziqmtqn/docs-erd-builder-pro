@@ -88,7 +88,7 @@ npm run reset-password -- --email admin@local.dev --password passwordbaru123
 
 > **Catatan**: Solusi ini khusus untuk mode **Local PostgreSQL** dan **Docker**. Mode Supabase menggunakan dashboard Supabase untuk reset password. Mode Desktop (SQLite/Tauri) menggunakan kredensial default `admin@local.dev` / `admin123`.
 
-## 7. Canvas Terasa Berat/Lag Setelah Generate
+## 10. Canvas Terasa Berat/Lag Setelah Generate
 **Gejala**: Setelah Anda menekan tombol aksi di bawah balasan AI pada Chat Panel (seperti tombol *Replace All*, *Append*, *Create or Update ERD from SQL*, atau *Create or Update Flowchart*) untuk pertama kalinya, pergerakan tabel atau simbol di canvas terasa berat atau "patah-patah".
 
 **Penyebab**: Ini adalah kendala teknis pada sinkronisasi state awal canvas saat menerima data baru dalam jumlah besar dari AI.
