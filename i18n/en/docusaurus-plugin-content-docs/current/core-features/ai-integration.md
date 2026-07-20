@@ -75,6 +75,7 @@ Button order (left to right): `Copy` → `Replace/Append` → `Database` → `Fl
 
 The AI Assistant has internal detection logic:
 - **SQL DDL:** Detects keywords like `CREATE TABLE`, `ALTER TABLE`, or `INSERT INTO`.
+- **DBML:** Detects code blocks containing DBML syntax (`Table`, `Ref`, `Enum`). The **Database** button appears to apply the DBML schema to the ERD diagram. See [DBML Editor](/core-features/dbml-editor) for details.
 - **Flowchart JSON:** Looks for the structure pattern `{ nodes: [...] }` inside a JSON code block.
 
 ## 5. Data Flow Architecture

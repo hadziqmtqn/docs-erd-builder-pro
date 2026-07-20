@@ -48,6 +48,28 @@ Jika diagram Anda mulai terlihat berantakan atau tabel saling tumpang tindih, An
 1. Klik ikon **"Auto Layout"** (ikon grid/susunan) pada toolbar.
 2. Sistem akan secara otomatis menghitung posisi optimal setiap tabel berdasarkan relasi yang ada untuk meminimalisir garis yang saling silang (*edge crossing*).
 
+## Editing dengan DBML
+
+Selain menggunakan antarmuka visual drag-and-drop, Anda juga dapat mendefinisikan skema database menggunakan **DBML** (*Database Markup Language*) — bahasa markup teks yang ringkas.
+
+1. Klik tombol **DBML Editor** (ikon `</>`) pada toolbar di pojok kanan atas canvas.
+2. Panel editor muncul di sisi kanan — ketik sintaks DBML dan diagram akan diperbarui secara otomatis.
+3. Perubahan bersifat **dua arah**: edit di canvas memperbarui teks DBML, dan sebaliknya.
+
+Contoh:
+```dbml
+Table users {
+  id integer [pk, increment]
+  name varchar [not null]
+  email varchar [unique]
+}
+
+Ref: posts.user_id > users.id
+```
+
+> [!NOTE]
+> Lihat halaman [DBML Editor](/core-features/dbml-editor) untuk panduan lengkap sintaks DBML, autocomplete, dan fitur editor lainnya.
+
 ## Export Diagram (Eksperimental)
 > [!CAUTION]
 > Fitur ekspor diagram ke dalam format gambar (PNG/SVG) atau PDF saat ini masih dalam tahap **Eksperimental**. Anda mungkin menemui sedikit perbedaan visual pada file hasil ekspor dibanding tampilan di editor.

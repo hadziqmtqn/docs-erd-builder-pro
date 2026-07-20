@@ -48,6 +48,28 @@ If your diagram starts to look cluttered or tables overlap each other, you can u
 1. Click the **"Auto Layout"** icon (grid/layout icon) on the toolbar.
 2. The system will automatically calculate the optimal position for each table based on existing relationships to minimize intersecting lines (*edge crossing*).
 
+## Editing with DBML
+
+In addition to the visual drag-and-drop interface, you can also define database schemas using **DBML** (*Database Markup Language*) — a concise text-based markup language.
+
+1. Click the **DBML Editor** button (the `</>` icon) on the toolbar in the top-right corner of the canvas.
+2. The editor panel appears on the right — type DBML syntax and the diagram updates automatically.
+3. Changes are **bidirectional**: edits on the canvas update the DBML text, and vice versa.
+
+Example:
+```dbml
+Table users {
+  id integer [pk, increment]
+  name varchar [not null]
+  email varchar [unique]
+}
+
+Ref: posts.user_id > users.id
+```
+
+> [!NOTE]
+> See the [DBML Editor](/core-features/dbml-editor) page for a complete guide to DBML syntax, autocomplete, and other editor features.
+
 ## Export Diagram (Experimental)
 > [!CAUTION]
 > The diagram export feature to image format (PNG/SVG) or PDF is currently in **Experimental** stage. You may encounter slight visual differences in the exported file compared to the editor view.

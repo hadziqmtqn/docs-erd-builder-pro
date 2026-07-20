@@ -75,6 +75,7 @@ Urutan tombol (kiri ke kanan): `Copy` → `Replace/Append` → `Database` → `F
 
 AI Assistant memiliki logika deteksi internal:
 - **SQL DDL:** Mendeteksi kata kunci seperti `CREATE TABLE`, `ALTER TABLE`, atau `INSERT INTO`.
+- **DBML:** Mendeteksi blok kode yang mengandung sintaks DBML (`Table`, `Ref`, `Enum`). Tombol **Database** akan muncul untuk menerapkan skema DBML ke diagram ERD. Lihat [DBML Editor](/core-features/dbml-editor) untuk detail.
 - **Flowchart JSON:** Mencari pola struktur `{ nodes: [...] }` di dalam blok kode JSON.
 
 ## 5. Arsitektur Data Flow
