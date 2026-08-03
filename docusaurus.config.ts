@@ -48,6 +48,11 @@ const config: Config = {
             'https://github.com/hadziqmtqn/docs-erd-builder-pro/blob/main/',
         },
         blog: false,
+        sitemap: {
+          lastmod: 'date',
+          changefreq: 'weekly',
+          priority: 0.5,
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
