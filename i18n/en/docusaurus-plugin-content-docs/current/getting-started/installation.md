@@ -41,10 +41,13 @@ Set up the database according to your chosen mode. ERD Builder Pro supports thre
 # Create database
 createdb erd_builder_pro
 
-# Push schema & seed
+# Generate the Local PostgreSQL client, push schema & seed non-auth data
+npm run db:generate:pg:local
 npm run db:push:pg:local
 npm run db:seed:pg:local
 ```
+
+Also set `ERD_ENCRYPTION_KEY` in `.env` to a random value of at least 32 characters. Local PostgreSQL seeding does not create default credentials; create the first super admin through the **Create administrator account** page when the application starts.
 
 ## 4. Run the Application
 Run the following command to start the development server — choose according to your database mode:

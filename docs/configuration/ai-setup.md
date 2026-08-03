@@ -40,20 +40,23 @@ Gunakan ini jika Anda menggunakan layanan *proxy* atau *self-hosted* yang mengik
 
 ## Variabel Lingkungan (.env)
 
-Jika Anda ingin menetapkan konfigurasi secara permanen di tingkat server (tanpa melalui UI), Anda dapat menggunakan variabel berikut di file `.env`:
+Konfigurasi provider, model, dan API key dilakukan melalui **Settings > AI Configuration** dan disimpan di database. `AI_PROVIDER`, `AI_API_KEY`, `AI_BASE_URL`, dan `AI_MODEL` bukan variabel environment yang digunakan oleh server saat ini.
 
-| Nama Variabel | Deskripsi | Contoh |
-| :--- | :--- | :--- |
-| `AI_PROVIDER` | Penyedia AI default (`openai`, `google`, atau `custom`) | `openai` |
-| `AI_API_KEY` | API Key utama | `sk-...` |
-| `AI_BASE_URL` | Endpoint (khusus untuk `custom`) | `http://.../v1` |
-| `AI_MODEL` | ID Model default | `gpt-4o-mini` |
+Untuk web/Docker/self-host, atur kunci enkripsi server:
+
+```env
+ERD_ENCRYPTION_KEY="kunci-acak-minimal-32-karakter"
+```
+
+Kunci ini dipakai untuk mengenkripsi API key AI sebelum disimpan dan mendekripsinya saat request `/api/ai/proxy`, pengujian koneksi, atau pengambilan daftar model. Simpan kunci yang sama selama database digunakan.
 
 ## Keamanan Data
 
-- **Local Storage:** Jika diatur melalui UI, API Key disimpan secara lokal di browser Anda (atau dienkripsi di database jika sudah login).
-- **Keamanan:** API Key Anda tidak pernah dibagikan ke pihak ketiga selain penyedia layanan yang Anda pilih.
-- **Enkripsi:** Koneksi ke penyedia AI selalu menggunakan protokol HTTPS.
+- **Server-side storage:** API key yang disimpan melalui UI tidak dikembalikan ke frontend; UI hanya menerima placeholder `***`.
+- **Enkripsi:** API key dienkripsi di database menggunakan `ERD_ENCRYPTION_KEY`.
+- **Proxy:** API key hanya dikirim server ke provider yang dipilih. Jangan masukkan API key ke URL atau commit ke repository.
+- **Private endpoint:** Endpoint AI privat diblokir secara default untuk perlindungan SSRF. Aktifkan `AI_ALLOW_PRIVATE_BASE_URL=true` hanya untuk endpoint internal yang Anda kontrol.
+- **Guest:** Guest AI nonaktif secara default. `GUEST_AI_ENABLED=true` membuat Guest memakai API key server dan dapat menghabiskan kuota Anda.
 
 ---
 *Catatan: Jika Anda mengalami kendala koneksi, pastikan kuota API Anda masih mencukupi dan API Key memiliki izin yang tepat.*

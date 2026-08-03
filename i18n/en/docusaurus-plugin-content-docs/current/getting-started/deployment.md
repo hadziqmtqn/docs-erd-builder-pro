@@ -15,6 +15,7 @@ This is the fastest way to run ERD Builder Pro on your own server (self-hosted).
 You **must** prepare a `.env` file containing the **Database** and **Cloudflare R2** configuration:
 - `DATABASE_URL` — PostgreSQL connection string (required, both Supabase and Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — only required when using **Supabase** mode
+- `ERD_ENCRYPTION_KEY` — required for securely storing DB Connect passwords and AI API keys in web/Docker deployments
 - R2 vars — recommended for full file/image upload functionality
 
 If R2 is not configured, the file/image upload feature will error. For **Local PostgreSQL** mode, ensure the PostgreSQL database is reachable from the container.
@@ -27,12 +28,20 @@ If R2 is not configured, the file/image upload feature will error. For **Local P
    ```
 2. **Run Container:**
    ```bash
-   docker run -d \
-     -p 3000:3000 \
-     --name erd-builder-pro \
-     --env-file .env \
-     bekenweb/erd-builder-pro:latest
-   ```
+docker run -d \
+  -p 3000:3000 \
+  --name erd-builder-pro \
+  --env-file .env \
+  bekenweb/erd-builder-pro:latest
+```
+
+For Local PostgreSQL, the `.env` file must include at least:
+```env
+DATABASE_URL="postgresql://user:password@db:5432/erd_builder_pro"
+ERD_ENCRYPTION_KEY="replace-with-a-random-key-at-least-32-characters-long"
+```
+
+Do not use or share `admin@local.dev` / `admin123`. After an empty Local PostgreSQL database starts, the application shows a one-time setup page to create a new super admin.
 
 :::info
 The Vite environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) are baked into the Docker Hub image. Make sure you use the appropriate image tag for your needs.
@@ -83,11 +92,9 @@ npm install -g erdbpro
 erdbpro
 ```
 
-**Login:**
-- **Email:** `admin@local.dev`
-- **Password:** `admin123`
+**Login:** The CLI uses local SQLite and auto-logs into the dashboard; there is no login page or default credential to share.
 
-Data stored in `~/.erdbpro/` (SQLite). Zero config, always ready.
+Data is stored in `~/.erdbpro/` (SQLite). Zero config, always ready. A local encryption key is created beside the database when neither `ERD_ENCRYPTION_KEY` nor `ERD_ENCRYPTION_KEY_FILE` is configured.
 
 ### CLI Commands
 

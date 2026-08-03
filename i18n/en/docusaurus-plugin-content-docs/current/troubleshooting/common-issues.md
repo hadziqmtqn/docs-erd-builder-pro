@@ -67,7 +67,7 @@ UPDATE auth.users
 
 4. After running the query, **logout** and **login again** to the ERD Builder Pro application.
 
-> **Note**: This issue is specific to **Supabase (PostgreSQL)** mode. Local PostgreSQL and Desktop (SQLite) modes are not affected because all local accounts are automatically admin.
+> **Note**: This issue is specific to **Supabase (PostgreSQL)** mode. Local PostgreSQL has a local super admin created through initial setup; Desktop/CLI use local automatic access.
 
 ## 9. Forgot Password in Self-Hosted Mode (Local PostgreSQL / Docker)
 
@@ -80,15 +80,38 @@ UPDATE auth.users
 2. Run the following command, replacing the email and password:
 
 ```bash
-npm run reset-password -- --email admin@local.dev --password newpassword123
+npm run reset-password -- --email your-admin-email@example.com --password newpassword123
 ```
 
 3. The script will find the user, hash the password, and update the database.
 4. No application restart required — the user can log in immediately with the new password.
 
-> **Note**: This solution is specific to **Local PostgreSQL** and **Docker** modes. Supabase mode uses the Supabase dashboard for password reset. Desktop mode (SQLite/Tauri) uses the default credentials `admin@local.dev` / `admin123`.
+> **Note**: Replace the email with the actual super-admin email. This solution is specific to **Local PostgreSQL** and **Docker** modes. Supabase mode uses the Supabase dashboard for password reset. Desktop/CLI use local auto-login and do not use the web login form.
 
-## 10. Canvas Feels Heavy/Laggy After Generate
+## 10. Repeated Super-Admin Registration or Invalid Credentials
+
+**Symptoms**: After logout, the application returns to **Create administrator account**, or logging in with `admin@local.dev` / `admin123` shows `Invalid credentials`.
+
+**Cause**: `admin@local.dev` / `admin123` is the Desktop/CLI bootstrap credential and is deliberately rejected in Local PostgreSQL self-host mode. Self-host seeding does not create default credentials; the super admin must be created through the initial setup screen.
+
+**Solutions**:
+- Create an account with a new email and password through **Create administrator account**.
+- Ensure the server and seed command use `DB_VARIANT=pg` and the same `DATABASE_URL`.
+- Keep the same `ERD_ENCRYPTION_KEY` across restarts and deployments.
+- If the UI does not match the database, verify that the application is not using a different database or stale backend build.
+
+## 11. AI API Key or DB Connect Password Cannot Be Used
+
+**Symptoms**: DB Connect requests fail after deployment, or AI reports that a stored API key cannot be decrypted.
+
+**Cause**: `ERD_ENCRYPTION_KEY` is missing or changed. This key encrypts database connection passwords and AI API keys.
+
+**Solutions**:
+- Restore the same `ERD_ENCRYPTION_KEY` from your secret manager or `.env` backup.
+- For Desktop/CLI, keep `.erd-encryption-key` beside the database, or set `ERD_ENCRYPTION_KEY_FILE`.
+- After restoring the key, save the affected credentials again if needed.
+
+## 12. Canvas Feels Heavy/Laggy After Generate
 **Symptoms**: After you click the action button below the AI response in the Chat Panel (such as *Replace All*, *Append*, *Create or Update ERD from SQL*, or *Create or Update Flowchart*) for the first time, moving tables or symbols on the canvas feels heavy or "janky".
 
 **Cause**: This is a technical limitation with the initial canvas state synchronization when receiving a large amount of new data from AI.

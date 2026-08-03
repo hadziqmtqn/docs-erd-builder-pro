@@ -67,7 +67,7 @@ UPDATE auth.users
 
 4. Setelah menjalankan query, **logout** dan **login kembali** ke aplikasi ERD Builder Pro.
 
-> **Catatan**: Masalah ini khusus untuk mode **Supabase (PostgreSQL)**. Mode Local PostgreSQL dan Desktop (SQLite) tidak terpengaruh karena semua akun lokal otomatis menjadi admin.
+> **Catatan**: Masalah ini khusus untuk mode **Supabase (PostgreSQL)**. Local PostgreSQL memiliki super admin lokal dari setup awal; Desktop/CLI memakai akses lokal otomatis.
 
 ## 9. Lupa Password di Mode Self-Hosted (Local PostgreSQL / Docker)
 
@@ -80,15 +80,38 @@ UPDATE auth.users
 2. Jalankan perintah berikut, sesuaikan email dan password:
 
 ```bash
-npm run reset-password -- --email admin@local.dev --password passwordbaru123
+npm run reset-password -- --email email-admin-anda@example.com --password passwordbaru123
 ```
 
 3. Script akan mencari user, meng-hash password, dan memperbarui database.
 4. Tidak perlu restart aplikasi — user bisa langsung login dengan password baru.
 
-> **Catatan**: Solusi ini khusus untuk mode **Local PostgreSQL** dan **Docker**. Mode Supabase menggunakan dashboard Supabase untuk reset password. Mode Desktop (SQLite/Tauri) menggunakan kredensial default `admin@local.dev` / `admin123`.
+> **Catatan**: Ganti email dengan email super admin yang sebenarnya. Solusi ini khusus untuk mode **Local PostgreSQL** dan **Docker**. Mode Supabase menggunakan dashboard Supabase untuk reset password. Mode Desktop/CLI memakai auto-login lokal dan tidak menggunakan form login web.
 
-## 10. Canvas Terasa Berat/Lag Setelah Generate
+## 10. Registrasi Super Admin Berulang atau Invalid Credentials
+
+**Gejala**: Setelah logout, halaman kembali ke **Create administrator account**, atau login dengan `admin@local.dev` / `admin123` menampilkan `Invalid credentials`.
+
+**Penyebab**: `admin@local.dev` / `admin123` adalah kredensial bootstrap Desktop/CLI dan sengaja ditolak pada self-host Local PostgreSQL. Self-host tidak membuat akun default saat seed; akun super admin harus dibuat melalui setup awal.
+
+**Solusi**:
+- Buat akun dengan email dan password baru melalui halaman **Create administrator account**.
+- Pastikan server dan perintah seed memakai `DB_VARIANT=pg` serta `DATABASE_URL` yang sama.
+- Pastikan `ERD_ENCRYPTION_KEY` tetap sama pada setiap restart/deployment.
+- Jika data di database sudah memiliki akun tetapi UI tidak sesuai, cek bahwa aplikasi tidak memakai database atau build backend yang berbeda.
+
+## 11. API Key AI atau Password DB Connect Tidak Dapat Dipakai
+
+**Gejala**: Request DB Connect gagal setelah deployment, atau AI menampilkan error bahwa API key tersimpan tidak dapat didekripsi.
+
+**Penyebab**: `ERD_ENCRYPTION_KEY` hilang atau berubah. Kunci ini mengenkripsi password koneksi database dan API key AI.
+
+**Solusi**:
+- Pulihkan nilai `ERD_ENCRYPTION_KEY` yang sama dari secret manager atau backup `.env`.
+- Untuk Desktop/CLI, pastikan file `.erd-encryption-key` di dekat database tetap ada, atau atur `ERD_ENCRYPTION_KEY_FILE`.
+- Setelah kunci dipulihkan, simpan ulang kredensial yang gagal jika diperlukan.
+
+## 12. Canvas Terasa Berat/Lag Setelah Generate
 **Gejala**: Setelah Anda menekan tombol aksi di bawah balasan AI pada Chat Panel (seperti tombol *Replace All*, *Append*, *Create or Update ERD from SQL*, atau *Create or Update Flowchart*) untuk pertama kalinya, pergerakan tabel atau simbol di canvas terasa berat atau "patah-patah".
 
 **Penyebab**: Ini adalah kendala teknis pada sinkronisasi state awal canvas saat menerima data baru dalam jumlah besar dari AI.

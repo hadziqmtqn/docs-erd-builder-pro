@@ -41,10 +41,13 @@ Siapkan database sesuai mode yang Anda pilih. ERD Builder Pro mendukung tiga mod
 # Buat database
 createdb erd_builder_pro
 
-# Push schema & seed
+# Generate client Local PostgreSQL, push schema & seed data non-auth
+npm run db:generate:pg:local
 npm run db:push:pg:local
 npm run db:seed:pg:local
 ```
+
+Atur juga `ERD_ENCRYPTION_KEY` di `.env` dengan nilai acak minimal 32 karakter. Seed Local PostgreSQL tidak membuat akun default; buat super admin melalui halaman **Create administrator account** saat pertama kali membuka aplikasi.
 
 ## 4. Menjalankan Aplikasi
 Jalankan perintah berikut untuk memulai server pengembangan — sesuaikan dengan mode database Anda:

@@ -20,17 +20,29 @@ Variabel ini wajib diatur agar aplikasi dapat berfungsi.
   - **Local PostgreSQL**: Gunakan `postgresql://user:password@localhost:5432/nama_database`.
 - `PORT`: Port untuk server backend (default: 3000).
 
+## Enkripsi Rahasia (Wajib untuk Web/Self-host)
+Password koneksi database dan API key AI disimpan dalam bentuk terenkripsi di server.
+
+- `ERD_ENCRYPTION_KEY`: Kunci rahasia untuk web, Docker, dan deployment server. Gunakan nilai acak minimal 32 karakter dan gunakan nilai yang sama pada seluruh instance yang membaca database yang sama.
+- `ERD_ENCRYPTION_KEY_FILE`: Path file kunci untuk Desktop/CLI jika `ERD_ENCRYPTION_KEY` tidak diatur. Desktop/CLI akan membuat file kunci lokal di dekat database bila keduanya tidak diatur.
+
+> [!CAUTION]
+> Jangan commit atau membagikan `ERD_ENCRYPTION_KEY`, file kunci, atau `.env`. Jika kunci hilang atau berubah, password DB Connect dan API key AI yang tersimpan tidak dapat didekripsi.
+
 ## Autentikasi (Opsional — Tergantung Mode)
 Variabel berikut **hanya untuk mode Supabase**. Jika menggunakan Local PostgreSQL, variabel ini tidak diperlukan.
 
 - `SUPABASE_URL`: URL API proyek Supabase Anda.
 - `SUPABASE_SERVICE_ROLE_KEY`: Kunci peran layanan (*service_role*) untuk operasi server-side. **Jangan pernah membocorkan kunci ini ke frontend.**
 
-## AI & Realtime Sync (Opsional)
-Variabel dengan prefix `VITE_` ini diperlukan agar fitur AI Context, @mentions, dan sinkronisasi real-time di frontend dapat bekerja.
+## AI, Guest Mode, dan Realtime Sync (Opsional)
+Konfigurasi API key AI dilakukan melalui **Settings > AI Configuration** dan disimpan terenkripsi di database. Tidak ada `AI_API_KEY`, `AI_BASE_URL`, atau `AI_MODEL` yang dibaca dari `.env`.
+
 - `VITE_SUPABASE_URL`: Sama dengan `SUPABASE_URL`, diperlukan oleh client Supabase di browser.
 - `VITE_SUPABASE_ANON_KEY`: Kunci anonim (*anon/public*) untuk akses publik Supabase.
-- `VITE_ENABLE_GUEST_MODE`: Set ke `true` untuk mengizinkan penggunaan fitur dasar tanpa login (default: `true`).
+- `VITE_ENABLE_GUEST_MODE`: Set ke `true` untuk mengizinkan mode Guest (default: `false`).
+- `GUEST_AI_ENABLED`: Set ke `true` untuk mengizinkan Guest memakai AI melalui API key server (default: `false`). Guest dapat menghabiskan kuota API Anda.
+- `AI_ALLOW_PRIVATE_BASE_URL`: Set ke `true` hanya jika sengaja mengizinkan endpoint AI privat seperti Ollama. Biarkan `false` untuk perlindungan SSRF.
 
 ## Storage - Cloudflare R2 (Recommended)
 Disarankan untuk menyimpan aset (gambar/file) secara permanen di Cloudflare R2.
@@ -53,6 +65,8 @@ Fitur opsional untuk mengirimkan *feedback* pengguna ke pengembang melalui **Tel
 | Nama Variabel | Lokal / Dev | Vercel / VPS | Kegunaan |
 | :--- | :---: | :---: | :--- |
 | `DATABASE_URL` | ✅ | ✅ | Koneksi DB |
+| `ERD_ENCRYPTION_KEY` | ✅¹ | ✅ | Enkripsi password DB dan API key AI |
+| `ERD_ENCRYPTION_KEY_FILE` | 💡² | 💡² | File kunci Desktop/CLI |
 | `SUPABASE_URL` | 💡¹ | 💡¹ | Auth Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | 💡¹ | 💡¹ | Admin Auth |
 | `R2_ACCOUNT_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
@@ -62,11 +76,13 @@ Fitur opsional untuk mengirimkan *feedback* pengguna ke pengembang melalui **Tel
 | `R2_PUBLIC_URL` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `VITE_SUPABASE_URL` | 💡² | 💡² | AI & Realtime |
 | `VITE_SUPABASE_ANON_KEY` | 💡² | 💡² | AI & Realtime |
-| `VITE_ENABLE_GUEST_MODE` | 💡 | 💡 | Guest Mode |
+| `VITE_ENABLE_GUEST_MODE` | 💡 | 💡 | Guest Mode (default nonaktif) |
+| `GUEST_AI_ENABLED` | 💡 | 💡 | AI untuk Guest (default nonaktif) |
+| `AI_ALLOW_PRIVATE_BASE_URL` | 💡 | 💡 | Endpoint AI privat (default nonaktif) |
 | `VITE_API_URL` | ❌ | 💡 | Custom Backend URL |
 
 *Keterangan: ✅ Wajib | ⭐️ Recommended | 💡 Opsional | ❌ Tidak Diperlukan*
-*¹ Hanya untuk mode Supabase | ² Hanya jika Supabase digunakan sebagai backend auth*
+*¹ Wajib untuk web/Docker/self-host; Desktop/CLI dapat membuat kunci lokal | ² Alternatif file kunci Desktop/CLI*
 
 ## Panduan Pemasangan
 

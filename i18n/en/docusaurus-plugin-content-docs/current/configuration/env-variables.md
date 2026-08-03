@@ -20,17 +20,29 @@ These variables are mandatory for the application to function.
   - **Local PostgreSQL**: Use `postgresql://user:password@localhost:5432/database_name`.
 - `PORT`: Backend server port (default: 3000).
 
+## Secret Encryption (Required for Web/Self-host)
+Database connection passwords and AI API keys are stored encrypted on the server.
+
+- `ERD_ENCRYPTION_KEY`: Secret key required for web, Docker, and server deployments. Use a random value of at least 32 characters and keep the same value on every instance using the same database.
+- `ERD_ENCRYPTION_KEY_FILE`: Key-file path for Desktop/CLI when `ERD_ENCRYPTION_KEY` is not set. Desktop/CLI creates a local key beside the database when neither value is configured.
+
+> [!CAUTION]
+> Never commit or share `ERD_ENCRYPTION_KEY`, the key file, or `.env`. If the key is lost or changed, stored DB Connect passwords and AI API keys cannot be decrypted.
+
 ## Authentication (Optional — Mode-Dependent)
 The following variables are **only required for Supabase mode**. Not needed for Local PostgreSQL.
 
 - `SUPABASE_URL`: Your Supabase project API URL.
 - `SUPABASE_SERVICE_ROLE_KEY`: The service role key for server-side operations. **Never expose this key to the frontend.**
 
-## AI & Realtime Sync (Optional)
-Variables with the `VITE_` prefix are required for the AI Context, @mentions, and real-time synchronization features to work in the frontend.
+## AI, Guest Mode, and Realtime Sync (Optional)
+AI provider, model, and API key configuration is managed through **Settings > AI Configuration** and stored encrypted in the database. The server does not read `AI_API_KEY`, `AI_BASE_URL`, or `AI_MODEL` from `.env`.
+
 - `VITE_SUPABASE_URL`: Same as `SUPABASE_URL`, required by the Supabase client in the browser.
 - `VITE_SUPABASE_ANON_KEY`: Anonymous (anon/public) key for public Supabase access.
-- `VITE_ENABLE_GUEST_MODE`: Set to `true` to allow basic features without login (default: `true`).
+- `VITE_ENABLE_GUEST_MODE`: Set to `true` to enable Guest mode (default: `false`).
+- `GUEST_AI_ENABLED`: Set to `true` to let Guests use AI through the server API key (default: `false`). Guests may consume your API quota.
+- `AI_ALLOW_PRIVATE_BASE_URL`: Set to `true` only when intentionally allowing private AI endpoints such as Ollama. Keep `false` for SSRF protection.
 
 ## Storage - Cloudflare R2 (Recommended)
 It is recommended to store assets (images/files) permanently in Cloudflare R2.
@@ -53,6 +65,8 @@ Optional feature to send user feedback to the developer via a **Telegram bot**.
 | Variable Name | Local / Dev | Vercel / VPS | Usage |
 | :--- | :---: | :---: | :--- |
 | `DATABASE_URL` | ✅ | ✅ | DB Connection |
+| `ERD_ENCRYPTION_KEY` | ✅¹ | ✅ | DB password and AI API key encryption |
+| `ERD_ENCRYPTION_KEY_FILE` | 💡² | 💡² | Desktop/CLI key file |
 | `SUPABASE_URL` | 💡¹ | 💡¹ | Supabase Auth |
 | `SUPABASE_SERVICE_ROLE_KEY` | 💡¹ | 💡¹ | Admin Auth |
 | `R2_ACCOUNT_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
@@ -62,11 +76,13 @@ Optional feature to send user feedback to the developer via a **Telegram bot**.
 | `R2_PUBLIC_URL` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `VITE_SUPABASE_URL` | 💡² | 💡² | AI & Realtime |
 | `VITE_SUPABASE_ANON_KEY` | 💡² | 💡² | AI & Realtime |
-| `VITE_ENABLE_GUEST_MODE` | 💡 | 💡 | Guest Mode |
+| `VITE_ENABLE_GUEST_MODE` | 💡 | 💡 | Guest Mode (disabled by default) |
+| `GUEST_AI_ENABLED` | 💡 | 💡 | Guest AI (disabled by default) |
+| `AI_ALLOW_PRIVATE_BASE_URL` | 💡 | 💡 | Private AI endpoints (disabled by default) |
 | `VITE_API_URL` | ❌ | 💡 | Custom Backend URL |
 
 *Note: ✅ Required | ⭐️ Recommended | 💡 Optional | ❌ Not Required*
-*¹ Supabase mode only | ² Only if Supabase is used as backend auth*
+*¹ Required for web/Docker/self-host; Desktop/CLI can generate a local key | ² Desktop/CLI key-file alternative*
 
 ## Setup Guide
 

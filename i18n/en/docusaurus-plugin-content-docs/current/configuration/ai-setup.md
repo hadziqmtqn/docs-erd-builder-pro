@@ -40,20 +40,23 @@ Use this if you are using a proxy or self-hosted service that follows the OpenAI
 
 ## Environment Variables (.env)
 
-If you want to set the configuration permanently at the server level (without going through the UI), you can use the following variables in the `.env` file:
+Provider, model, and API key configuration is managed through **Settings > AI Configuration** and stored in the database. The server does not currently read `AI_PROVIDER`, `AI_API_KEY`, `AI_BASE_URL`, or `AI_MODEL` from `.env`.
 
-| Variable Name | Description | Example |
-| :--- | :--- | :--- |
-| `AI_PROVIDER` | Default AI provider (`openai`, `google`, or `custom`) | `openai` |
-| `AI_API_KEY` | Main API Key | `sk-...` |
-| `AI_BASE_URL` | Endpoint (specific to `custom`) | `http://.../v1` |
-| `AI_MODEL` | Default Model ID | `gpt-4o-mini` |
+For web/Docker/self-host deployments, configure the server encryption key:
+
+```env
+ERD_ENCRYPTION_KEY="random-key-at-least-32-characters-long"
+```
+
+This key encrypts AI API keys before they are stored and decrypts them for `/api/ai/proxy`, connection tests, and model-list requests. Keep the same key for the lifetime of the database.
 
 ## Data Security
 
-- **Local Storage:** If set via the UI, the API Key is stored locally in your browser (or encrypted in the database if logged in).
-- **Security:** Your API Key is never shared with any third party other than the service provider you choose.
-- **Encryption:** Connections to the AI provider always use the HTTPS protocol.
+- **Server-side storage:** API keys saved through the UI are never returned to the frontend; the UI receives only the `***` placeholder.
+- **Encryption:** API keys are encrypted in the database using `ERD_ENCRYPTION_KEY`.
+- **Proxy:** The API key is sent only from the server to the selected provider. Do not put keys in URLs or commit them to a repository.
+- **Private endpoints:** Private AI endpoints are blocked by default for SSRF protection. Enable `AI_ALLOW_PRIVATE_BASE_URL=true` only for an internal endpoint you control.
+- **Guest access:** Guest AI is disabled by default. `GUEST_AI_ENABLED=true` lets Guests use the server API key and may consume your quota.
 
 ---
 *Note: If you experience connection issues, make sure your API quota is still sufficient and the API Key has the correct permissions.*

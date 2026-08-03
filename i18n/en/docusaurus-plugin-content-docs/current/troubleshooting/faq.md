@@ -36,7 +36,7 @@ Since authentication uses Supabase, you can reset your password or manage user a
 For self-hosted mode using local authentication (not Supabase), use the following CLI script from the project directory:
 
 ```bash
-npm run reset-password -- --email admin@local.dev --password newpassword123
+npm run reset-password -- --email your-admin-email@example.com --password newpassword123
 ```
 
 This script will:
@@ -45,3 +45,12 @@ This script will:
 - Update the password in the database
 
 No application restart required. The user can log in immediately with the new password.
+
+### Why is `admin@local.dev` / `admin123` invalid in self-host mode?
+That combination is only the Desktop/CLI bootstrap credential. Local PostgreSQL self-host mode rejects it so a shared deployment does not run with a default password. After an empty database starts, use **Create administrator account** to create a super admin with a new email and password.
+
+### Why does the super-admin registration page appear again?
+It appears when the database has no configured super admin or still contains the bootstrap account. Register with a new email/password and ensure the application uses the same `DATABASE_URL` as the database you seeded. `/api/auth-config` reads setup status directly from the database.
+
+### What happens if `ERD_ENCRYPTION_KEY` is lost or changed?
+Stored DB Connect passwords and AI API keys cannot be decrypted. Restore the same key from your secret manager or environment backup. Do not generate a new key for an existing database unless you are ready to save all encrypted credentials again.

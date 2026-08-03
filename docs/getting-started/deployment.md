@@ -15,6 +15,7 @@ Ini adalah cara tercepat untuk menjalankan ERD Builder Pro di server sendiri (se
 Anda **tetap wajib** menyiapkan file `.env` yang berisi konfigurasi **Database** dan **Cloudflare R2**:
 - `DATABASE_URL` — connection string PostgreSQL (wajib, baik Supabase maupun Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — hanya jika menggunakan mode **Supabase**
+- `ERD_ENCRYPTION_KEY` — wajib untuk menyimpan password DB Connect dan API key AI secara aman pada deployment web/Docker
 - R2 vars — disarankan agar fitur unggah file/gambar berfungsi penuh
 
 Jika R2 tidak disiapkan, fitur unggah file/gambar akan error. Untuk mode **Local PostgreSQL**, pastikan database PostgreSQL dapat dijangkau dari container.
@@ -27,12 +28,20 @@ Jika R2 tidak disiapkan, fitur unggah file/gambar akan error. Untuk mode **Local
    ```
 2. **Jalankan Container:**
    ```bash
-   docker run -d \
-     -p 3000:3000 \
-     --name erd-builder-pro \
-     --env-file .env \
-     bekenweb/erd-builder-pro:latest
-   ```
+docker run -d \
+  -p 3000:3000 \
+  --name erd-builder-pro \
+  --env-file .env \
+  bekenweb/erd-builder-pro:latest
+```
+
+Untuk Local PostgreSQL, isi `.env` minimal seperti berikut:
+```env
+DATABASE_URL="postgresql://user:password@db:5432/erd_builder_pro"
+ERD_ENCRYPTION_KEY="ganti-dengan-kunci-acak-minimal-32-karakter"
+```
+
+Jangan gunakan atau membagikan `admin@local.dev` / `admin123`. Setelah database Local PostgreSQL kosong, aplikasi menampilkan setup satu kali untuk membuat super admin baru.
 
 :::info
 Variabel lingkungan Vite (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) sudah terpasang (*baked-in*) di dalam image Docker Hub. Pastikan Anda menggunakan tag image yang sesuai dengan kebutuhan Anda.
@@ -83,11 +92,9 @@ npm install -g erdbpro
 erdbpro
 ```
 
-**Login:**
-- **Email:** `admin@local.dev`
-- **Password:** `admin123`
+**Login:** CLI menggunakan SQLite lokal dan auto-login ke dashboard; tidak ada halaman login atau kredensial default yang perlu dibagikan.
 
-Data tersimpan di `~/.erdbpro/` (SQLite). Zero config, selalu siap pakai.
+Data tersimpan di `~/.erdbpro/` (SQLite). Zero config, selalu siap pakai. Kunci enkripsi lokal dibuat di dekat database jika `ERD_ENCRYPTION_KEY` dan `ERD_ENCRYPTION_KEY_FILE` tidak diatur.
 
 ### Perintah CLI
 

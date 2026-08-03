@@ -36,7 +36,7 @@ Karena autentikasi menggunakan Supabase, Anda dapat mereset password atau mengel
 Untuk mode self-hosted yang menggunakan autentikasi lokal (bukan Supabase), gunakan script CLI berikut dari direktori proyek:
 
 ```bash
-npm run reset-password -- --email admin@local.dev --password passwordbaru123
+npm run reset-password -- --email email-admin-anda@example.com --password passwordbaru123
 ```
 
 Script ini akan:
@@ -45,3 +45,12 @@ Script ini akan:
 - Memperbarui password di database
 
 Tidak perlu restart aplikasi. User bisa langsung login dengan password baru.
+
+### Mengapa login `admin@local.dev` / `admin123` tidak valid di self-host?
+Kombinasi tersebut hanya kredensial bootstrap untuk Desktop/CLI. Self-host Local PostgreSQL menolaknya agar deployment bersama tidak berjalan dengan password default. Setelah database kosong, gunakan halaman **Create administrator account** untuk membuat akun super admin dengan email dan password baru.
+
+### Mengapa halaman registrasi super admin muncul lagi?
+Halaman tersebut muncul jika database belum memiliki super admin yang dikonfigurasi atau masih berisi akun bootstrap. Pastikan registrasi menggunakan email/password baru dan aplikasi memakai `DATABASE_URL` yang sama dengan database yang Anda seed. `/api/auth-config` membaca status setup langsung dari database.
+
+### Apa yang terjadi jika `ERD_ENCRYPTION_KEY` hilang atau berubah?
+Password DB Connect dan API key AI yang tersimpan tidak dapat didekripsi. Pulihkan kunci yang sama dari secret manager atau backup environment. Jangan membuat kunci baru untuk database lama kecuali Anda siap menyimpan ulang seluruh kredensial terenkripsi.

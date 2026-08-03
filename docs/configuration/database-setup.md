@@ -11,10 +11,10 @@ ERD Builder Pro mendukung **tiga mode database**. Pilih salah satu sesuai kebutu
 | **Cocok untuk** | Production / Cloud | Development / Self-hosted | Aplikasi Desktop / Tauri |
 | **Autentikasi** | Supabase Auth (JWT) | Lokal (email + password) | Lokal (email + password) |
 | **ID Type** | `BigInt` | `Int` | `Int` |
-| **Env vars tambahan** | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | — | — |
+| **Env vars tambahan** | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ERD_ENCRYPTION_KEY` | `ERD_ENCRYPTION_KEY` | — |
 | **Setup schema** | SQL Editor di Dashboard Supabase | `npm run db:push:pg:local` | `npm run db:push:sqlite` |
 | **Seed data** | — (via SQL Editor) | `npm run db:seed:pg:local` | `npm run db:seed:sqlite` |
-| **Generate client** | `npm run db:generate:pg` | `npm run db:generate:pg` | `npm run db:generate:sqlite` |
+| **Generate client** | `npm run db:generate:pg` | `npm run db:generate:pg:local` | `npm run db:generate:sqlite` |
 | **Jalankan** | `npm run dev` | `npm run dev:pg:local` | `npm run dev:desktop` |
 
 ---
@@ -122,9 +122,9 @@ Aplikasi akan otomatis mendeteksi mode Local PostgreSQL selama `SUPABASE_URL` ti
 
 ### 3. Generate Prisma Client
 ```bash
-npm run db:generate:pg
+npm run db:generate:pg:local
 ```
-Sama seperti mode Supabase, menggunakan schema `schema.pg.prisma` (varian Local PostgreSQL).
+Perintah ini menggunakan schema `schema.pg.prisma` (varian Local PostgreSQL). Jangan gunakan `npm run db:generate:pg`, karena perintah tersebut memilih schema Supabase.
 
 ### 4. Push Schema
 ```bash
@@ -141,7 +141,7 @@ npm run db:seed:pg:local
 Output:
 ```
 Seeding database...
-  ✓ Admin user: admin@local.dev
+  - Self-host admin user skipped; use the one-time setup screen
   ✓ AI Providers: OpenAI, Gemini, OpenAI Compatible
   ✓ OpenAI models: GPT-4o, GPT-4o Mini, GPT-4 Turbo
   ✓ Gemini models: Gemini 1.5 Pro, Gemini 1.5 Flash
@@ -151,11 +151,11 @@ Seeding database...
 ✅ Seed complete
 ```
 
-**Default credentials**:
-- Email: `admin@local.dev`
-- Password: `admin123`
+Seed Local PostgreSQL tidak membuat kredensial default. Setelah database kosong, buka aplikasi dan gunakan halaman **Create administrator account** untuk membuat super admin pertama.
 
-> Seed script menggunakan Prisma 7 adapter pattern yang sama. Pastikan `DATABASE_URL` di `.env` mengarah ke database lokal Anda.
+> Jangan gunakan `admin@local.dev` / `admin123` pada self-host. Kombinasi tersebut adalah kredensial bootstrap Desktop/CLI dan ditolak oleh login self-host.
+
+> Seed script menggunakan Prisma 7 adapter pattern yang sama. Pastikan `DATABASE_URL` di `.env` mengarah ke database lokal Anda dan `ERD_ENCRYPTION_KEY` sudah diatur.
 
 ### 6. Jalankan Aplikasi
 ```bash
@@ -163,7 +163,7 @@ npm run dev:pg:local
 ```
 Aplikasi akan tersedia di `http://localhost:3000`.
 
-> Mode Local PostgreSQL menggunakan autentikasi lokal (email + password) dengan Prisma Session, bukan Supabase Auth. Semua akun lokal otomatis menjadi admin.
+> Mode Local PostgreSQL menggunakan autentikasi lokal (email + password) dengan Prisma Session, bukan Supabase Auth. Super admin dibuat melalui setup awal.
 
 ---
 
@@ -205,9 +205,7 @@ Seeding SQLite database...
 ✅ Seed complete
 ```
 
-**Default credentials**:
-- Email: `admin@local.dev` (ubah dengan env `ADMIN_EMAIL`)
-- Password: `admin123` (ubah dengan env `ADMIN_PASSWORD`)
+Seed Desktop/SQLite mempertahankan akun bootstrap internal `admin@local.dev` untuk kompatibilitas data lokal. Aplikasi Desktop/CLI menggunakan auto-login; kredensial bootstrap ini bukan kredensial untuk self-host dan tidak boleh dipakai dalam deployment bersama.
 
 ### 4. Verifikasi
 ```bash
@@ -231,7 +229,7 @@ npm run dev:tauri           # membuka jendela Tauri
 > `dev:desktop` menggunakan `DATABASE_URL=file:./data.db` dan me-*override* nilai di `.env`, sehingga kedua mode (Supabase PG di `.env` dan SQLite di script) bisa berjalan berdampingan.
 
 ### 6. Login Bootstrap
-Saat pertama kali aplikasi desktop dijalankan, user pertama yang mendaftar otomatis menjadi admin. Setelah melakukan seed, fitur ini tidak lagi diperlukan.
+Desktop/CLI melakukan auto-login melalui server lokal tanpa halaman login. File kunci enkripsi lokal dibuat di dekat database bila `ERD_ENCRYPTION_KEY` dan `ERD_ENCRYPTION_KEY_FILE` tidak diatur.
 
 ---
 
@@ -242,7 +240,8 @@ Saat pertama kali aplikasi desktop dijalankan, user pertama yang mendaftar otoma
 | `npm run db:generate:sqlite` | Generate Prisma Client | `schema.sqlite.prisma` | — |
 | `npm run db:push:sqlite` | Buat tabel SQLite | `schema.sqlite.prisma` | `file:./data.db` |
 | `npm run db:seed:sqlite` | Seed data SQLite | (via `seed.sqlite.ts`) | `file:./data.db` |
-| `npm run db:generate:pg` | Generate Prisma Client | `schema.prisma` / `schema.pg.prisma` | — |
+| `npm run db:generate:pg` | Generate Prisma Client Supabase | `schema.prisma` | — |
+| `npm run db:generate:pg:local` | Generate Prisma Client Local PG | `schema.pg.prisma` | — |
 | `npm run db:push:pg:local` | Buat tabel Local PG | `schema.pg.prisma` | (dari `.env`) |
 | `npm run db:seed:pg:local` | Seed Local PG | (via `seed.sqlite.ts`) | (dari `.env`) |
 | `npm run dev` | Jalankan mode Supabase | `schema.prisma` | (dari `.env`) |
@@ -256,7 +255,7 @@ Saat pertama kali aplikasi desktop dijalankan, user pertama yang mendaftar otoma
 | Aspek | Supabase | Local PostgreSQL / Desktop |
 |:---|:---|:---|
 | **Tipe ID** | `BigInt` (via `toProjectId()`) | `Number` / `Int` |
-| **Status Admin** | Dikelola via Supabase Auth | Semua user lokal otomatis admin |
+| **Status Admin** | Dikelola via Supabase Auth | Super admin dibuat melalui setup awal |
 | **Auth** | Supabase Auth (JWT) | Prisma Session (lokal) |
 | **Kolom `uid`** | `@default(uuid())` di Prisma | Harus diisi manual via `randomUUID()` (SQLite) |
 
