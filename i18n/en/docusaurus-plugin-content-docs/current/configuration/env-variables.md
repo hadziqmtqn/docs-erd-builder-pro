@@ -33,7 +33,15 @@ Database connection passwords and AI API keys are stored encrypted on the server
 The following variables are **only required for Supabase mode**. Not needed for Local PostgreSQL.
 
 - `SUPABASE_URL`: Your Supabase project API URL.
+- `SUPABASE_ANON_KEY`: The anon/public key used by the server to validate Supabase sessions.
 - `SUPABASE_SERVICE_ROLE_KEY`: The service role key for server-side operations. **Never expose this key to the frontend.**
+
+## Web MCP (Optional — Supabase Mode Only)
+
+- `MCP_PUBLIC_URL`: Canonical HTTPS URL of the MCP Streamable HTTP endpoint, including its path, such as `https://app.example.com/api/mcp` or `https://mcp.example.com/api/mcp`. Setting this variable enables public MCP.
+- `MCP_AUTH_ISSUER_URL`: OAuth issuer override. Leave unset to use `${SUPABASE_URL}/auth/v1`; set it only when Supabase Auth uses a custom domain.
+
+`MCP_PUBLIC_URL` must exactly match the JWT `aud` claim produced by the Supabase Custom Access Token Hook. Web MCP is unavailable in Local PostgreSQL, Desktop, and CLI modes. See [Web MCP configuration](./mcp#web-mcp-public-api).
 
 ## AI, Guest Mode, and Realtime Sync (Optional)
 AI provider, model, and API key configuration is managed through **Settings > AI Configuration** and stored encrypted in the database. The server does not read `AI_API_KEY`, `AI_BASE_URL`, or `AI_MODEL` from `.env`.
@@ -68,7 +76,10 @@ Optional feature to send user feedback to the developer via a **Telegram bot**.
 | `ERD_ENCRYPTION_KEY` | ✅¹ | ✅ | DB password and AI API key encryption |
 | `ERD_ENCRYPTION_KEY_FILE` | 💡² | 💡² | Desktop/CLI key file |
 | `SUPABASE_URL` | 💡¹ | 💡¹ | Supabase Auth |
+| `SUPABASE_ANON_KEY` | 💡¹ | 💡¹ | Supabase session validation |
 | `SUPABASE_SERVICE_ROLE_KEY` | 💡¹ | 💡¹ | Admin Auth |
+| `MCP_PUBLIC_URL` | 💡 | 💡 | Public Web MCP + OAuth resource |
+| `MCP_AUTH_ISSUER_URL` | 💡 | 💡 | Custom MCP OAuth issuer |
 | `R2_ACCOUNT_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_ACCESS_KEY_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_SECRET_ACCESS_KEY` | ⭐️ | ⭐️ | Cloudflare R2 |

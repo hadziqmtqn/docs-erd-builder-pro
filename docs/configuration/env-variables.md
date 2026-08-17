@@ -33,7 +33,15 @@ Password koneksi database dan API key AI disimpan dalam bentuk terenkripsi di se
 Variabel berikut **hanya untuk mode Supabase**. Jika menggunakan Local PostgreSQL, variabel ini tidak diperlukan.
 
 - `SUPABASE_URL`: URL API proyek Supabase Anda.
+- `SUPABASE_ANON_KEY`: Kunci anon/public yang dipakai server untuk memvalidasi sesi Supabase.
 - `SUPABASE_SERVICE_ROLE_KEY`: Kunci peran layanan (*service_role*) untuk operasi server-side. **Jangan pernah membocorkan kunci ini ke frontend.**
+
+## MCP Web (Opsional — Hanya Mode Supabase)
+
+- `MCP_PUBLIC_URL`: URL HTTPS kanonis endpoint Streamable HTTP MCP, termasuk path, misalnya `https://app.example.com/api/mcp` atau `https://mcp.example.com/api/mcp`. Mengaktifkan public MCP saat variabel ini diisi.
+- `MCP_AUTH_ISSUER_URL`: Override issuer OAuth. Kosongkan untuk memakai `${SUPABASE_URL}/auth/v1`; isi hanya jika Supabase Auth menggunakan custom domain.
+
+Nilai `MCP_PUBLIC_URL` harus sama persis dengan claim JWT `aud` yang dihasilkan oleh Custom Access Token Hook Supabase. MCP Web tidak tersedia pada Local PostgreSQL, Desktop, atau CLI. Lihat [konfigurasi MCP Web](./mcp#mcp-web-public-api).
 
 ## AI, Guest Mode, dan Realtime Sync (Opsional)
 Konfigurasi API key AI dilakukan melalui **Settings > AI Configuration** dan disimpan terenkripsi di database. Tidak ada `AI_API_KEY`, `AI_BASE_URL`, atau `AI_MODEL` yang dibaca dari `.env`.
@@ -68,7 +76,10 @@ Fitur opsional untuk mengirimkan *feedback* pengguna ke pengembang melalui **Tel
 | `ERD_ENCRYPTION_KEY` | ✅¹ | ✅ | Enkripsi password DB dan API key AI |
 | `ERD_ENCRYPTION_KEY_FILE` | 💡² | 💡² | File kunci Desktop/CLI |
 | `SUPABASE_URL` | 💡¹ | 💡¹ | Auth Supabase |
+| `SUPABASE_ANON_KEY` | 💡¹ | 💡¹ | Validasi sesi Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | 💡¹ | 💡¹ | Admin Auth |
+| `MCP_PUBLIC_URL` | 💡 | 💡 | Public MCP Web + OAuth resource |
+| `MCP_AUTH_ISSUER_URL` | 💡 | 💡 | Custom issuer OAuth MCP |
 | `R2_ACCOUNT_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_ACCESS_KEY_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_SECRET_ACCESS_KEY` | ⭐️ | ⭐️ | Cloudflare R2 |
