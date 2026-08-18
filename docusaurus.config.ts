@@ -49,6 +49,7 @@ const config: Config = {
         },
         blog: false,
         sitemap: {
+          filename: 'sitemap-v1.xml',
           lastmod: 'date',
           changefreq: 'weekly',
           priority: 0.5,

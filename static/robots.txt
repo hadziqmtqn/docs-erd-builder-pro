@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://docs.erdbuilderpro.com/sitemap-v1.txt
+Sitemap: https://docs.erdbuilderpro.com/sitemap-v1.xml
