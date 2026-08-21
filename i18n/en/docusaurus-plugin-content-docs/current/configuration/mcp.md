@@ -114,7 +114,7 @@ Web MCP does not register tools for DB Client, database connections, SQL queries
 
 1. Update ERD Builder Pro to a release that includes MCP.
 2. Open the CLI or Desktop application at least once so its local database and user are created.
-3. Select your operating system tab to see the CLI installation command and Desktop executable location.
+3. Select your operating system tab for installation steps. Once the app is running, generate client configuration from **Settings → MCP Integration**.
 
 <Tabs>
   <TabItem value="macos" label="macOS" default>
@@ -126,22 +126,7 @@ npm install -g erdbpro@latest
 erdbpro --version
 ```
 
-The Desktop production executable is usually located at:
-
-```text
-/Applications/ERD Builder Pro.app/Contents/MacOS/ERD Builder Pro
-```
-
-Direct Desktop configuration:
-
-```json
-{
-  "command": "/Applications/ERD Builder Pro.app/Contents/MacOS/ERD Builder Pro",
-  "args": ["--mcp"]
-}
-```
-
-If the application is installed elsewhere, use its actual executable path.
+Install Desktop from the `.dmg` release, open it once, then use **Settings → MCP Integration**. Do not copy the `.app` path or `--mcp` argument manually; the panel provides the correct launcher for the active installation.
 
   </TabItem>
   <TabItem value="windows" label="Windows">
@@ -153,23 +138,7 @@ npm install -g erdbpro@latest
 erdbpro --version
 ```
 
-The Desktop production executable is usually located in one of these paths:
-
-```text
-C:\Program Files\ERD Builder Pro\ERD Builder Pro.exe
-C:\Users\<username>\AppData\Local\Programs\ERD Builder Pro\ERD Builder Pro.exe
-```
-
-Example direct Desktop configuration:
-
-```json
-{
-  "command": "C:\\Program Files\\ERD Builder Pro\\ERD Builder Pro.exe",
-  "args": ["--mcp"]
-}
-```
-
-Adjust `command` to the actual installation path.
+Install Desktop from the `.msi` release, open it once, then use **Settings → MCP Integration**. Do not copy the `.exe` path or `--mcp` argument manually; the panel provides the launcher and correct Windows escaping.
 
   </TabItem>
   <TabItem value="linux" label="Linux">
@@ -181,147 +150,66 @@ npm install -g erdbpro@latest
 erdbpro --version
 ```
 
-The Desktop production executable is usually located in one of these paths:
-
-```text
-/usr/bin/erd-builder-pro
-/usr/local/bin/erd-builder-pro
-/opt/ERD Builder Pro/ERD Builder Pro
-```
-
-Example direct Desktop configuration:
-
-```json
-{
-  "command": "/usr/bin/erd-builder-pro",
-  "args": ["--mcp"]
-}
-```
-
-Adjust `command` to the actual executable path.
+Install Desktop from the `.deb` release, open it once, then use **Settings → MCP Integration**. Do not copy an executable path or `--mcp` argument manually; the panel provides the launcher and correct POSIX escaping.
 
   </TabItem>
 </Tabs>
 
 The `erdbpro mcp` command uses `stdio`, so it does not show the web interface or open a network port.
 
+### Configure from the Desktop or CLI app
+
+In the Desktop or CLI app, open **Settings → MCP Integration**. This page shows the `stdio` launcher for the active installation and provides ready-to-copy configurations for:
+
+- JetBrains AI;
+- VS Code;
+- Codex;
+- Hermes Agent; and
+- generic MCP clients that support `stdio`.
+
+Choose a client, click **Copy**, and paste the configuration into the AI client. `command` and `args` come from the active runtime and must not be replaced with a fixed example. On Windows, the Codex command uses Windows escaping; on macOS/Linux, it uses POSIX quoting. Use only one configuration in each AI client so it does not start two identical local MCP servers.
+
 ### Client configuration
 
 #### Codex
 
-Add the server with the Codex CLI:
+Select the **Codex** tab, click **Copy**, and run the displayed command once in a terminal. It already contains the correct runtime command and arguments for the active OS and Desktop/CLI installation. Then verify it with:
 
 ```bash
-codex mcp add erdbpro -- erdbpro mcp
 codex mcp list
-```
-
-Alternatively, add the following configuration to `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.erdbpro]
-command = "erdbpro"
-args = ["mcp"]
-default_tools_approval_mode = "writes"
 ```
 
 See the [Codex MCP documentation](https://developers.openai.com/codex/mcp/) for more details.
 
-#### Claude Desktop
+#### JetBrains AI
 
-Add this server to `claude_desktop_config.json`:
+Open **Settings → Tools → AI Assistant → Model Context Protocol (MCP)**, then copy the output from the **JetBrains AI** tab into JetBrains' JSON server configuration. Do not replace the command or arguments with `erdbpro mcp`.
 
-```json
-{
-  "mcpServers": {
-    "erdbpro": {
-      "command": "erdbpro",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-Save the configuration and restart Claude Desktop. The equivalent Claude Code command is:
-
-```bash
-claude mcp add erdbpro -- erdbpro mcp
-```
-
-See the [Claude MCP guide](https://docs.anthropic.com/en/docs/mcp) for operating-system-specific configuration locations.
+See the [JetBrains MCP documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) as well.
 
 #### Visual Studio Code
 
-Create `.vscode/mcp.json` in the workspace or open **MCP: Open User Configuration**, then use:
+Create `.vscode/mcp.json` in the workspace or open **MCP: Open User Configuration**, then paste the output from the **VS Code** tab. It already uses the `servers` format and `type: "stdio"` required by VS Code.
 
-```json
-{
-  "servers": {
-    "erdbpro": {
-      "type": "stdio",
-      "command": "erdbpro",
-      "args": ["mcp"]
-    }
-  }
-}
-```
+After saving, run **MCP: List Servers**, then start or restart the `erdbpro` server. See the [VS Code MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
 
-After saving, run **MCP: List Servers** and start or restart `erdbpro`. See the [VS Code MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
+#### Hermes Agent
 
-#### Using Desktop application data through the CLI
+Select the **Hermes Agent** tab, then fill the **Add MCP Server** dialog with the displayed values:
 
-Use the CLI launcher with the additional `--desktop` argument:
+- **Name**: `erdbpro`;
+- **Transport**: `stdio`;
+- **Command**: the `Command` value from the panel;
+- **Args**: the `Args` value from the panel; and
+- **Environment**: empty.
 
-```json
-{
-  "command": "erdbpro",
-  "args": ["mcp", "--desktop"]
-}
-```
+Do not replace these values with the old command. If `Args` shows `(leave empty)`, leave the args field empty.
 
-The launcher detects the Desktop executable in standard macOS, Windows, and Linux installation locations. In development, run the MCP client with the repository root as its working directory to use the Desktop dev database. If the app is installed in a custom location, set `ERDBPRO_DESKTOP_MCP_TARGET` to the Desktop executable path.
+#### Generic MCP (STDIO)
 
-#### JetBrains AI Assistant (including Codex)
+For other agents that accept a standard MCP configuration, select the **Generic MCP (STDIO)** tab and paste the generated JSON. Use the command and arguments exactly as shown in the panel.
 
-JetBrains AI Assistant supports local MCP through the `stdio` transport. Open **Settings > Tools > AI Assistant > Model Context Protocol (MCP)**, click **Add**, select **STDIO**, and use one of the configurations below. See the [JetBrains MCP documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) as well.
-
-Choose **exactly one** option. Both options expose the same local tools; enabling both adds no capability and can make JetBrains start two MCP processes with the same tool names and Desktop database.
-
-##### Option A — CLI launcher for Desktop data
-
-Use this option when the npm CLI package is installed:
-
-```bash
-npm install -g erdbpro@latest
-erdbpro --version
-```
-
-JetBrains configuration:
-
-```json
-{
-  "mcpServers": {
-    "erdbpro-desktop": {
-      "command": "erdbpro",
-      "args": ["mcp", "--desktop"]
-    }
-  }
-}
-```
-
-`erdbpro mcp --desktop` is a launcher that detects the Desktop application. If the client's working directory is the repository root and contains `src-tauri/tauri.conf.json` and `dist-server/mcp.js`, the launcher can select the Desktop development database `data.db`. Do not use the repository root as the working directory when you intend to use the installed Desktop production database; use Option B for an explicit production target.
-
-##### Option B — direct Desktop production executable
-
-This option does not require the npm CLI. Use the configuration in the operating-system tab under [Prerequisites by operating system](#prerequisites-by-operating-system). The executable path and JSON examples for macOS, Windows, and Linux are provided there.
-
-The argument must be `--mcp`, not `mcp`. The Desktop binary enters MCP mode only when it receives this flag.
-
-:::warning[Do not enable both options]
-If both servers are present in the JetBrains list, disable or remove one of them, then click **Apply** or **Reconnect** and restart AI Assistant. Enabling both launchers can cause two servers to register `workspace_list_files`, `document_read`, `history_list`, and the other local tools with the same names.
-:::
-
-After connecting, click the icon in the **Status** column to review the available tools. Test with a read-only request such as “list my Desktop projects and documents.”
+After connecting, test with a read-only request such as “list my Desktop projects and documents.”
 
 ### Available local tools
 

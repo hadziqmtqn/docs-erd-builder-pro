@@ -114,7 +114,7 @@ MCP Web tidak mendaftarkan tool DB Client, koneksi database, query SQL, kredensi
 
 1. Perbarui ERD Builder Pro ke versi yang sudah menyertakan MCP.
 2. Buka aplikasi CLI atau Desktop setidaknya satu kali agar database dan user lokal dibuat.
-3. Pilih tab OS Anda untuk melihat perintah instalasi CLI dan lokasi executable Desktop.
+3. Pilih tab OS Anda untuk melihat langkah instalasi. Setelah aplikasi berjalan, konfigurasi klien dibuat dari **Settings → MCP Integration**.
 
 <Tabs>
   <TabItem value="macos" label="macOS" default>
@@ -126,22 +126,7 @@ npm install -g erdbpro@latest
 erdbpro --version
 ```
 
-Executable Desktop production biasanya berada di:
-
-```text
-/Applications/ERD Builder Pro.app/Contents/MacOS/ERD Builder Pro
-```
-
-Konfigurasi langsung ke Desktop:
-
-```json
-{
-  "command": "/Applications/ERD Builder Pro.app/Contents/MacOS/ERD Builder Pro",
-  "args": ["--mcp"]
-}
-```
-
-Jika aplikasi berada di lokasi lain, gunakan path executable yang sebenarnya.
+Pasang Desktop dari rilis `.dmg`, buka aplikasi sekali, lalu gunakan **Settings → MCP Integration**. Jangan menyalin path `.app` atau argumen `--mcp` secara manual; panel tersebut menyediakan launcher yang benar untuk instalasi aktif.
 
   </TabItem>
   <TabItem value="windows" label="Windows">
@@ -153,23 +138,7 @@ npm install -g erdbpro@latest
 erdbpro --version
 ```
 
-Executable Desktop production biasanya berada di salah satu lokasi berikut:
-
-```text
-C:\Program Files\ERD Builder Pro\ERD Builder Pro.exe
-C:\Users\<username>\AppData\Local\Programs\ERD Builder Pro\ERD Builder Pro.exe
-```
-
-Contoh konfigurasi langsung ke Desktop:
-
-```json
-{
-  "command": "C:\\Program Files\\ERD Builder Pro\\ERD Builder Pro.exe",
-  "args": ["--mcp"]
-}
-```
-
-Sesuaikan `command` dengan lokasi instalasi yang sebenarnya.
+Pasang Desktop dari rilis `.msi`, buka aplikasi sekali, lalu gunakan **Settings → MCP Integration**. Jangan menyalin path `.exe` atau argumen `--mcp` secara manual; panel tersebut menyediakan launcher dan escaping Windows yang benar.
 
   </TabItem>
   <TabItem value="linux" label="Linux">
@@ -181,147 +150,66 @@ npm install -g erdbpro@latest
 erdbpro --version
 ```
 
-Executable Desktop production biasanya berada di salah satu lokasi berikut:
-
-```text
-/usr/bin/erd-builder-pro
-/usr/local/bin/erd-builder-pro
-/opt/ERD Builder Pro/ERD Builder Pro
-```
-
-Contoh konfigurasi langsung ke Desktop:
-
-```json
-{
-  "command": "/usr/bin/erd-builder-pro",
-  "args": ["--mcp"]
-}
-```
-
-Sesuaikan `command` dengan lokasi executable yang sebenarnya.
+Pasang Desktop dari rilis `.deb`, buka aplikasi sekali, lalu gunakan **Settings → MCP Integration**. Jangan menyalin path executable atau argumen `--mcp` secara manual; panel tersebut menyediakan launcher dan escaping POSIX yang benar.
 
   </TabItem>
 </Tabs>
 
 Perintah `erdbpro mcp` menggunakan `stdio`, sehingga tidak menampilkan antarmuka web atau membuka port jaringan.
 
+### Konfigurasi dari aplikasi Desktop atau CLI
+
+Pada aplikasi Desktop atau CLI, buka **Settings → MCP Integration**. Halaman ini menampilkan launcher `stdio` yang sesuai dengan instalasi aktif dan menyediakan konfigurasi siap salin untuk:
+
+- JetBrains AI;
+- VS Code;
+- Codex;
+- Hermes Agent; dan
+- klien MCP generik yang mendukung `stdio`.
+
+Pilih klien, klik **Copy**, lalu tempel konfigurasi tersebut pada klien AI. `command` dan `args` dihasilkan dari runtime aktif, sehingga tidak boleh diganti dengan contoh tetap. Pada Windows, perintah Codex memakai escaping Windows; pada macOS/Linux, memakai quoting POSIX. Untuk satu klien AI, gunakan satu konfigurasi saja agar tidak menjalankan dua server MCP lokal yang sama.
+
 ### Konfigurasi klien
 
 #### Codex
 
-Tambahkan server melalui CLI Codex:
+Pilih tab **Codex**, klik **Copy**, lalu jalankan perintah yang ditampilkan satu kali di terminal. Perintah tersebut sudah memuat command dan args runtime yang benar untuk OS serta instalasi Desktop/CLI aktif. Setelah itu, verifikasi dengan:
 
 ```bash
-codex mcp add erdbpro -- erdbpro mcp
 codex mcp list
-```
-
-Atau tambahkan konfigurasi berikut ke `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.erdbpro]
-command = "erdbpro"
-args = ["mcp"]
-default_tools_approval_mode = "writes"
 ```
 
 Lihat juga [dokumentasi MCP Codex](https://developers.openai.com/codex/mcp/).
 
-#### Claude Desktop
+#### JetBrains AI
 
-Tambahkan server berikut pada `claude_desktop_config.json`:
+Buka **Settings → Tools → AI Assistant → Model Context Protocol (MCP)**, lalu salin output dari tab **JetBrains AI** ke konfigurasi JSON JetBrains. Jangan mengganti command atau args dengan `erdbpro mcp`.
 
-```json
-{
-  "mcpServers": {
-    "erdbpro": {
-      "command": "erdbpro",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-Simpan konfigurasi lalu restart Claude Desktop. Untuk Claude Code, perintah setara adalah:
-
-```bash
-claude mcp add erdbpro -- erdbpro mcp
-```
-
-Lihat [panduan MCP Claude](https://docs.anthropic.com/en/docs/mcp) untuk lokasi konfigurasi setiap sistem operasi.
+Lihat juga [dokumentasi MCP JetBrains](https://www.jetbrains.com/help/ai-assistant/mcp.html).
 
 #### Visual Studio Code
 
-Buat `.vscode/mcp.json` di workspace atau buka **MCP: Open User Configuration**, lalu gunakan:
+Buat `.vscode/mcp.json` di workspace atau buka **MCP: Open User Configuration**, lalu tempel output dari tab **VS Code**. Output tersebut sudah menggunakan format `servers` dan `type: "stdio"` yang dibutuhkan VS Code.
 
-```json
-{
-  "servers": {
-    "erdbpro": {
-      "type": "stdio",
-      "command": "erdbpro",
-      "args": ["mcp"]
-    }
-  }
-}
-```
+Setelah disimpan, jalankan **MCP: List Servers** lalu mulai atau restart server `erdbpro`. Lihat [referensi konfigurasi MCP VS Code](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
 
-Setelah disimpan, jalankan **MCP: List Servers** dan mulai atau restart `erdbpro`. Lihat [referensi konfigurasi MCP VS Code](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
+#### Hermes Agent
 
-#### Menggunakan data aplikasi Desktop melalui CLI
+Pilih tab **Hermes Agent**, lalu isi dialog **Add MCP Server** menggunakan nilai yang ditampilkan:
 
-Gunakan launcher CLI dengan tambahan argumen `--desktop`:
+- **Name**: `erdbpro`;
+- **Transport**: `stdio`;
+- **Command**: nilai `Command` dari panel;
+- **Args**: nilai `Args` dari panel; dan
+- **Environment**: kosong.
 
-```json
-{
-  "command": "erdbpro",
-  "args": ["mcp", "--desktop"]
-}
-```
+Jangan mengganti nilai tersebut dengan command lama. Jika `Args` menampilkan `(leave empty)`, biarkan field args kosong.
 
-Launcher mendeteksi executable Desktop pada lokasi instalasi standar macOS, Windows, dan Linux. Untuk mode development, jalankan klien MCP dengan working directory di root repository agar database Desktop dev digunakan. Jika aplikasi dipasang pada lokasi khusus, set `ERDBPRO_DESKTOP_MCP_TARGET` ke path executable Desktop.
+#### Generic MCP (STDIO)
 
-#### JetBrains AI Assistant (termasuk Codex)
+Untuk agen lain yang menerima konfigurasi MCP standar, pilih tab **Generic MCP (STDIO)** dan tempel JSON yang dihasilkan. Gunakan command dan args apa adanya dari panel.
 
-JetBrains AI Assistant mendukung MCP lokal melalui transport `stdio`. Buka **Settings > Tools > AI Assistant > Model Context Protocol (MCP)**, klik **Add**, pilih **STDIO**, lalu masukkan salah satu konfigurasi berikut. Lihat juga [dokumentasi MCP JetBrains](https://www.jetbrains.com/help/ai-assistant/mcp.html).
-
-Pilih **satu** opsi saja. Keduanya menyediakan tool lokal yang sama; mengaktifkan keduanya tidak menambah kemampuan dan dapat membuat JetBrains menjalankan dua proses MCP dengan nama tool yang sama serta database Desktop yang sama.
-
-##### Opsi A — launcher CLI ke data Desktop
-
-Gunakan opsi ini jika paket CLI npm sudah terpasang:
-
-```bash
-npm install -g erdbpro@latest
-erdbpro --version
-```
-
-Konfigurasi JetBrains:
-
-```json
-{
-  "mcpServers": {
-    "erdbpro-desktop": {
-      "command": "erdbpro",
-      "args": ["mcp", "--desktop"]
-    }
-  }
-}
-```
-
-`erdbpro mcp --desktop` adalah launcher yang mendeteksi aplikasi Desktop. Jika working directory klien mengarah ke root repository yang memiliki `src-tauri/tauri.conf.json` dan `dist-server/mcp.js`, launcher dapat memilih database Desktop development `data.db`. Jangan gunakan root repository sebagai working directory jika tujuan Anda adalah database Desktop production; untuk target production yang eksplisit, gunakan Opsi B.
-
-##### Opsi B — executable Desktop production langsung
-
-Opsi ini tidak membutuhkan instalasi CLI npm. Gunakan konfigurasi pada tab OS yang sesuai di bagian [Persiapan berdasarkan OS](#persiapan-berdasarkan-os). Contoh path executable dan JSON untuk macOS, Windows, serta Linux tersedia di sana.
-
-Argumen harus berupa `--mcp`, bukan `mcp`. Binary Desktop hanya masuk ke mode MCP ketika menerima flag tersebut.
-
-:::warning[Jangan mengaktifkan kedua opsi]
-Jika kedua server sudah ada di daftar JetBrains, nonaktifkan atau hapus salah satunya, lalu klik **Apply** atau **Reconnect** dan restart AI Assistant. Mengaktifkan dua launcher tersebut sekaligus dapat membuat dua server mendaftarkan `workspace_list_files`, `document_read`, `history_list`, dan tool lokal lain dengan nama yang sama.
-:::
-
-Setelah koneksi berhasil, klik ikon pada kolom **Status** untuk memeriksa daftar tool. Uji dengan permintaan read-only seperti “daftarkan project dan dokumen Desktop saya”.
+Setelah koneksi berhasil, uji dengan permintaan read-only seperti “daftarkan project dan dokumen Desktop saya”.
 
 ### Tool lokal yang tersedia
 
