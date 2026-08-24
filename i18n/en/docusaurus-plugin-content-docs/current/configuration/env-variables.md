@@ -36,12 +36,16 @@ The following variables are **only required for Supabase mode**. Not needed for 
 - `SUPABASE_ANON_KEY`: The anon/public key used by the server to validate Supabase sessions.
 - `SUPABASE_SERVICE_ROLE_KEY`: The service role key for server-side operations. **Never expose this key to the frontend.**
 
-## Web MCP (Optional — Supabase Mode Only)
+## Web MCP (Optional — Web App)
+
+Public MCP runs only in the Web App over HTTPS. Desktop and CLI continue to use local MCP over `stdio`.
 
 - `MCP_PUBLIC_URL`: Canonical HTTPS URL of the MCP Streamable HTTP endpoint, including its path, such as `https://app.example.com/api/mcp` or `https://mcp.example.com/api/mcp`. Setting this variable enables public MCP.
-- `MCP_AUTH_ISSUER_URL`: OAuth issuer override. Leave unset to use `${SUPABASE_URL}/auth/v1`; set it only when Supabase Auth uses a custom domain.
+- `MCP_AUTH_PROVIDER`: MCP OAuth provider: `local` for Pure PostgreSQL or `supabase` for Supabase Auth. When unset, the server selects `supabase` when `SUPABASE_URL` is present and `local` otherwise; set it explicitly in deployments.
+- `MCP_CONSENT_URL`: OAuth consent page URL for the `local` provider. It defaults to the origin of `MCP_PUBLIC_URL` with the `/oauth/consent` path.
+- `MCP_AUTH_ISSUER_URL`: OAuth issuer override for the `supabase` provider only. Leave unset to use `${SUPABASE_URL}/auth/v1`; set it only when Supabase Auth uses a custom domain.
 
-`MCP_PUBLIC_URL` must exactly match the JWT `aud` claim produced by the Supabase Custom Access Token Hook. Web MCP is unavailable in Local PostgreSQL, Desktop, and CLI modes. See [Web MCP configuration](./mcp#web-mcp-public-api).
+For `MCP_AUTH_PROVIDER=local`, `DATABASE_URL` must point to Pure PostgreSQL and `SUPABASE_URL` must not be set. For `MCP_AUTH_PROVIDER=supabase`, configure Supabase Auth and make the JWT `aud` claim exactly match `MCP_PUBLIC_URL`. See [Web MCP configuration](./mcp#web-mcp-public-api).
 
 ## AI, Guest Mode, and Realtime Sync (Optional)
 AI provider, model, and API key configuration is managed through **Settings > AI Configuration** and stored encrypted in the database. The server does not read `AI_API_KEY`, `AI_BASE_URL`, or `AI_MODEL` from `.env`.
@@ -79,7 +83,9 @@ Optional feature to send user feedback to the developer via a **Telegram bot**.
 | `SUPABASE_ANON_KEY` | 💡¹ | 💡¹ | Supabase session validation |
 | `SUPABASE_SERVICE_ROLE_KEY` | 💡¹ | 💡¹ | Admin Auth |
 | `MCP_PUBLIC_URL` | 💡 | 💡 | Public Web MCP + OAuth resource |
-| `MCP_AUTH_ISSUER_URL` | 💡 | 💡 | Custom MCP OAuth issuer |
+| `MCP_AUTH_PROVIDER` | 💡 | 💡 | MCP OAuth provider: `local` or `supabase` |
+| `MCP_CONSENT_URL` | 💡 | 💡 | Local OAuth consent URL |
+| `MCP_AUTH_ISSUER_URL` | 💡 | 💡 | Custom Supabase OAuth issuer |
 | `R2_ACCOUNT_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_ACCESS_KEY_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_SECRET_ACCESS_KEY` | ⭐️ | ⭐️ | Cloudflare R2 |

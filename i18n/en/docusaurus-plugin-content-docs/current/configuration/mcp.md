@@ -19,14 +19,14 @@ MCP allows external AI applications such as Codex, Claude, and VS Code to access
 MCP is available through two separate transports:
 
 - **Local stdio**: CLI through `erdbpro mcp` and Desktop through `erdbpro mcp --desktop`;
-- **Web Streamable HTTP**: Supabase-authenticated Web App deployments at the HTTPS URL configured in `MCP_PUBLIC_URL`.
+- **Web Streamable HTTP**: Web App deployments at the HTTPS URL configured in `MCP_PUBLIC_URL`, using either the `local` (Pure PostgreSQL) or `supabase` OAuth provider.
 
-Web MCP is disabled by default and cannot be enabled for Desktop, CLI, or Local PostgreSQL-authenticated Web Apps. Docker may expose Web MCP only when it runs the Supabase Web mode and satisfies the OAuth configuration below.
+Web MCP is disabled by default and cannot be enabled for Desktop or CLI. For a Pure PostgreSQL Web App, use local OAuth; Supabase Auth remains available as an alternative provider. Docker may expose Web MCP when it runs a PostgreSQL Web App with the matching OAuth configuration.
 
 | Capability | Local MCP | Web MCP |
 | --- | --- | --- |
 | Transport | `stdio` | Streamable HTTP over HTTPS |
-| Authentication | Local installation user | Supabase OAuth 2.1 with PKCE |
+| Authentication | Local installation user | OAuth 2.1 with PKCE (`local` or `supabase`) |
 | Notes, Flowcharts, Drawings, regular ERDs | Yes | Yes, read-only |
 | Document history | Read and confirmed restore | Read-only |
 | DB Client / `production_db` | Limited read-only access | **Unavailable** |
@@ -51,10 +51,31 @@ MCP_PUBLIC_URL=https://app.example.com/api/mcp
 The same-domain option needs no extra DNS. For a dedicated subdomain, point DNS and the reverse proxy to the same ERD Builder Pro backend, enable TLS, preserve the `Host` header, and add the Web App origin to `CORS_ORIGINS`. The request path must exactly match the path in `MCP_PUBLIC_URL`.
 
 :::caution[Canonical URL]
-`MCP_PUBLIC_URL` is also the OAuth resource identifier and the required JWT `aud` claim. If its URL, domain, or path changes, update the audience hook and reconnect clients so they obtain new tokens.
+`MCP_PUBLIC_URL` is also the OAuth resource identifier. With the `supabase` provider, it must exactly match the JWT `aud` claim; with the `local` provider, it binds the MCP resource and tokens. If its URL, domain, or path changes, reconnect clients so they obtain new tokens.
 :::
 
-### Enable Supabase OAuth
+### Local OAuth for Pure PostgreSQL
+
+Use the `local` provider for a self-hosted Web App that uses Pure PostgreSQL. This provider stores MCP clients, authorization codes, access tokens, and refresh tokens separately from the application's login sessions.
+
+Set the following server variables, then restart or redeploy:
+
+```dotenv
+DATABASE_URL=postgresql://user:password@db:5432/erd_builder_pro
+MCP_PUBLIC_URL=https://app.example.com/api/mcp
+MCP_AUTH_PROVIDER=local
+MCP_CONSENT_URL=https://app.example.com/oauth/consent
+
+# Do not set SUPABASE_URL in this mode.
+```
+
+`MCP_CONSENT_URL` may be omitted when using the default origin of `MCP_PUBLIC_URL` with the `/oauth/consent` path. The consent URL must be served by the same Web App deployment over HTTPS. The user must log in to the Web App before approving read-only access.
+
+The local provider requires Pure PostgreSQL. It is not enabled for Desktop/CLI, must not be combined with `SUPABASE_URL`, and does not use `MCP_AUTH_ISSUER_URL`.
+
+### Supabase OAuth (optional)
+
+Use the `supabase` provider when the Web App uses Supabase Auth:
 
 1. In **Supabase Dashboard > Authentication > URL Configuration**, set **Site URL** to the Web App domain that displays the login page.
 2. In **Authentication > OAuth Server**, enable OAuth 2.1 and set **Authorization Path** to `/oauth/consent`.
@@ -64,6 +85,7 @@ The same-domain option needs no extra DNS. For a dedicated subdomain, point DNS 
 
 ```dotenv
 MCP_PUBLIC_URL=https://app.example.com/api/mcp
+MCP_AUTH_PROVIDER=supabase
 SUPABASE_URL=https://project-ref.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 
@@ -83,7 +105,7 @@ For an `/api/mcp` endpoint, metadata is served at:
 curl https://app.example.com/.well-known/oauth-protected-resource/api/mcp
 ```
 
-The response must contain a `resource` exactly matching `MCP_PUBLIC_URL` and `authorization_servers` pointing to the Supabase issuer. An MCP request without a token must return `401` with a `WWW-Authenticate` header:
+The response must contain a `resource` exactly matching `MCP_PUBLIC_URL`. With the `local` provider, `authorization_servers` uses the Web App root domain; with the `supabase` provider, it points to the Supabase issuer. An MCP request without a token must return `401` with a `WWW-Authenticate` header:
 
 ```bash
 curl -i -X POST https://app.example.com/api/mcp \
@@ -276,7 +298,7 @@ Test the connection from the DB Client panel first. MCP uses the account, TLS mo
 
 ### Web MCP always returns `401`
 
-Verify that the token has an `iss` matching `MCP_AUTH_ISSUER_URL` (or `${SUPABASE_URL}/auth/v1`), a `client_id` claim, an `exp` claim, and an `aud` claim exactly matching `MCP_PUBLIC_URL`. A regular Web App session token has a different audience and is intentionally rejected.
+Make sure `MCP_PUBLIC_URL` exactly matches the URL entered in the client, including the `/api/mcp` path, then reconnect the client after changing it. For `MCP_AUTH_PROVIDER=local`, verify that `DATABASE_URL` points to Pure PostgreSQL, `SUPABASE_URL` is unset, and the consent was approved by the correct Web App user. For `MCP_AUTH_PROVIDER=supabase`, the token must have an `iss` matching `MCP_AUTH_ISSUER_URL` (or `${SUPABASE_URL}/auth/v1`), a `client_id` claim, an `exp` claim, and an `aud` claim exactly matching `MCP_PUBLIC_URL`. A regular Web App session token has a different audience and is intentionally rejected.
 
 ### OAuth metadata is not found
 

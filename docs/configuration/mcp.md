@@ -19,14 +19,14 @@ MCP memungkinkan aplikasi AI eksternal seperti Codex, Claude, dan VS Code mengak
 MCP tersedia melalui dua transport yang terpisah:
 
 - **Local stdio**: CLI melalui `erdbpro mcp` dan Desktop melalui `erdbpro mcp --desktop`;
-- **Web Streamable HTTP**: deployment Web App berbasis Supabase Auth melalui URL HTTPS yang ditentukan oleh `MCP_PUBLIC_URL`.
+- **Web Streamable HTTP**: deployment Web App melalui URL HTTPS yang ditentukan oleh `MCP_PUBLIC_URL`, dengan OAuth provider `local` (Pure PostgreSQL) atau `supabase`.
 
-MCP Web dinonaktifkan secara default dan tidak dapat diaktifkan pada Desktop, CLI, atau Web App yang memakai autentikasi Local PostgreSQL. Docker dapat mengekspos MCP Web hanya jika menjalankan mode Web Supabase dan memenuhi konfigurasi OAuth di bawah.
+MCP Web dinonaktifkan secara default dan tidak dapat diaktifkan pada Desktop atau CLI. Untuk Web App Pure PostgreSQL gunakan OAuth lokal; Supabase Auth tetap tersedia sebagai provider alternatif. Docker dapat mengekspos MCP Web selama menjalankan Web App dengan PostgreSQL dan konfigurasi OAuth yang sesuai.
 
 | Kemampuan | MCP lokal | MCP Web |
 | --- | --- | --- |
 | Transport | `stdio` | Streamable HTTP melalui HTTPS |
-| Autentikasi | User instalasi lokal | OAuth 2.1 Supabase dengan PKCE |
+| Autentikasi | User instalasi lokal | OAuth 2.1 dengan PKCE (`local` atau `supabase`) |
 | Notes, Flowcharts, Drawings, ERD reguler | Ya | Ya, read-only |
 | Riwayat dokumen | Read dan restore terkonfirmasi | Read-only |
 | DB Client / `production_db` | Read-only terbatas | **Tidak tersedia** |
@@ -51,10 +51,31 @@ MCP_PUBLIC_URL=https://app.example.com/api/mcp
 Untuk domain yang sama, tidak ada DNS tambahan. Untuk subdomain khusus, arahkan DNS dan reverse proxy subdomain ke backend ERD Builder Pro yang sama, aktifkan TLS, pertahankan header `Host`, lalu tambahkan origin Web App ke `CORS_ORIGINS`. Path request harus sama persis dengan path pada `MCP_PUBLIC_URL`.
 
 :::caution[URL kanonis]
-`MCP_PUBLIC_URL` juga menjadi OAuth resource identifier dan nilai wajib claim JWT `aud`. Jika URL, domain, atau path berubah, perbarui hook audience dan hubungkan ulang klien agar memperoleh token baru.
+`MCP_PUBLIC_URL` juga menjadi OAuth resource identifier. Pada provider `supabase`, URL ini wajib sama dengan claim JWT `aud`; pada provider `local`, URL ini dipakai untuk mengikat resource dan token MCP. Jika URL, domain, atau path berubah, hubungkan ulang klien agar memperoleh token baru.
 :::
 
-### Mengaktifkan OAuth Supabase
+### OAuth lokal untuk Pure PostgreSQL
+
+Gunakan provider `local` untuk Web App self-hosted yang memakai Pure PostgreSQL. Provider ini menyimpan client, authorization code, access token, dan refresh token MCP secara terpisah dari session login aplikasi.
+
+Atur variabel server berikut lalu restart atau deploy ulang:
+
+```dotenv
+DATABASE_URL=postgresql://user:password@db:5432/erd_builder_pro
+MCP_PUBLIC_URL=https://app.example.com/api/mcp
+MCP_AUTH_PROVIDER=local
+MCP_CONSENT_URL=https://app.example.com/oauth/consent
+
+# Jangan set SUPABASE_URL pada mode ini.
+```
+
+`MCP_CONSENT_URL` boleh dihilangkan jika memakai default origin dari `MCP_PUBLIC_URL` dengan path `/oauth/consent`. URL consent harus berada pada deployment Web App yang sama dan memakai HTTPS. User harus login ke Web App sebelum menyetujui akses read-only.
+
+Provider lokal hanya menerima Pure PostgreSQL. Ia tidak aktif pada Desktop/CLI, tidak boleh digabung dengan `SUPABASE_URL`, dan tidak menggunakan `MCP_AUTH_ISSUER_URL`.
+
+### OAuth Supabase (opsional)
+
+Gunakan provider `supabase` jika Web App memakai Supabase Auth:
 
 1. Di **Supabase Dashboard > Authentication > URL Configuration**, set **Site URL** ke domain Web App yang menampilkan halaman login.
 2. Di **Authentication > OAuth Server**, aktifkan OAuth 2.1 dan set **Authorization Path** ke `/oauth/consent`.
@@ -64,6 +85,7 @@ Untuk domain yang sama, tidak ada DNS tambahan. Untuk subdomain khusus, arahkan 
 
 ```dotenv
 MCP_PUBLIC_URL=https://app.example.com/api/mcp
+MCP_AUTH_PROVIDER=supabase
 SUPABASE_URL=https://project-ref.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 
@@ -83,7 +105,7 @@ Untuk endpoint `/api/mcp`, metadata berada di:
 curl https://app.example.com/.well-known/oauth-protected-resource/api/mcp
 ```
 
-Response harus berisi `resource` yang sama persis dengan `MCP_PUBLIC_URL` dan `authorization_servers` yang menunjuk ke issuer Supabase. Request MCP tanpa token harus ditolak dengan `401` dan header `WWW-Authenticate`:
+Response harus berisi `resource` yang sama persis dengan `MCP_PUBLIC_URL`. Pada provider `local`, `authorization_servers` memakai root domain Web App; pada provider `supabase`, nilainya menunjuk ke issuer Supabase. Request MCP tanpa token harus ditolak dengan `401` dan header `WWW-Authenticate`:
 
 ```bash
 curl -i -X POST https://app.example.com/api/mcp \
@@ -276,7 +298,7 @@ Uji koneksi dari panel DB Client terlebih dahulu. MCP memakai account, mode TLS,
 
 ### MCP Web selalu mengembalikan `401`
 
-Pastikan token memiliki `iss` yang sama dengan `MCP_AUTH_ISSUER_URL` (atau `${SUPABASE_URL}/auth/v1`), claim `client_id`, claim `exp`, dan claim `aud` yang sama persis dengan `MCP_PUBLIC_URL`. Token sesi Web App biasa memiliki audience berbeda dan sengaja ditolak.
+Pastikan `MCP_PUBLIC_URL` benar-benar sama dengan URL yang dimasukkan ke klien, termasuk path `/api/mcp`, lalu hubungkan ulang klien setelah mengubahnya. Untuk `MCP_AUTH_PROVIDER=local`, pastikan `DATABASE_URL` Pure PostgreSQL, `SUPABASE_URL` tidak diatur, dan consent sudah disetujui oleh user Web App yang benar. Untuk `MCP_AUTH_PROVIDER=supabase`, token harus memiliki `iss` yang sama dengan `MCP_AUTH_ISSUER_URL` (atau `${SUPABASE_URL}/auth/v1`), claim `client_id`, claim `exp`, dan claim `aud` yang sama persis dengan `MCP_PUBLIC_URL`. Token sesi Web App biasa memiliki audience berbeda dan sengaja ditolak.
 
 ### Metadata OAuth tidak ditemukan
 

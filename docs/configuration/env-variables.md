@@ -36,12 +36,16 @@ Variabel berikut **hanya untuk mode Supabase**. Jika menggunakan Local PostgreSQ
 - `SUPABASE_ANON_KEY`: Kunci anon/public yang dipakai server untuk memvalidasi sesi Supabase.
 - `SUPABASE_SERVICE_ROLE_KEY`: Kunci peran layanan (*service_role*) untuk operasi server-side. **Jangan pernah membocorkan kunci ini ke frontend.**
 
-## MCP Web (Opsional — Hanya Mode Supabase)
+## MCP Web (Opsional — Web App)
+
+Public MCP hanya berjalan pada Web App melalui HTTPS. Desktop dan CLI tetap menggunakan MCP lokal melalui `stdio`.
 
 - `MCP_PUBLIC_URL`: URL HTTPS kanonis endpoint Streamable HTTP MCP, termasuk path, misalnya `https://app.example.com/api/mcp` atau `https://mcp.example.com/api/mcp`. Mengaktifkan public MCP saat variabel ini diisi.
-- `MCP_AUTH_ISSUER_URL`: Override issuer OAuth. Kosongkan untuk memakai `${SUPABASE_URL}/auth/v1`; isi hanya jika Supabase Auth menggunakan custom domain.
+- `MCP_AUTH_PROVIDER`: Provider OAuth MCP, yaitu `local` untuk Pure PostgreSQL atau `supabase` untuk Supabase Auth. Jika dikosongkan, server memilih `supabase` ketika `SUPABASE_URL` tersedia dan `local` jika tidak; sebaiknya isi eksplisit pada deployment.
+- `MCP_CONSENT_URL`: URL halaman consent OAuth untuk provider `local`. Default-nya adalah origin dari `MCP_PUBLIC_URL` dengan path `/oauth/consent`.
+- `MCP_AUTH_ISSUER_URL`: Override issuer OAuth hanya untuk provider `supabase`. Kosongkan untuk memakai `${SUPABASE_URL}/auth/v1`; isi hanya jika Supabase Auth menggunakan custom domain.
 
-Nilai `MCP_PUBLIC_URL` harus sama persis dengan claim JWT `aud` yang dihasilkan oleh Custom Access Token Hook Supabase. MCP Web tidak tersedia pada Local PostgreSQL, Desktop, atau CLI. Lihat [konfigurasi MCP Web](./mcp#mcp-web-public-api).
+Untuk `MCP_AUTH_PROVIDER=local`, `DATABASE_URL` harus menunjuk ke Pure PostgreSQL dan `SUPABASE_URL` tidak boleh diatur. Untuk `MCP_AUTH_PROVIDER=supabase`, siapkan variabel Supabase Auth dan pastikan claim JWT `aud` sama persis dengan `MCP_PUBLIC_URL`. Lihat [konfigurasi MCP Web](./mcp#mcp-web-public-api).
 
 ## AI, Guest Mode, dan Realtime Sync (Opsional)
 Konfigurasi API key AI dilakukan melalui **Settings > AI Configuration** dan disimpan terenkripsi di database. Tidak ada `AI_API_KEY`, `AI_BASE_URL`, atau `AI_MODEL` yang dibaca dari `.env`.
@@ -79,7 +83,9 @@ Fitur opsional untuk mengirimkan *feedback* pengguna ke pengembang melalui **Tel
 | `SUPABASE_ANON_KEY` | 💡¹ | 💡¹ | Validasi sesi Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | 💡¹ | 💡¹ | Admin Auth |
 | `MCP_PUBLIC_URL` | 💡 | 💡 | Public MCP Web + OAuth resource |
-| `MCP_AUTH_ISSUER_URL` | 💡 | 💡 | Custom issuer OAuth MCP |
+| `MCP_AUTH_PROVIDER` | 💡 | 💡 | Provider OAuth MCP: `local` atau `supabase` |
+| `MCP_CONSENT_URL` | 💡 | 💡 | URL consent OAuth provider local |
+| `MCP_AUTH_ISSUER_URL` | 💡 | 💡 | Custom issuer OAuth provider Supabase |
 | `R2_ACCOUNT_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_ACCESS_KEY_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
 | `R2_SECRET_ACCESS_KEY` | ⭐️ | ⭐️ | Cloudflare R2 |
