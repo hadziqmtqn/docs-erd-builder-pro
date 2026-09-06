@@ -34,7 +34,7 @@ Web MCP is disabled by default and cannot be enabled for Desktop or CLI. For a P
 
 ## Web MCP (public API)
 
-The Web endpoint follows the [MCP 2026-07-28 authorization specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). It publishes OAuth Protected Resource Metadata, returns a Bearer challenge for unauthenticated requests, validates issuer, audience, expiry, and `client_id`, then scopes every query to the authenticated OAuth user's data.
+The Web endpoint follows the [MCP 2026-07-28 authorization specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). It publishes OAuth Protected Resource Metadata, returns a Bearer challenge for unauthenticated requests, and validates issuer, audience, expiry, and `client_id`. Every query can read only the OAuth user's personal documents or documents in Teams where that user's membership remains active; the MCP client cannot supply a Team scope.
 
 ### Choose the domain
 

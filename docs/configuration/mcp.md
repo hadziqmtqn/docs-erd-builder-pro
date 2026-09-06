@@ -34,7 +34,7 @@ MCP Web dinonaktifkan secara default dan tidak dapat diaktifkan pada Desktop ata
 
 ## MCP Web (public API)
 
-Endpoint Web mengikuti [spesifikasi otorisasi MCP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Server memublikasikan OAuth Protected Resource Metadata, mengembalikan challenge Bearer untuk request tanpa token, memvalidasi issuer, audience, masa berlaku, dan `client_id`, lalu membatasi setiap query ke data milik user OAuth tersebut.
+Endpoint Web mengikuti [spesifikasi otorisasi MCP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Server memublikasikan OAuth Protected Resource Metadata, mengembalikan challenge Bearer untuk request tanpa token, memvalidasi issuer, audience, masa berlaku, dan `client_id`. Setiap query hanya dapat membaca dokumen pribadi user OAuth atau dokumen pada Team yang membership-nya masih aktif; MCP tidak menerima scope Team dari klien.
 
 ### Menentukan domain
 
