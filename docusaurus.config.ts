@@ -7,7 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'ERD Builder Pro Docs',
   tagline: 'Premium ERD Builder for Modern Developers',
-  favicon: 'img/app-logo.svg',
+  favicon: 'img/favicon.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
