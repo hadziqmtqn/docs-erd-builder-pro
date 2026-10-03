@@ -7,15 +7,48 @@ slug: /getting-started/deployment
 
 ERD Builder Pro dirancang agar fleksibel untuk dideploy di berbagai platform, baik sebagai layanan serverless maupun menggunakan container.
 
+## Memilih Plan Self-host
+
+Self-host Personal Gratis hanya menyediakan Personal Workspace. Self-host Commercial Team memakai lisensi instance untuk menambahkan Team Workspace dan kapasitas member. Konfigurasi Cloud SaaS memakai lingkungan berbeda; lihat [Environment Variables](../configuration/env-variables).
+
+- **Personal Gratis:** siapkan database dan `ERD_ENCRYPTION_KEY`; environment lisensi Team tidak diperlukan.
+- **Commercial Team Berbayar:** siapkan environment lisensi sesuai [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-berbayar), lalu masukkan license key melalui **Application Settings**. Persistensikan kedua file state lisensi.
+
+Kedua plan memakai konfigurasi dasar Local PostgreSQL yang sama. Tambahkan tiga nilai ini hanya pada `.env` Commercial Team:
+
+```env
+ERDBPRO_LICENSE_API_URL=https://license.example.com
+ERDBPRO_LICENSE_ISSUER=https://license.example.com
+ERDBPRO_LICENSE_STATE_FILE=/app/data/.erdbpro/license-state.json
+```
+
+Ganti URL contoh dengan endpoint dan issuer yang diberikan penyedia lisensi. Jangan menyimpan license key di file environment.
+
+## Persistent License State (Paid Self-host)
+
+Container berbayar harus menyimpan state lisensi pada persistent volume. `license-state.json` mempertahankan client token, sedangkan file `installation-identity.json` di folder yang sama mempertahankan installation ID dan identity yang menandatangani record Team lokal.
+
+Untuk instalasi yang sudah berjalan, sebelum mengganti konfigurasi atau membuat ulang container:
+
+1. Temukan path efektif kedua file pada container yang sedang berjalan. Secara default, file berada di `.erdbpro/` di bawah working directory server.
+2. Salin dan simpan **kedua file yang sama** ke lokasi aman.
+3. Pasang volume persisten pada container baru dan pulihkan kedua file tanpa mengubah isinya. Set `ERDBPRO_LICENSE_STATE_FILE` ke path file di mount tersebut; identity instalasi otomatis memakai file saudara, kecuali Anda mengatur override-nya.
+4. Setelah container mulai, periksa status lisensi dan daftar Team sebelum menghapus salinan cadangan.
+
+Pada Easypanel atau platform container terkelola, buat persistent mount terlebih dahulu dan arahkan `ERDBPRO_LICENSE_STATE_FILE` ke file di mount. Jangan mengubah path lalu me-restart sebelum menyalin state yang ada; identity baru dapat membuat tanda tangan Team lama tidak cocok. Simpan kedua file sebagai secret lokal dan jangan unggah ke repositori atau SaaS.
+
+Personal Gratis tidak menggunakan state lisensi Team tersebut. Database, backup, dan file lain tetap harus mengikuti kebijakan persistensi deployment Anda.
+
 ### 1. Local Deployment (via Docker)
 
 Ini adalah cara tercepat untuk menjalankan ERD Builder Pro di server sendiri (self-hosted). Kami menyediakan image resmi di Docker Hub.
 
 :::warning Penting
-Anda **tetap wajib** menyiapkan file `.env` yang berisi konfigurasi **Database** dan **Cloudflare R2**:
+Siapkan `.env` dengan konfigurasi database dan kunci enkripsi. Cloudflare R2 direkomendasikan untuk unggah file/gambar:
 - `DATABASE_URL` — connection string PostgreSQL (wajib, baik Supabase maupun Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — hanya jika menggunakan mode **Supabase**
 - `ERD_ENCRYPTION_KEY` — wajib untuk menyimpan password DB Connect dan API key AI secara aman pada deployment web/Docker
+- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — wajib hanya untuk Self-host Commercial Team berlisensi
 - R2 vars — disarankan agar fitur unggah file/gambar berfungsi penuh
 
 Jika R2 tidak disiapkan, fitur unggah file/gambar akan error. Untuk mode **Local PostgreSQL**, pastikan database PostgreSQL dapat dijangkau dari container.
@@ -32,10 +65,11 @@ docker run -d \
   -p 3000:3000 \
   --name erd-builder-pro \
   --env-file .env \
+  -v erd-data:/app/data \
   bekenweb/erd-builder-pro:latest
 ```
 
-Untuk Local PostgreSQL, isi `.env` minimal seperti berikut:
+Konfigurasi dasar `.env` berikut dipakai oleh kedua plan Self-host pada mode Local PostgreSQL:
 ```env
 DATABASE_URL="postgresql://user:password@db:5432/erd_builder_pro"
 ERD_ENCRYPTION_KEY="ganti-dengan-kunci-acak-minimal-32-karakter"
@@ -63,6 +97,7 @@ Jika Anda ingin membangun image sendiri dengan konfigurasi kustom:
      -p 3000:3000 \
      --name erd-builder-pro \
      --env-file .env \
+     -v erd-data:/app/data \
      erd-builder-pro
    ```
 3. Akses aplikasi di `http://localhost:3000`.

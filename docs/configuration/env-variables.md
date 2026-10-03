@@ -13,6 +13,30 @@ ERD Builder Pro mendukung **dua mode database PostgreSQL**:
 
 Panduan lengkap untuk masing-masing mode ada di [Setup Database](./database-setup).
 
+## Profil Self-host: Personal Gratis dan Commercial Team
+
+Bagian ini membedakan **plan Self-host**. Pilihan database seperti Local PostgreSQL atau Supabase adalah konfigurasi teknis yang terpisah; Cloud SaaS juga memakai konfigurasi Cloud tersendiri.
+
+| Profil | Kegunaan | Environment lisensi |
+| --- | --- | --- |
+| **Self-host Personal (gratis)** | Satu Personal Workspace lokal; tidak menyediakan Team atau member Team | Tidak memerlukan environment client lisensi Team di bawah |
+| **Self-host Commercial Team (berbayar)** | Personal Workspace pemilik aplikasi ditambah Team Workspace dan kuota member sesuai lisensi instance | Wajib mengatur endpoint API dan issuer lisensi; state lisensi dan identity instalasi harus persisten |
+
+Kedua profil tetap memakai environment server bersama seperti `DATABASE_URL` dan `ERD_ENCRYPTION_KEY` di bagian berikut. Upgrade dari Personal ke Commercial Team dilakukan dengan mengaktifkan lisensi melalui **Application Settings**. Jangan menaruh license key di `.env`.
+
+## Self-host Commercial Team License (Berbayar)
+
+Variabel berikut hanya diperlukan jika instalasi memakai lisensi kapasitas Team. Salin endpoint resmi yang diberikan untuk lingkungan lisensi Anda; produksi harus memakai HTTPS.
+
+- `ERDBPRO_LICENSE_API_URL`: **Wajib**. Origin API lisensi, misalnya `https://license.example.com` tanpa path endpoint. Aplikasi menambahkan path aktivasi dan pemeriksaan lisensi.
+- `ERDBPRO_LICENSE_ISSUER`: **Wajib**. Nilai issuer persis yang dipakai pada signed entitlement dari control plane. Jangan menebak nilainya dari nama plan.
+- `ERDBPRO_LICENSE_STATE_FILE`: Path opsional untuk file state lisensi. Di container gunakan persistent mount, misalnya `/app/data/.erdbpro/license-state.json`. File ini memuat client token dan bersifat rahasia.
+- `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Override path opsional untuk identity instalasi. Jika tidak diatur, `installation-identity.json` dibuat berdampingan dengan file state lisensi. File ini berisi private key lokal dan harus dipertahankan bersama file state.
+
+Kunci verifikasi publik resmi sudah disertakan di server. Jangan mengatur public key atau key ID khusus di production. Untuk Personal Gratis, jangan isi variabel client lisensi Team hanya untuk menjalankan Personal Workspace.
+
+Saat berpindah dari instalasi container lama, salin **kedua file state yang sudah ada** ke persistent mount sebelum mengganti path atau membuat ulang container. Jangan membuat identity baru untuk menggantikan identity instalasi lama. Lihat [panduan deployment dan migrasi state](../getting-started/deployment#persistent-license-state-paid-self-host).
+
 ## Core (Wajib)
 Variabel ini wajib diatur agar aplikasi dapat berfungsi.
 - `DATABASE_URL`: Connection string PostgreSQL.

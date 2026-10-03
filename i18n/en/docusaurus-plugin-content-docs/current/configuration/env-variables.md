@@ -13,6 +13,30 @@ ERD Builder Pro supports **two PostgreSQL database modes**:
 
 For complete setup guides, see [Database Setup](./database-setup).
 
+## Self-host Profiles: Free Personal and Commercial Team
+
+This section separates plans only for Local PostgreSQL Self-host Web. Supabase Auth/Cloud SaaS is a separate deployment mode and does not use this Self-host plan split.
+
+| Profile | Use | License environment |
+| --- | --- | --- |
+| **Self-host Personal (free)** | One local Personal Workspace; no Teams or Team members | Does not need the Team license client variables below |
+| **Self-host Commercial Team (paid)** | The application owner’s Personal Workspace plus Team Workspaces and licensed member capacity | Requires the license API and issuer; license state and installation identity must persist |
+
+Both profiles still use shared server settings such as `DATABASE_URL` and `ERD_ENCRYPTION_KEY` below. Upgrade from Personal to Commercial Team by activating a license in **Application Settings**. Do not put a license key in `.env`.
+
+## Self-host Commercial Team License (Paid)
+
+These variables are needed only when the installation uses Team capacity licensing. Use the endpoints supplied for your license environment; production must use HTTPS.
+
+- `ERDBPRO_LICENSE_API_URL`: **Required**. The license API origin, such as `https://license.example.com`, without an endpoint path. The app appends the activation and license-check routes.
+- `ERDBPRO_LICENSE_ISSUER`: **Required**. The exact issuer value used by the control plane in signed entitlements. Do not infer it from a plan name.
+- `ERDBPRO_LICENSE_STATE_FILE`: Optional path for the license state file. In a container, put it on a persistent mount, for example `/app/data/.erdbpro/license-state.json`. This file contains a client token and is secret.
+- `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Optional override for the installation identity path. When unset, `installation-identity.json` is placed beside the license state file. It contains the local private key and must be preserved with the state file.
+
+The official verification key is bundled with the server. Do not set a custom public key or key ID in production. Free Personal does not need the Team license client variables to run its Personal Workspace.
+
+When moving an existing container, copy **both existing state files** to the persistent mount before changing the path or recreating the container. Do not replace the existing installation identity with a newly generated one. See [deployment and state migration](../getting-started/deployment#persistent-license-state-paid-self-host).
+
 ## Core (Required)
 These variables are mandatory for the application to function.
 - `DATABASE_URL`: PostgreSQL connection string.

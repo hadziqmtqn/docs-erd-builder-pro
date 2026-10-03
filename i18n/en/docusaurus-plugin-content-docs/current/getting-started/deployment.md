@@ -7,15 +7,48 @@ slug: /getting-started/deployment
 
 ERD Builder Pro is designed to be flexible for deployment on various platforms, either as a serverless service or using containers.
 
+## Choose a Self-host Plan
+
+Free Self-host Personal provides one Personal Workspace. Paid Self-host Commercial Team uses an instance license for Team Workspaces and member capacity. Cloud SaaS uses a separate environment; see [Environment Variables](../configuration/env-variables).
+
+- **Free Personal:** configure the database and `ERD_ENCRYPTION_KEY`; Team license environment variables are not required.
+- **Paid Commercial Team:** configure the license environment from [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-paid), then enter the license key in **Application Settings**. Persist both license state files.
+
+Both plans share the same Local PostgreSQL base configuration. Add these three values to the Commercial Team `.env` only:
+
+```env
+ERDBPRO_LICENSE_API_URL=https://license.example.com
+ERDBPRO_LICENSE_ISSUER=https://license.example.com
+ERDBPRO_LICENSE_STATE_FILE=/app/data/.erdbpro/license-state.json
+```
+
+Replace the example URLs with the API and issuer provided by your license service. Do not store the license key in environment files.
+
+## Persistent License State (Paid Self-host)
+
+Paid containers must keep license state on a persistent volume. `license-state.json` preserves the client token. Its sibling `installation-identity.json` preserves the installation ID and the identity that signs local Team records.
+
+For an existing installation, before changing configuration or recreating the container:
+
+1. Find the effective paths of both files in the running container. By default, they are under `.erdbpro/` inside the server working directory.
+2. Copy and securely retain **both existing files**.
+3. Mount persistent storage on the replacement container and restore the same files unchanged. Set `ERDBPRO_LICENSE_STATE_FILE` to the file path on that mount; the installation identity uses the sibling file unless its override is set.
+4. After startup, verify the license status and Team list before removing the backup copies.
+
+On Easypanel or another managed container platform, create the persistent mount first and point `ERDBPRO_LICENSE_STATE_FILE` inside it. Do not change the path and restart before copying the current state; a newly generated identity can invalidate signatures on existing Teams. Keep both files as local secrets and never upload them to source control or SaaS.
+
+Free Personal does not use this Team license state. Database, backups, and other files still follow the deployment’s own persistence policy.
+
 ### 1. Local Deployment (via Docker)
 
 This is the fastest way to run ERD Builder Pro on your own server (self-hosted). We provide official images on Docker Hub.
 
 :::warning Important
-You **must** prepare a `.env` file containing the **Database** and **Cloudflare R2** configuration:
+Prepare `.env` with database and encryption-key settings. Cloudflare R2 is recommended for file/image uploads:
 - `DATABASE_URL` — PostgreSQL connection string (required, both Supabase and Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — only required when using **Supabase** mode
 - `ERD_ENCRYPTION_KEY` — required for securely storing DB Connect passwords and AI API keys in web/Docker deployments
+- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — required only for licensed Self-host Commercial Team deployments
 - R2 vars — recommended for full file/image upload functionality
 
 If R2 is not configured, the file/image upload feature will error. For **Local PostgreSQL** mode, ensure the PostgreSQL database is reachable from the container.
@@ -32,10 +65,11 @@ docker run -d \
   -p 3000:3000 \
   --name erd-builder-pro \
   --env-file .env \
+  -v erd-data:/app/data \
   bekenweb/erd-builder-pro:latest
 ```
 
-For Local PostgreSQL, the `.env` file must include at least:
+The following Local PostgreSQL base configuration is shared by both Self-host plans:
 ```env
 DATABASE_URL="postgresql://user:password@db:5432/erd_builder_pro"
 ERD_ENCRYPTION_KEY="replace-with-a-random-key-at-least-32-characters-long"
@@ -63,6 +97,7 @@ If you want to build your own image with custom configuration:
      -p 3000:3000 \
      --name erd-builder-pro \
      --env-file .env \
+     -v erd-data:/app/data \
      erd-builder-pro
    ```
 3. Access the application at `http://localhost:3000`.
