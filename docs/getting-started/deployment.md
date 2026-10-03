@@ -37,6 +37,12 @@ Untuk instalasi yang sudah berjalan, sebelum mengganti konfigurasi atau membuat 
 
 Pada Easypanel atau platform container terkelola, buat persistent mount terlebih dahulu dan arahkan `ERDBPRO_LICENSE_STATE_FILE` ke file di mount. Jangan mengubah path lalu me-restart sebelum menyalin state yang ada; identity baru dapat membuat tanda tangan Team lama tidak cocok. Simpan kedua file sebagai secret lokal dan jangan unggah ke repositori atau SaaS.
 
+:::caution Jika startup menampilkan `ENOENT` pada `/app/data/.erdbpro`
+Pastikan `/app/data` benar-benar merupakan mount yang tersedia dan dapat ditulis oleh container. Kode runtime membuat subdirektori secara rekursif, tetapi tidak dapat menulis ke mount yang hilang atau tidak dapat diakses. Jika menjalankan `npm run start` di luar container, jangan gunakan path Docker `/app/data`; hilangkan override atau gunakan path lokal yang dapat ditulis.
+
+Periksa juga versi pada log startup agar cocok dengan image yang sedang diuji. Sebelum mencoba ulang pada deployment berbayar, pastikan salinan lama `license-state.json` dan `installation-identity.json` sudah aman.
+:::
+
 Personal Gratis tidak menggunakan state lisensi Team tersebut. Database, backup, dan file lain tetap harus mengikuti kebijakan persistensi deployment Anda.
 
 ### 1. Local Deployment (via Docker)

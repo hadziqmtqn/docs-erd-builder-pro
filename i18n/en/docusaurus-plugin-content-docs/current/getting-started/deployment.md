@@ -37,6 +37,12 @@ For an existing installation, before changing configuration or recreating the co
 
 On Easypanel or another managed container platform, create the persistent mount first and point `ERDBPRO_LICENSE_STATE_FILE` inside it. Do not change the path and restart before copying the current state; a newly generated identity can invalidate signatures on existing Teams. Keep both files as local secrets and never upload them to source control or SaaS.
 
+:::caution If startup reports `ENOENT` at `/app/data/.erdbpro`
+Confirm that `/app/data` is an actual mount available and writable by the container. The runtime creates missing subdirectories recursively, but it cannot write to a missing or inaccessible mount. When running `npm run start` outside a container, do not reuse the Docker path `/app/data`; omit the override or choose a writable local path.
+
+Also check that the startup log reports the version of the image you intended to test. Before retrying a paid deployment, make sure the previous `license-state.json` and `installation-identity.json` are safely backed up.
+:::
+
 Free Personal does not use this Team license state. Database, backups, and other files still follow the deployment’s own persistence policy.
 
 ### 1. Local Deployment (via Docker)
