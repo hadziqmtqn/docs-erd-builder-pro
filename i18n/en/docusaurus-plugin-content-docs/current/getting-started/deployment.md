@@ -5,7 +5,7 @@ slug: /getting-started/deployment
 
 # Deployment
 
-ERD Builder Pro is designed to be flexible for deployment on various platforms, either as a serverless service or using containers.
+ERD Builder Pro can run on several platforms, including serverless services and containers. Feature availability depends on the storage and process model each platform provides; Commercial Team licensing requires a persistent filesystem.
 
 ## Choose a Self-host Plan
 
@@ -14,31 +14,47 @@ Free Self-host Personal provides one Personal Workspace. Paid Self-host Commerci
 - **Free Personal:** configure the database and `ERD_ENCRYPTION_KEY`; Team license environment variables are not required.
 - **Paid Commercial Team:** configure the license environment from [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-paid), then enter the license key in **Application Settings**. Persist both license state files.
 
-Both plans share the same Local PostgreSQL base configuration. Add these three values to the Commercial Team `.env` only:
+Both plans share the same Local PostgreSQL base configuration. Add these license endpoints to the Commercial Team `.env` only:
 
 ```env
 ERDBPRO_LICENSE_API_URL=https://license.example.com
 ERDBPRO_LICENSE_ISSUER=https://license.example.com
-ERDBPRO_LICENSE_STATE_FILE=/app/data/.erdbpro/license-state.json
 ```
 
-Replace the example URLs with the API and issuer provided by your license service. Do not store the license key in environment files.
+Replace the example URLs with the API and issuer provided by your license service. Do not store the license key in environment files. The value of `ERDBPRO_LICENSE_STATE_FILE` depends on the platform because it points to a file on the server filesystem. See [path examples by platform](../configuration/env-variables#path-values-by-deployment-type).
 
 ## Persistent License State (Paid Self-host)
 
-Paid containers must keep license state on a persistent volume. `license-state.json` preserves the client token. Its sibling `installation-identity.json` preserves the installation ID and the identity that signs local Team records.
+Commercial Team deployments must keep license state on a persistent, writable local filesystem. `license-state.json` preserves the client token. The `installation-identity.json` file is normally stored beside it to preserve the installation ID and private key that signs local Team records.
 
-For an existing installation, before changing configuration or recreating the container:
+`ERDBPRO_LICENSE_STATE_FILE` takes the full path to the `license-state.json` file, not a directory name or URL. Use an absolute path visible to the server process. If `ERDBPRO_INSTALLATION_IDENTITY_FILE` is not set, the runtime stores `installation-identity.json` beside the state file. Set the identity override only when needed, and make sure that file is also on persistent storage.
 
-1. Find the effective paths of both files in the running container. By default, they are under `.erdbpro/` inside the server working directory.
+### Path Values by Deployment Type
+
+| Deployment type | `ERDBPRO_LICENSE_STATE_FILE` | `ERDBPRO_INSTALLATION_IDENTITY_FILE` |
+| --- | --- | --- |
+| Docker or Docker Compose with the `erd-data:/app/data` volume | `/app/data/.erdbpro/license-state.json` | Optional: `/app/data/.erdbpro/installation-identity.json`; normally leave unset to use this default |
+| Managed container such as Easypanel, Coolify, or Dokploy | `<persistent-mount-path>/.erdbpro/license-state.json`, for example `/data/.erdbpro/license-state.json` if the mount is available at `/data` | Optional: `<persistent-mount-path>/.erdbpro/installation-identity.json`; normally leave unset to use the sibling file |
+| Linux VPS without Docker, such as a systemd service | `/var/lib/erd-builder-pro/.erdbpro/license-state.json` | Optional: `/var/lib/erd-builder-pro/.erdbpro/installation-identity.json`; normally leave unset to use the sibling file |
+| Vercel Functions | No supported path for a licensed Commercial Team deployment at this time | No supported path |
+
+For containers, use the path inside the container. For example, if the host mounts `/srv/erdbpro-data` at `/app/data`, set the variable to `/app/data/.erdbpro/license-state.json`, not the host path `/srv/erdbpro-data/...`. The runtime creates the parent directory, but the volume must already be mounted and writable by the application process user.
+
+Vercel serves the API through Functions and recommends object storage for files written by Functions. ERDBPro currently reads and writes both license state files through the local filesystem; the application does not connect them to object storage. Therefore, the current Vercel integration has no supported persistent path for Commercial Team licensing. Do not replace `/app/data` with `/tmp`; the path variable only selects a file location and does not provide persistent storage. See Vercel's [guide to files in Vercel Functions](https://vercel.com/kb/guide/how-can-i-use-files-in-serverless-functions).
+
+Daily capacity reports also run from a long-lived server process. The current Vercel entry point does not start that scheduler, so Vercel cannot ensure daily reports are sent. Use a container with a persistent volume or a VPS for Commercial Team deployments.
+
+For an existing installation, before changing configuration or recreating the container/server:
+
+1. Find the effective paths of both files on the running server. By default, they are under `.erdbpro/` inside the server working directory.
 2. Copy and securely retain **both existing files**.
-3. Mount persistent storage on the replacement container and restore the same files unchanged. Set `ERDBPRO_LICENSE_STATE_FILE` to the file path on that mount; the installation identity uses the sibling file unless its override is set.
+3. Attach persistent storage to the replacement deployment and restore the same files unchanged. Set `ERDBPRO_LICENSE_STATE_FILE` to the new file path; the installation identity uses the sibling file unless its override is set.
 4. After startup, verify the license status and Team list before removing the backup copies.
 
-On Easypanel or another managed container platform, create the persistent mount first and point `ERDBPRO_LICENSE_STATE_FILE` inside it. Do not change the path and restart before copying the current state; a newly generated identity can invalidate signatures on existing Teams. Keep both files as local secrets and never upload them to source control or SaaS.
+On Easypanel or another managed container platform, create the persistent mount first and use the path visible inside the container. Do not change the path and restart before copying the current state; a newly generated identity can invalidate signatures on existing Teams. Keep both files as local secrets and never upload them to source control or SaaS.
 
-:::caution If startup reports `ENOENT` at `/app/data/.erdbpro`
-Confirm that `/app/data` is an actual mount available and writable by the container. The runtime creates missing subdirectories recursively, but it cannot write to a missing or inaccessible mount. When running `npm run start` outside a container, do not reuse the Docker path `/app/data`; omit the override or choose a writable local path.
+:::caution If startup cannot write license state
+Check that `ERDBPRO_LICENSE_STATE_FILE` points to persistent storage available and writable by the application process user. For Docker, confirm that `/app/data` is an actual mount. When running `npm run start` on a VPS outside a container, do not reuse the Docker path `/app/data`; omit the override to use the working-directory default or set a VPS path from the table above.
 
 Also check that the startup log reports the version of the image you intended to test. Before retrying a paid deployment, make sure the previous `license-state.json` and `installation-identity.json` are safely backed up.
 :::
@@ -75,6 +91,14 @@ docker run -d \
   bekenweb/erd-builder-pro:latest
 ```
 
+For a licensed Docker deployment, add the file path inside the mount to `.env`:
+
+```env
+ERDBPRO_LICENSE_STATE_FILE=/app/data/.erdbpro/license-state.json
+```
+
+The official Docker Compose file sets the same default path. Leave `ERDBPRO_INSTALLATION_IDENTITY_FILE` unset unless you move the identity file to another persistent path.
+
 The following Local PostgreSQL base configuration is shared by both Self-host plans:
 ```env
 DATABASE_URL="postgresql://user:password@db:5432/erd_builder_pro"
@@ -110,11 +134,13 @@ If you want to build your own image with custom configuration:
 
 ## 2. Vercel (Frontend & Serverless)
 
-This application is compatible with Vercel for simpler deployment:
+Use these steps only for deployment modes compatible with Vercel that do not use Team license state files:
 1. Connect your GitHub repository to Vercel.
 2. Use the *Framework Preset*: **Vite**.
 3. Set the *Output Directory*: `dist`.
-4. Enter all *Environment Variables* in the Vercel dashboard.
+4. Enter the environment variables required by that mode in the Vercel dashboard.
+
+Licensed Self-host Commercial Team is not supported on Vercel. See [persistent state and license paths](#persistent-license-state-paid-self-host). Use Docker with a persistent volume or a Linux VPS for licensed deployments.
 
 ## 3. CLI Installer (One-Command Setup)
 
