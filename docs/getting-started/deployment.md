@@ -12,7 +12,7 @@ ERD Builder Pro dapat dijalankan pada beberapa platform, termasuk serverless dan
 Self-host Personal Gratis hanya menyediakan Personal Workspace. Self-host Commercial Team memakai lisensi instance untuk menambahkan Team Workspace dan kapasitas member. Konfigurasi Cloud SaaS memakai lingkungan berbeda; lihat [Environment Variables](../configuration/env-variables).
 
 - **Personal Gratis:** siapkan database dan `ERD_ENCRYPTION_KEY`; environment lisensi Team tidak diperlukan.
-- **Commercial Team Berbayar:** siapkan environment lisensi sesuai [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-berbayar), lalu masukkan license key melalui **Application Settings**. Persistensikan kedua file state lisensi.
+- **Commercial Team Berbayar:** siapkan environment lisensi sesuai [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-berbayar), pasang storage persisten seperti dijelaskan di bawah, lalu masukkan license key melalui **Application Settings**.
 
 Kedua plan memakai konfigurasi dasar Local PostgreSQL yang sama. Tambahkan endpoint lisensi berikut hanya pada `.env` Commercial Team:
 
@@ -25,7 +25,7 @@ Ganti URL contoh dengan endpoint dan issuer yang diberikan penyedia lisensi. Jan
 
 ## Persistent License State (Paid Self-host)
 
-Deployment Commercial Team harus menyimpan state lisensi pada filesystem lokal yang persisten dan dapat ditulis oleh proses aplikasi. `license-state.json` mempertahankan client token, sedangkan file `installation-identity.json` biasanya disimpan di folder yang sama untuk mempertahankan installation ID dan private key yang menandatangani record Team lokal.
+Deployment Commercial Team harus menyimpan state lisensi pada filesystem lokal yang persisten dan dapat ditulis oleh proses aplikasi. `license-state.json` menyimpan client token dan signed entitlement, bukan license key mentah. File `installation-identity.json` biasanya disimpan di folder yang sama untuk mempertahankan installation ID dan private key yang menandatangani record Team lokal.
 
 `ERDBPRO_LICENSE_STATE_FILE` menerima path lengkap ke file `license-state.json`, bukan nama folder atau URL. Gunakan path absolut yang terlihat dari proses server. Jika `ERDBPRO_INSTALLATION_IDENTITY_FILE` tidak diatur, runtime menyimpan `installation-identity.json` di folder yang sama. Set override identity hanya jika diperlukan, dan pastikan file itu juga berada di storage persisten.
 
@@ -40,21 +40,34 @@ Deployment Commercial Team harus menyimpan state lisensi pada filesystem lokal y
 
 Untuk container, gunakan path di dalam container. Contohnya, bila host memasang `/srv/erdbpro-data` ke `/app/data`, isi variabel dengan `/app/data/.erdbpro/license-state.json`, bukan path host `/srv/erdbpro-data/...`. Runtime membuat folder induk, tetapi volume harus sudah terpasang dan dapat ditulis oleh user proses aplikasi.
 
+### Catatan Docker dan Easypanel
+
+Docker image saat ini tidak menetapkan `ERDBPRO_LICENSE_STATE_FILE` atau volume secara default. Jika variabel itu kosong, runtime memakai `.erdbpro/license-state.json` di working directory server, yaitu `/app/.erdbpro/license-state.json` pada image Docker. Membuat volume di `/app/data` saja tidak memindahkan state ke sana; Compose resmi juga mengatur variabel path ke dalam volume tersebut.
+
+- **Docker Compose resmi:** Compose membuat named volume `erd-data` dan mengarahkannya ke `/app/data`. Nilai path lisensi sudah diatur ke `/app/data/.erdbpro/license-state.json`. Jangan gunakan `docker compose down -v`, `docker volume rm`, atau `docker volume prune` pada volume yang menyimpan data aplikasi.
+- **Easypanel App service:** buka **Storage**, tambahkan Volume mount pada `/app/data`, lalu pastikan environment berisi `ERDBPRO_LICENSE_STATE_FILE=/app/data/.erdbpro/license-state.json`. Tanpa mount, file di filesystem container dapat hilang saat Easypanel membuat ulang service. Image maupun environment variable tidak membuat storage persisten dengan sendirinya.
+- **Target mount:** pasang volume di `/app/data`, bukan di `/app`; mount dapat menutupi file yang sudah ada pada direktori tujuan. Cadangkan isi `/app/data` sebelum memasang volume jika direktori itu sudah berisi file.
+- **Backup:** volume persisten melindungi file saat container diganti, tetapi bukan backup. Atur backup volume secara terpisah dan pastikan Anda dapat memulihkannya.
+
+Lihat juga [dokumentasi volume Docker](https://docs.docker.com/engine/storage/volumes/) dan [dokumentasi Storage Easypanel](https://easypanel.io/docs/services/app) untuk detail siklus hidup volume dan mount.
+
+Volume aplikasi `/app/data` menyimpan database SQLite bila Anda memilih mode SQLite. Volume itu tidak menyimpan database PostgreSQL pada service terpisah; atur volume untuk service PostgreSQL tersebut secara terpisah. Pertahankan nilai `ERD_ENCRYPTION_KEY` saat menggunakan database yang sama, karena aplikasi memerlukannya untuk mendekripsi secret DB Connect dan AI yang tersimpan.
+
 Vercel menjalankan API sebagai Functions dan menyarankan object storage untuk file yang ditulis dari Functions. Runtime ERDBPro saat ini membaca dan menulis kedua file state lisensi melalui filesystem lokal; aplikasi belum menghubungkannya ke object storage. Karena itu, tidak ada path persisten yang didukung untuk lisensi Commercial Team pada integrasi Vercel saat ini. Jangan mengganti `/app/data` dengan `/tmp`; variabel path hanya memilih lokasi file dan tidak menyediakan storage persisten. Lihat [panduan file pada Vercel Functions](https://vercel.com/kb/guide/how-can-i-use-files-in-serverless-functions).
 
 Laporan kapasitas harian juga dijalankan oleh proses server yang terus hidup. Entry point Vercel saat ini tidak menjalankan scheduler tersebut, jadi Vercel tidak menjamin pengiriman laporan harian. Gunakan container dengan persistent volume atau VPS untuk deployment Commercial Team.
 
 Untuk instalasi yang sudah berjalan, sebelum mengganti konfigurasi atau membuat ulang container/server:
 
-1. Temukan path efektif kedua file pada server yang sedang berjalan. Secara default, file berada di `.erdbpro/` di bawah working directory server.
-2. Salin dan simpan **kedua file yang sama** ke lokasi aman.
-3. Pasang storage persisten pada deployment baru dan pulihkan kedua file tanpa mengubah isinya. Set `ERDBPRO_LICENSE_STATE_FILE` ke path baru; identity instalasi otomatis memakai file saudara, kecuali Anda mengatur override-nya.
+1. Periksa nilai `ERDBPRO_LICENSE_STATE_FILE` pada service yang sedang berjalan untuk menemukan path efektifnya. Jangan mengasumsikan file di `/app/.erdbpro` adalah file yang sedang dibaca jika variabel itu menunjuk ke path lain.
+2. Simpan cadangan **kedua file asli** (`license-state.json` dan `installation-identity.json`). Jika folder `.erdbpro` berisi `team-provisioning-baseline-v1`, simpan juga. Menyalin seluruh folder biasanya paling aman. Jangan membagikan atau mengunggah file-file ini.
+3. Pasang storage persisten pada deployment baru dan pulihkan file tanpa mengubah isinya. Set `ERDBPRO_LICENSE_STATE_FILE` ke path file pada mount; identity instalasi memakai file saudara kecuali Anda mengatur override-nya.
 4. Setelah server mulai, periksa status lisensi dan daftar Team sebelum menghapus salinan cadangan.
 
-Pada Easypanel atau platform container terkelola, buat persistent mount terlebih dahulu dan gunakan path mount yang terlihat di dalam container. Jangan mengubah path lalu me-restart sebelum menyalin state yang ada; identity baru dapat membuat tanda tangan Team lama tidak cocok. Simpan kedua file sebagai secret lokal dan jangan unggah ke repositori atau SaaS.
+Jika berpindah dari default `/app/.erdbpro` ke volume `/app/data`, pulihkan state lama ke `/app/data/.erdbpro/` sebelum menjalankan service dengan path baru. Jangan biarkan runtime membuat installation identity baru untuk menggantikan identity lama; perubahan identity dapat membuat tanda tangan Team yang ada tidak cocok. Bila state lisensi lama tidak tersedia, jangan anggap pengaktifan ulang otomatis akan memulihkan binding lama.
 
 :::caution Jika startup tidak dapat menulis state lisensi
-Periksa bahwa nilai `ERDBPRO_LICENSE_STATE_FILE` menunjuk ke storage persisten yang tersedia dan dapat ditulis oleh user proses aplikasi. Untuk Docker, pastikan `/app/data` benar-benar merupakan mount. Jika menjalankan `npm run start` di VPS tanpa container, jangan gunakan path Docker `/app/data`; hilangkan override agar runtime memakai default di working directory atau atur path VPS seperti pada tabel di atas.
+Periksa bahwa nilai `ERDBPRO_LICENSE_STATE_FILE` menunjuk ke storage persisten yang tersedia dan dapat ditulis oleh user proses aplikasi. Untuk Docker/Easypanel, pastikan `/app/data` benar-benar merupakan mount dan path variabel berada di dalamnya. Jika menjalankan `npm run start` di VPS tanpa container, jangan gunakan path Docker `/app/data`; hilangkan override agar runtime memakai default di working directory atau atur path VPS seperti pada tabel di atas.
 
 Periksa juga versi pada log startup agar cocok dengan image yang sedang diuji. Sebelum mencoba ulang pada deployment berbayar, pastikan salinan lama `license-state.json` dan `installation-identity.json` sudah aman.
 :::
@@ -83,13 +96,13 @@ Jika R2 tidak disiapkan, fitur unggah file/gambar akan error. Untuk mode **Local
    ```
 2. **Jalankan Container:**
    ```bash
-docker run -d \
-  -p 3000:3000 \
-  --name erd-builder-pro \
-  --env-file .env \
-  -v erd-data:/app/data \
-  bekenweb/erd-builder-pro:latest
-```
+   docker run -d \
+   -p 3000:3000 \
+   --name erd-builder-pro \
+   --env-file .env \
+   -v erd-data:/app/data \
+   bekenweb/erd-builder-pro:latest
+   ```
 
 Untuk Docker berlisensi, tambahkan path file di dalam mount ke `.env`:
 

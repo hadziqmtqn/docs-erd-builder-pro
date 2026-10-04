@@ -12,7 +12,7 @@ ERD Builder Pro can run on several platforms, including serverless services and 
 Free Self-host Personal provides one Personal Workspace. Paid Self-host Commercial Team uses an instance license for Team Workspaces and member capacity. Cloud SaaS uses a separate environment; see [Environment Variables](../configuration/env-variables).
 
 - **Free Personal:** configure the database and `ERD_ENCRYPTION_KEY`; Team license environment variables are not required.
-- **Paid Commercial Team:** configure the license environment from [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-paid), then enter the license key in **Application Settings**. Persist both license state files.
+- **Paid Commercial Team:** configure the license environment from [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-paid), attach persistent storage as described below, then enter the license key in **Application Settings**.
 
 Both plans share the same Local PostgreSQL base configuration. Add these license endpoints to the Commercial Team `.env` only:
 
@@ -25,7 +25,7 @@ Replace the example URLs with the API and issuer provided by your license servic
 
 ## Persistent License State (Paid Self-host)
 
-Commercial Team deployments must keep license state on a persistent, writable local filesystem. `license-state.json` preserves the client token. The `installation-identity.json` file is normally stored beside it to preserve the installation ID and private key that signs local Team records.
+Commercial Team deployments must keep license state on a persistent, writable local filesystem. `license-state.json` stores the client token and signed entitlement, not the raw license key. The `installation-identity.json` file is normally stored beside it to preserve the installation ID and private key that signs local Team records.
 
 `ERDBPRO_LICENSE_STATE_FILE` takes the full path to the `license-state.json` file, not a directory name or URL. Use an absolute path visible to the server process. If `ERDBPRO_INSTALLATION_IDENTITY_FILE` is not set, the runtime stores `installation-identity.json` beside the state file. Set the identity override only when needed, and make sure that file is also on persistent storage.
 
@@ -40,21 +40,34 @@ Commercial Team deployments must keep license state on a persistent, writable lo
 
 For containers, use the path inside the container. For example, if the host mounts `/srv/erdbpro-data` at `/app/data`, set the variable to `/app/data/.erdbpro/license-state.json`, not the host path `/srv/erdbpro-data/...`. The runtime creates the parent directory, but the volume must already be mounted and writable by the application process user.
 
+### Docker and Easypanel Notes
+
+The current Docker image does not set `ERDBPRO_LICENSE_STATE_FILE` or declare a volume by default. If the variable is empty, the runtime uses `.erdbpro/license-state.json` under the server working directory, which is `/app/.erdbpro/license-state.json` in the Docker image. Mounting a volume at `/app/data` alone does not move the license state there; the official Compose file also sets the path variable to that volume.
+
+- **Official Docker Compose:** Compose creates the named `erd-data` volume and mounts it at `/app/data`. It sets the license path to `/app/data/.erdbpro/license-state.json`. Do not run `docker compose down -v`, `docker volume rm`, or `docker volume prune` against a volume that holds application data.
+- **Easypanel App service:** open **Storage**, add a Volume mount at `/app/data`, then set `ERDBPRO_LICENSE_STATE_FILE=/app/data/.erdbpro/license-state.json` in the service environment. Without a mount, files in the container filesystem may disappear when Easypanel recreates the service. An image or environment variable does not create persistent storage by itself.
+- **Mount target:** mount at `/app/data`, not `/app`; a mount can hide files already present in its target directory. Back up existing `/app/data` contents before adding a mount there.
+- **Backups:** a persistent volume protects files when a container is replaced, but it is not a backup. Configure volume backups separately and confirm you can restore them.
+
+See the [Docker volumes documentation](https://docs.docker.com/engine/storage/volumes/) and [Easypanel Storage documentation](https://easypanel.io/docs/services/app) for details on volume and mount lifecycles.
+
+The `/app/data` application volume stores the SQLite database when you use SQLite mode. It does not store a PostgreSQL database running in a separate service; configure persistent storage for that PostgreSQL service separately. Keep the same `ERD_ENCRYPTION_KEY` when continuing to use the same database, or the application will not be able to decrypt stored DB Connect and AI secrets.
+
 Vercel serves the API through Functions and recommends object storage for files written by Functions. ERDBPro currently reads and writes both license state files through the local filesystem; the application does not connect them to object storage. Therefore, the current Vercel integration has no supported persistent path for Commercial Team licensing. Do not replace `/app/data` with `/tmp`; the path variable only selects a file location and does not provide persistent storage. See Vercel's [guide to files in Vercel Functions](https://vercel.com/kb/guide/how-can-i-use-files-in-serverless-functions).
 
 Daily capacity reports also run from a long-lived server process. The current Vercel entry point does not start that scheduler, so Vercel cannot ensure daily reports are sent. Use a container with a persistent volume or a VPS for Commercial Team deployments.
 
 For an existing installation, before changing configuration or recreating the container/server:
 
-1. Find the effective paths of both files on the running server. By default, they are under `.erdbpro/` inside the server working directory.
-2. Copy and securely retain **both existing files**.
-3. Attach persistent storage to the replacement deployment and restore the same files unchanged. Set `ERDBPRO_LICENSE_STATE_FILE` to the new file path; the installation identity uses the sibling file unless its override is set.
+1. Check `ERDBPRO_LICENSE_STATE_FILE` on the running service to find the effective path. Do not assume that files under `/app/.erdbpro` are being used if the variable points somewhere else.
+2. Back up **both existing files** (`license-state.json` and `installation-identity.json`). If the `.erdbpro` folder contains `team-provisioning-baseline-v1`, preserve it too. Copying the whole folder is usually safest. Never share or upload these files.
+3. Attach persistent storage to the replacement deployment and restore the files unchanged. Set `ERDBPRO_LICENSE_STATE_FILE` to the file path on that mount; the installation identity uses the sibling file unless its override is set.
 4. After startup, verify the license status and Team list before removing the backup copies.
 
-On Easypanel or another managed container platform, create the persistent mount first and use the path visible inside the container. Do not change the path and restart before copying the current state; a newly generated identity can invalidate signatures on existing Teams. Keep both files as local secrets and never upload them to source control or SaaS.
+When moving from the `/app/.erdbpro` default to a volume at `/app/data`, restore the old state to `/app/data/.erdbpro/` before starting the service with the new path. Do not let the runtime generate a replacement installation identity; changing the identity can invalidate signatures on existing Teams. If the old license state is unavailable, do not assume that activation will automatically restore the existing binding.
 
 :::caution If startup cannot write license state
-Check that `ERDBPRO_LICENSE_STATE_FILE` points to persistent storage available and writable by the application process user. For Docker, confirm that `/app/data` is an actual mount. When running `npm run start` on a VPS outside a container, do not reuse the Docker path `/app/data`; omit the override to use the working-directory default or set a VPS path from the table above.
+Check that `ERDBPRO_LICENSE_STATE_FILE` points to persistent storage available and writable by the application process user. For Docker or Easypanel, confirm that `/app/data` is actually mounted and that the path variable points inside it. When running `npm run start` on a VPS outside a container, do not reuse the Docker path `/app/data`; omit the override to use the working-directory default or set a VPS path from the table above.
 
 Also check that the startup log reports the version of the image you intended to test. Before retrying a paid deployment, make sure the previous `license-state.json` and `installation-identity.json` are safely backed up.
 :::

@@ -30,12 +30,12 @@ Variabel berikut hanya diperlukan jika instalasi memakai lisensi kapasitas Team.
 
 - `ERDBPRO_LICENSE_API_URL`: **Wajib**. Origin API lisensi, misalnya `https://license.example.com` tanpa path endpoint. Aplikasi menambahkan path aktivasi dan pemeriksaan lisensi.
 - `ERDBPRO_LICENSE_ISSUER`: **Wajib**. Nilai issuer persis yang dipakai pada signed entitlement dari control plane. Jangan menebak nilainya dari nama plan.
-- `ERDBPRO_LICENSE_STATE_FILE`: Path lengkap opsional untuk file state lisensi, misalnya `/app/data/.erdbpro/license-state.json` di Docker. Pilih path absolut pada filesystem persisten yang dapat ditulis oleh proses server. File ini memuat client token dan bersifat rahasia.
+- `ERDBPRO_LICENSE_STATE_FILE`: Path lengkap opsional untuk file state lisensi, misalnya `/app/data/.erdbpro/license-state.json` di Docker. Pilih path absolut pada filesystem persisten yang dapat ditulis oleh proses server. Variabel ini hanya memilih path; variabel ini tidak membuat atau memasang volume. File ini memuat client token dan signed entitlement, sehingga harus diperlakukan sebagai rahasia.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Override path opsional untuk identity instalasi. Jika tidak diatur, `installation-identity.json` dibuat berdampingan dengan file state lisensi. File ini berisi private key lokal dan harus dipertahankan bersama file state.
 
 Kunci verifikasi publik resmi sudah disertakan di server. Jangan mengatur public key atau key ID khusus di production. Untuk Personal Gratis, jangan isi variabel client lisensi Team hanya untuk menjalankan Personal Workspace.
 
-Nilai path yang tepat berbeda untuk Docker, container terkelola, VPS, dan Vercel. Lihat [tabel path per jenis deployment](../getting-started/deployment#nilai-path-per-jenis-deployment). Saat memindahkan instalasi yang sudah ada, salin **kedua file state tersebut** ke storage persisten sebelum mengganti path atau membuat ulang server. Jangan membuat identity baru untuk menggantikan identity instalasi lama.
+Nilai path yang tepat berbeda untuk Docker, container terkelola, VPS, dan Vercel. Lihat [tabel path per jenis deployment](../getting-started/deployment#nilai-path-per-jenis-deployment) dan [catatan Docker/Easypanel](../getting-started/deployment#catatan-docker-dan-easypanel). Saat memindahkan instalasi yang sudah ada, salin file state, identity, dan marker instalasi yang ada ke storage persisten sebelum mengganti path atau membuat ulang server. Jangan membuat identity baru untuk menggantikan identity instalasi lama.
 
 ## Core (Wajib)
 Variabel ini wajib diatur agar aplikasi dapat berfungsi.
