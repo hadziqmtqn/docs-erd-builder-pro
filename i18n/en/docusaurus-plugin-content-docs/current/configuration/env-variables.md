@@ -30,12 +30,12 @@ These variables are needed only when the installation uses Team capacity licensi
 
 - `ERDBPRO_LICENSE_API_URL`: **Required**. The license API origin, such as `https://license.example.com`, without an endpoint path. The app appends the activation and license-check routes.
 - `ERDBPRO_LICENSE_ISSUER`: **Required**. The exact issuer value used by the control plane in signed entitlements. Do not infer it from a plan name.
-- `ERDBPRO_LICENSE_STATE_FILE`: Optional full path to the license state file, for example `/app/data/.erdbpro/license-state.json` in Docker. Choose an absolute path on persistent storage that the server process can write to. This file contains a client token and is secret.
+- `ERDBPRO_LICENSE_STATE_FILE`: Optional full path to the license state file, for example `/app/data/.erdbpro/license-state.json` in Docker. Choose an absolute path on persistent storage that the server process can write to. This variable only selects a path; it does not create or attach a volume. The file contains a client token and signed entitlement, so treat it as secret.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Optional override for the installation identity path. When unset, `installation-identity.json` is placed beside the license state file. It contains the local private key and must be preserved with the state file.
 
 The official verification key is bundled with the server. Do not set a custom public key or key ID in production. Free Personal does not need the Team license client variables to run its Personal Workspace.
 
-The path value differs for Docker, managed containers, VPS, and Vercel. See the [path table by deployment type](../getting-started/deployment#path-values-by-deployment-type). When moving an existing installation, copy **both existing state files** to persistent storage before changing the path or recreating the server. Do not replace the existing installation identity with a newly generated one.
+The path value differs for Docker, managed containers, VPS, and Vercel. See the [path table by deployment type](../getting-started/deployment#path-values-by-deployment-type) and the [Docker/Easypanel notes](../getting-started/deployment#docker-and-easypanel-notes). When moving an existing installation, copy the state, identity, and any installation marker files to persistent storage before changing the path or recreating the server. Do not replace the existing installation identity with a newly generated one.
 
 ## Core (Required)
 These variables are mandatory for the application to function.
