@@ -30,12 +30,12 @@ Variabel berikut hanya diperlukan jika instalasi memakai lisensi kapasitas Team.
 
 - `ERDBPRO_LICENSE_API_URL`: **Wajib**. Origin API lisensi, misalnya `https://license.example.com` tanpa path endpoint. Aplikasi menambahkan path aktivasi dan pemeriksaan lisensi.
 - `ERDBPRO_LICENSE_ISSUER`: **Wajib**. Nilai issuer persis yang dipakai pada signed entitlement dari control plane. Jangan menebak nilainya dari nama plan.
-- `ERDBPRO_LICENSE_STATE_FILE`: Path opsional untuk file state lisensi. Di container gunakan persistent mount, misalnya `/app/data/.erdbpro/license-state.json`. File ini memuat client token dan bersifat rahasia.
+- `ERDBPRO_LICENSE_STATE_FILE`: Path lengkap opsional untuk file state lisensi, misalnya `/app/data/.erdbpro/license-state.json` di Docker. Pilih path absolut pada filesystem persisten yang dapat ditulis oleh proses server. File ini memuat client token dan bersifat rahasia.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Override path opsional untuk identity instalasi. Jika tidak diatur, `installation-identity.json` dibuat berdampingan dengan file state lisensi. File ini berisi private key lokal dan harus dipertahankan bersama file state.
 
 Kunci verifikasi publik resmi sudah disertakan di server. Jangan mengatur public key atau key ID khusus di production. Untuk Personal Gratis, jangan isi variabel client lisensi Team hanya untuk menjalankan Personal Workspace.
 
-Saat berpindah dari instalasi container lama, salin **kedua file state yang sudah ada** ke persistent mount sebelum mengganti path atau membuat ulang container. Jangan membuat identity baru untuk menggantikan identity instalasi lama. Lihat [panduan deployment dan migrasi state](../getting-started/deployment#persistent-license-state-paid-self-host).
+Nilai path yang tepat berbeda untuk Docker, container terkelola, VPS, dan Vercel. Lihat [tabel path per jenis deployment](../getting-started/deployment#nilai-path-per-jenis-deployment). Saat memindahkan instalasi yang sudah ada, salin **kedua file state tersebut** ke storage persisten sebelum mengganti path atau membuat ulang server. Jangan membuat identity baru untuk menggantikan identity instalasi lama.
 
 ## Core (Wajib)
 Variabel ini wajib diatur agar aplikasi dapat berfungsi.
@@ -98,6 +98,8 @@ Fitur opsional untuk mengirimkan *feedback* pengguna ke pengembang melalui **Tel
 
 ## Matriks Kebutuhan Platform
 
+Matriks ini merangkum kebutuhan environment aplikasi secara umum. Nilai path state lisensi Commercial Team bergantung pada platform dan dijelaskan terpisah pada [tabel path lisensi](../getting-started/deployment#nilai-path-per-jenis-deployment).
+
 | Nama Variabel | Lokal / Dev | Vercel / VPS | Kegunaan |
 | :--- | :---: | :---: | :--- |
 | `DATABASE_URL` | ✅ | ✅ | Koneksi DB |
@@ -134,10 +136,12 @@ cp .env.example .env
 ```
 Isi nilai variabel sesuai dengan dashboard penyedia layanan masing-masing.
 
-### 2. Deployment (Vercel / VPS)
-- Masukkan variabel di atas pada dashboard **Project Settings > Environment Variables**.
+### 2. Deployment (Docker, VPS, atau Vercel)
+- Masukkan variabel yang dibutuhkan pada dashboard penyedia atau konfigurasi service.
+- Untuk Docker, kirim variabel melalui `.env` atau flag `-e` saat `docker run`; path lisensi harus mengarah ke persistent volume yang dipasang di container.
+- Untuk VPS tanpa container, gunakan path absolut yang dapat ditulis oleh user service.
+- Vercel tidak mendukung state file lisensi persisten yang diperlukan Self-host Commercial Team saat ini. Lihat [panduan deployment](../getting-started/deployment).
 - Pastikan variabel `VITE_` dicentang untuk semua lingkungan (Production & Preview).
-- Jika menggunakan Docker, masukkan variabel melalui file `.env` atau flag `-e` saat `docker run`.
 
 ---
 *Informasi lebih lanjut tentang setup database dapat dilihat di [Setup Database](./database-setup).*

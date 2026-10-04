@@ -30,12 +30,12 @@ These variables are needed only when the installation uses Team capacity licensi
 
 - `ERDBPRO_LICENSE_API_URL`: **Required**. The license API origin, such as `https://license.example.com`, without an endpoint path. The app appends the activation and license-check routes.
 - `ERDBPRO_LICENSE_ISSUER`: **Required**. The exact issuer value used by the control plane in signed entitlements. Do not infer it from a plan name.
-- `ERDBPRO_LICENSE_STATE_FILE`: Optional path for the license state file. In a container, put it on a persistent mount, for example `/app/data/.erdbpro/license-state.json`. This file contains a client token and is secret.
+- `ERDBPRO_LICENSE_STATE_FILE`: Optional full path to the license state file, for example `/app/data/.erdbpro/license-state.json` in Docker. Choose an absolute path on persistent storage that the server process can write to. This file contains a client token and is secret.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Optional override for the installation identity path. When unset, `installation-identity.json` is placed beside the license state file. It contains the local private key and must be preserved with the state file.
 
 The official verification key is bundled with the server. Do not set a custom public key or key ID in production. Free Personal does not need the Team license client variables to run its Personal Workspace.
 
-When moving an existing container, copy **both existing state files** to the persistent mount before changing the path or recreating the container. Do not replace the existing installation identity with a newly generated one. See [deployment and state migration](../getting-started/deployment#persistent-license-state-paid-self-host).
+The path value differs for Docker, managed containers, VPS, and Vercel. See the [path table by deployment type](../getting-started/deployment#path-values-by-deployment-type). When moving an existing installation, copy **both existing state files** to persistent storage before changing the path or recreating the server. Do not replace the existing installation identity with a newly generated one.
 
 ## Core (Required)
 These variables are mandatory for the application to function.
@@ -98,6 +98,8 @@ Optional feature to send user feedback to the developer via a **Telegram bot**.
 
 ## Platform Requirements Matrix
 
+This matrix summarizes general application environment requirements. Commercial Team license state paths depend on the hosting platform and are listed separately in the [license path table](../getting-started/deployment#path-values-by-deployment-type).
+
 | Variable Name | Local / Dev | Vercel / VPS | Usage |
 | :--- | :---: | :---: | :--- |
 | `DATABASE_URL` | ✅ | ✅ | DB Connection |
@@ -134,10 +136,12 @@ cp .env.example .env
 ```
 Fill in the variable values according to each service provider's dashboard.
 
-### 2. Deployment (Vercel / VPS)
-- Enter the variables in the dashboard under **Project Settings > Environment Variables**.
+### 2. Deployment (Docker, VPS, or Vercel)
+- Add required variables in the provider dashboard or service configuration.
+- For Docker, pass variables with `.env` or the `-e` flag to `docker run`; the license path must point to a persistent volume mounted inside the container.
+- For a VPS without containers, use an absolute path writable by the service user.
+- Vercel does not currently support the persistent license state files required by Self-host Commercial Team. See the [deployment guide](../getting-started/deployment).
 - Make sure the `VITE_` variables are checked for all environments (Production & Preview).
-- If using Docker, pass the variables via an `.env` file or the `-e` flag when running `docker run`.
 
 ---
 *For more information on database setup, see [Database Setup](./database-setup).*
