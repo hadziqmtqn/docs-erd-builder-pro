@@ -3,6 +3,8 @@ import {
   ReactFlow, 
   Background, 
   BackgroundVariant,
+  type Node,
+  type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useColorMode } from '@docusaurus/theme-common';
@@ -12,7 +14,7 @@ const nodeTypes = {
   entity: StaticEntityNode,
 };
 
-export default function ERDEmbed({ height = '400px', nodes = [], edges = [] }) {
+export default function ERDEmbed({ height = '400px', nodes = [], edges = [] }: { height?: string; nodes?: Node[]; edges?: Edge[] }) {
   const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';
 
