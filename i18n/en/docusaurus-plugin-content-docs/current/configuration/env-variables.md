@@ -29,7 +29,6 @@ Both profiles still use shared server settings such as `DATABASE_URL` and `ERD_E
 These variables are needed only when the installation uses Team capacity licensing. Use the endpoints supplied for your license environment; production must use HTTPS.
 
 - `ERDBPRO_LICENSE_API_URL`: **Required**. The license API origin, such as `https://license.example.com`, without an endpoint path. The app appends the activation and license-check routes.
-- `ERDBPRO_LICENSE_ISSUER`: **Required**. The exact issuer value used by the control plane in signed entitlements. Do not infer it from a plan name.
 - `ERDBPRO_LICENSE_STATE_FILE`: Optional full path to the license state file, for example `/app/data/.erdbpro/license-state.json` in Docker. Choose an absolute path on persistent storage that the server process can write to. This variable only selects a path; it does not create or attach a volume. The file contains a client token and signed entitlement, so treat it as secret.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Optional override for the installation identity path. When unset, `installation-identity.json` is placed beside the license state file. It contains the local private key and must be preserved with the state file.
 

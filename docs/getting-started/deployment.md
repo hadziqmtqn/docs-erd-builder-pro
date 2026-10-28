@@ -18,10 +18,9 @@ Kedua plan memakai konfigurasi dasar Local PostgreSQL yang sama. Tambahkan endpo
 
 ```env
 ERDBPRO_LICENSE_API_URL=https://license.example.com
-ERDBPRO_LICENSE_ISSUER=https://license.example.com
 ```
 
-Ganti URL contoh dengan endpoint dan issuer yang diberikan penyedia lisensi. Jangan menyimpan license key di file environment. Nilai `ERDBPRO_LICENSE_STATE_FILE` berbeda menurut platform karena variabel itu menunjuk ke file pada filesystem server. Lihat [contoh path per platform](../configuration/env-variables#nilai-path-per-jenis-deployment).
+Ganti URL contoh dengan endpoint yang diberikan penyedia lisensi. Kunci verifikasi dan issuer resmi sudah tertanam di aplikasi, jadi tidak perlu diatur. Jangan menyimpan license key di file environment. Nilai `ERDBPRO_LICENSE_STATE_FILE` berbeda menurut platform karena variabel itu menunjuk ke file pada filesystem server. Lihat [contoh path per platform](../configuration/env-variables#nilai-path-per-jenis-deployment).
 
 ## Persistent License State (Paid Self-host)
 
@@ -83,7 +82,7 @@ Siapkan `.env` dengan konfigurasi database dan kunci enkripsi. Cloudflare R2 dir
 - `DATABASE_URL` — connection string PostgreSQL (wajib, baik Supabase maupun Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — hanya jika menggunakan mode **Supabase**
 - `ERD_ENCRYPTION_KEY` — wajib untuk menyimpan password DB Connect dan API key AI secara aman pada deployment web/Docker
-- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — wajib hanya untuk Self-host Commercial Team berlisensi
+- `ERDBPRO_LICENSE_API_URL` — wajib hanya untuk Self-host Commercial Team berlisensi
 - R2 vars — disarankan agar fitur unggah file/gambar berfungsi penuh
 
 Jika R2 tidak disiapkan, fitur unggah file/gambar akan error. Untuk mode **Local PostgreSQL**, pastikan database PostgreSQL dapat dijangkau dari container.

@@ -29,7 +29,6 @@ Kedua profil tetap memakai environment server bersama seperti `DATABASE_URL` dan
 Variabel berikut hanya diperlukan jika instalasi memakai lisensi kapasitas Team. Salin endpoint resmi yang diberikan untuk lingkungan lisensi Anda; produksi harus memakai HTTPS.
 
 - `ERDBPRO_LICENSE_API_URL`: **Wajib**. Origin API lisensi, misalnya `https://license.example.com` tanpa path endpoint. Aplikasi menambahkan path aktivasi dan pemeriksaan lisensi.
-- `ERDBPRO_LICENSE_ISSUER`: **Wajib**. Nilai issuer persis yang dipakai pada signed entitlement dari control plane. Jangan menebak nilainya dari nama plan.
 - `ERDBPRO_LICENSE_STATE_FILE`: Path lengkap opsional untuk file state lisensi, misalnya `/app/data/.erdbpro/license-state.json` di Docker. Pilih path absolut pada filesystem persisten yang dapat ditulis oleh proses server. Variabel ini hanya memilih path; variabel ini tidak membuat atau memasang volume. File ini memuat client token dan signed entitlement, sehingga harus diperlakukan sebagai rahasia.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Override path opsional untuk identity instalasi. Jika tidak diatur, `installation-identity.json` dibuat berdampingan dengan file state lisensi. File ini berisi private key lokal dan harus dipertahankan bersama file state.
 

@@ -18,10 +18,9 @@ Both plans share the same Local PostgreSQL base configuration. Add these license
 
 ```env
 ERDBPRO_LICENSE_API_URL=https://license.example.com
-ERDBPRO_LICENSE_ISSUER=https://license.example.com
 ```
 
-Replace the example URLs with the API and issuer provided by your license service. Do not store the license key in environment files. The value of `ERDBPRO_LICENSE_STATE_FILE` depends on the platform because it points to a file on the server filesystem. See [path examples by platform](../configuration/env-variables#path-values-by-deployment-type).
+Replace the example URL with the API provided by your license service. The official verification key and issuer are built into the app, so you do not set them. Do not store the license key in environment files. The value of `ERDBPRO_LICENSE_STATE_FILE` depends on the platform because it points to a file on the server filesystem. See [path examples by platform](../configuration/env-variables#path-values-by-deployment-type).
 
 ## Persistent License State (Paid Self-host)
 
@@ -83,7 +82,7 @@ Prepare `.env` with database and encryption-key settings. Cloudflare R2 is recom
 - `DATABASE_URL` — PostgreSQL connection string (required, both Supabase and Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — only required when using **Supabase** mode
 - `ERD_ENCRYPTION_KEY` — required for securely storing DB Connect passwords and AI API keys in web/Docker deployments
-- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — required only for licensed Self-host Commercial Team deployments
+- `ERDBPRO_LICENSE_API_URL` — required only for licensed Self-host Commercial Team deployments
 - R2 vars — recommended for full file/image upload functionality
 
 If R2 is not configured, the file/image upload feature will error. For **Local PostgreSQL** mode, ensure the PostgreSQL database is reachable from the container.
