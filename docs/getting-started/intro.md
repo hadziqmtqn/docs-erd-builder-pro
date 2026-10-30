@@ -48,3 +48,11 @@ Kami terus berupaya untuk mengembangkan ERD Builder Pro menjadi alat yang lebih 
 
 > [!NOTE]
 > Seluruh fitur di atas dirancang untuk saling terintegrasi dalam satu ekosistem. **Mindmap** adalah tempat merencanakan ide, **ERD & Flowchart** adalah visualisasi struktur, **Task Workspace** mengatur eksekusi, dan **API Mapper** mendokumentasikan jalur data — semuanya terhubung satu sama lain. Dengan hadirnya **Kolaborasi Tim**, seluruh tim dapat berkontribusi secara real-time.
+
+## Lisensi
+
+ERD Builder Pro memakai [Elastic License 2.0](https://github.com/hadziqmtqn/erd-builder-pro/blob/master/LICENSE) (ELv2).
+
+- **Boleh:** memakai, men-deploy, dan memodifikasi untuk diri sendiri atau di dalam organisasi Anda, termasuk perusahaan.
+- **Tidak boleh:** menyediakannya ke pihak lain sebagai layanan hosted/managed, mengakali atau menghapus fungsi license key, atau menghapus notice lisensi.
+- **Team di Self-host** membutuhkan license key Self-host Commercial. Personal Workspace tetap gratis.
