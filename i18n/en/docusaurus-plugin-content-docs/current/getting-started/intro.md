@@ -50,3 +50,11 @@ We are continuously working to develop ERD Builder Pro into an even more powerfu
 
 > [!NOTE]
 > All the above features are designed to be integrated within a single ecosystem. **Mindmap** is a place for planning ideas, **ERD & Flowchart** for structure visualization, **Task Workspace** for managing execution, and **API Mapper** for documenting data pathways — all interconnected. With **Team Collaboration**, the entire team can contribute in real-time.
+
+## License
+
+ERD Builder Pro uses the [Elastic License 2.0](https://github.com/hadziqmtqn/erd-builder-pro/blob/master/LICENSE) (ELv2).
+
+- **Allowed:** use, deploy, and modify it for yourself or inside your organization, including companies.
+- **Not allowed:** provide it to others as a hosted or managed service, circumvent or remove the license key functionality, or remove licensing notices.
+- **Teams on Self-host** require a Self-host Commercial license key. Personal Workspace stays free.
