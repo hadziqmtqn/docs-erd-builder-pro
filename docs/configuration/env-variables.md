@@ -20,16 +20,16 @@ Bagian ini membedakan **plan Self-host**. Pilihan database seperti Local Postgre
 | Profil | Kegunaan | Environment lisensi |
 | --- | --- | --- |
 | **Self-host Personal (gratis)** | Satu Personal Workspace lokal; tidak menyediakan Team atau member Team | Tidak memerlukan environment client lisensi Team di bawah |
-| **Self-host Commercial Team (berbayar)** | Personal Workspace pemilik aplikasi ditambah Team Workspace dan kuota member sesuai lisensi instance | Wajib mengatur endpoint API dan issuer lisensi; state lisensi dan identity instalasi harus persisten |
+| **Self-host Commercial Team (berbayar)** | Personal Workspace pemilik aplikasi ditambah Team Workspace dan kuota member sesuai lisensi instance | Server lisensi resmi sudah menjadi bawaan, tanpa variabel tambahan; state lisensi dan identity instalasi harus persisten |
 
 Kedua profil tetap memakai environment server bersama seperti `DATABASE_URL` dan `ERD_ENCRYPTION_KEY` di bagian berikut. Upgrade dari Personal ke Commercial Team dilakukan dengan mengaktifkan lisensi melalui **Application Settings**. Jangan menaruh license key di `.env`.
 
 ## Self-host Commercial Team License (Berbayar)
 
-Variabel berikut hanya diperlukan jika instalasi memakai lisensi kapasitas Team. Salin endpoint resmi yang diberikan untuk lingkungan lisensi Anda; produksi harus memakai HTTPS.
+Variabel berikut hanya berlaku jika instalasi memakai lisensi kapasitas Team. Sejak versi 3.5.6, runtime memakai server lisensi resmi secara bawaan, jadi `ERDBPRO_LICENSE_API_URL` dan `ERDBPRO_LICENSE_ISSUER` tidak perlu diisi. Versi sebelumnya masih memerlukan keduanya; perbarui ke 3.5.6 atau lebih baru.
 
-- `ERDBPRO_LICENSE_API_URL`: **Wajib**. Origin API lisensi, misalnya `https://license.example.com` tanpa path endpoint. Aplikasi menambahkan path aktivasi dan pemeriksaan lisensi.
-- `ERDBPRO_LICENSE_ISSUER`: **Wajib**. Nilai issuer persis yang dipakai pada signed entitlement dari control plane. Jangan menebak nilainya dari nama plan.
+- `ERDBPRO_LICENSE_API_URL`: **Opsional**. Bawaan: `https://license.erdbuilderpro.com`. Isi hanya untuk memakai server lisensi lain, misalnya lingkungan staging. Nilainya origin tanpa path endpoint, misalnya `https://license.example.com`; aplikasi menambahkan path aktivasi dan pemeriksaan lisensi. Production harus memakai HTTPS.
+- `ERDBPRO_LICENSE_ISSUER`: **Opsional**. Bawaan: issuer resmi `https://erdbuilderpro.com` dan `https://www.erdbuilderpro.com`. Jika diisi, hanya nilai ini yang diterima, jadi isi bersama `ERDBPRO_LICENSE_API_URL` dengan issuer persis dari signed entitlement server lisensi tersebut. Jangan menebak nilainya dari nama plan.
 - `ERDBPRO_LICENSE_STATE_FILE`: Path lengkap opsional untuk file state lisensi, misalnya `/app/data/.erdbpro/license-state.json` di Docker. Pilih path absolut pada filesystem persisten yang dapat ditulis oleh proses server. Variabel ini hanya memilih path; variabel ini tidak membuat atau memasang volume. File ini memuat client token dan signed entitlement, sehingga harus diperlakukan sebagai rahasia.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Override path opsional untuk identity instalasi. Jika tidak diatur, `installation-identity.json` dibuat berdampingan dengan file state lisensi. File ini berisi private key lokal dan harus dipertahankan bersama file state.
 
