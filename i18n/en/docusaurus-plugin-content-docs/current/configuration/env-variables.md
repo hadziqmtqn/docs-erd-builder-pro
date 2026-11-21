@@ -20,16 +20,16 @@ This section separates plans only for Local PostgreSQL Self-host Web. Supabase A
 | Profile | Use | License environment |
 | --- | --- | --- |
 | **Self-host Personal (free)** | One local Personal Workspace; no Teams or Team members | Does not need the Team license client variables below |
-| **Self-host Commercial Team (paid)** | The application owner’s Personal Workspace plus Team Workspaces and licensed member capacity | Requires the license API and issuer; license state and installation identity must persist |
+| **Self-host Commercial Team (paid)** | The application owner’s Personal Workspace plus Team Workspaces and licensed member capacity | Uses the official license service by default, with no extra variables; license state and installation identity must persist |
 
 Both profiles still use shared server settings such as `DATABASE_URL` and `ERD_ENCRYPTION_KEY` below. Upgrade from Personal to Commercial Team by activating a license in **Application Settings**. Do not put a license key in `.env`.
 
 ## Self-host Commercial Team License (Paid)
 
-These variables are needed only when the installation uses Team capacity licensing. Use the endpoints supplied for your license environment; production must use HTTPS.
+These variables apply only when the installation uses Team capacity licensing. Since version 3.5.6, the runtime uses the official license service by default, so `ERDBPRO_LICENSE_API_URL` and `ERDBPRO_LICENSE_ISSUER` can stay unset. Earlier versions still require both; update to 3.5.6 or later.
 
-- `ERDBPRO_LICENSE_API_URL`: **Required**. The license API origin, such as `https://license.example.com`, without an endpoint path. The app appends the activation and license-check routes.
-- `ERDBPRO_LICENSE_ISSUER`: **Required**. The exact issuer value used by the control plane in signed entitlements. Do not infer it from a plan name.
+- `ERDBPRO_LICENSE_API_URL`: **Optional**. Default: `https://license.erdbuilderpro.com`. Set it only to use another license service, such as a staging environment. The value is an origin without an endpoint path, such as `https://license.example.com`; the app appends the activation and license-check routes. Production must use HTTPS.
+- `ERDBPRO_LICENSE_ISSUER`: **Optional**. Default: the official issuers `https://erdbuilderpro.com` and `https://www.erdbuilderpro.com`. When set, only this value is accepted, so set it together with `ERDBPRO_LICENSE_API_URL` to the exact issuer in that license service's signed entitlements. Do not infer it from a plan name.
 - `ERDBPRO_LICENSE_STATE_FILE`: Optional full path to the license state file, for example `/app/data/.erdbpro/license-state.json` in Docker. Choose an absolute path on persistent storage that the server process can write to. This variable only selects a path; it does not create or attach a volume. The file contains a client token and signed entitlement, so treat it as secret.
 - `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Optional override for the installation identity path. When unset, `installation-identity.json` is placed beside the license state file. It contains the local private key and must be preserved with the state file.
 

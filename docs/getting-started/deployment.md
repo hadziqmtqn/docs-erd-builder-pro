@@ -12,16 +12,9 @@ ERD Builder Pro dapat dijalankan pada beberapa platform, termasuk serverless dan
 Self-host Personal Gratis hanya menyediakan Personal Workspace. Self-host Commercial Team memakai lisensi instance untuk menambahkan Team Workspace dan kapasitas member. Konfigurasi Cloud SaaS memakai lingkungan berbeda; lihat [Environment Variables](../configuration/env-variables).
 
 - **Personal Gratis:** siapkan database dan `ERD_ENCRYPTION_KEY`; environment lisensi Team tidak diperlukan.
-- **Commercial Team Berbayar:** siapkan environment lisensi sesuai [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-berbayar), pasang storage persisten seperti dijelaskan di bawah, lalu masukkan license key melalui **Application Settings**.
+- **Commercial Team Berbayar:** pasang storage persisten seperti dijelaskan di bawah, lalu masukkan license key melalui **Application Settings**. Server lisensi resmi sudah menjadi bawaan, jadi environment endpoint lisensi tidak diperlukan.
 
-Kedua plan memakai konfigurasi dasar Local PostgreSQL yang sama. Tambahkan endpoint lisensi berikut hanya pada `.env` Commercial Team:
-
-```env
-ERDBPRO_LICENSE_API_URL=https://license.example.com
-ERDBPRO_LICENSE_ISSUER=https://license.example.com
-```
-
-Ganti URL contoh dengan endpoint dan issuer yang diberikan penyedia lisensi. Jangan menyimpan license key di file environment. Nilai `ERDBPRO_LICENSE_STATE_FILE` berbeda menurut platform karena variabel itu menunjuk ke file pada filesystem server. Lihat [contoh path per platform](../configuration/env-variables#nilai-path-per-jenis-deployment).
+Kedua plan memakai konfigurasi dasar Local PostgreSQL yang sama. Sejak versi 3.5.6, Commercial Team tidak memerlukan `ERDBPRO_LICENSE_API_URL` maupun `ERDBPRO_LICENSE_ISSUER`; isi keduanya hanya untuk memakai server lisensi lain, seperti dijelaskan di [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-berbayar). Jangan menyimpan license key di file environment. Nilai `ERDBPRO_LICENSE_STATE_FILE` berbeda menurut platform karena variabel itu menunjuk ke file pada filesystem server. Lihat [contoh path per platform](#nilai-path-per-jenis-deployment).
 
 ## Persistent License State (Paid Self-host)
 
@@ -83,7 +76,7 @@ Siapkan `.env` dengan konfigurasi database dan kunci enkripsi. Cloudflare R2 dir
 - `DATABASE_URL` — connection string PostgreSQL (wajib, baik Supabase maupun Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — hanya jika menggunakan mode **Supabase**
 - `ERD_ENCRYPTION_KEY` — wajib untuk menyimpan password DB Connect dan API key AI secara aman pada deployment web/Docker
-- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — wajib hanya untuk Self-host Commercial Team berlisensi
+- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — opsional; sejak versi 3.5.6 Self-host Commercial Team memakai server lisensi resmi secara bawaan
 - R2 vars — disarankan agar fitur unggah file/gambar berfungsi penuh
 
 Jika R2 tidak disiapkan, fitur unggah file/gambar akan error. Untuk mode **Local PostgreSQL**, pastikan database PostgreSQL dapat dijangkau dari container.
