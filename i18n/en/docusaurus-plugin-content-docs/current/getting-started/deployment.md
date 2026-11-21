@@ -12,16 +12,9 @@ ERD Builder Pro can run on several platforms, including serverless services and 
 Free Self-host Personal provides one Personal Workspace. Paid Self-host Commercial Team uses an instance license for Team Workspaces and member capacity. Cloud SaaS uses a separate environment; see [Environment Variables](../configuration/env-variables).
 
 - **Free Personal:** configure the database and `ERD_ENCRYPTION_KEY`; Team license environment variables are not required.
-- **Paid Commercial Team:** configure the license environment from [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-paid), attach persistent storage as described below, then enter the license key in **Application Settings**.
+- **Paid Commercial Team:** attach persistent storage as described below, then enter the license key in **Application Settings**. The official license service is built in, so no license endpoint variables are needed.
 
-Both plans share the same Local PostgreSQL base configuration. Add these license endpoints to the Commercial Team `.env` only:
-
-```env
-ERDBPRO_LICENSE_API_URL=https://license.example.com
-ERDBPRO_LICENSE_ISSUER=https://license.example.com
-```
-
-Replace the example URLs with the API and issuer provided by your license service. Do not store the license key in environment files. The value of `ERDBPRO_LICENSE_STATE_FILE` depends on the platform because it points to a file on the server filesystem. See [path examples by platform](../configuration/env-variables#path-values-by-deployment-type).
+Both plans share the same Local PostgreSQL base configuration. Since version 3.5.6, Commercial Team needs neither `ERDBPRO_LICENSE_API_URL` nor `ERDBPRO_LICENSE_ISSUER`; set them only to use another license service, as described in [Environment Variables](../configuration/env-variables#self-host-commercial-team-license-paid). Do not store the license key in environment files. The value of `ERDBPRO_LICENSE_STATE_FILE` depends on the platform because it points to a file on the server filesystem. See [path examples by platform](#path-values-by-deployment-type).
 
 ## Persistent License State (Paid Self-host)
 
@@ -83,7 +76,7 @@ Prepare `.env` with database and encryption-key settings. Cloudflare R2 is recom
 - `DATABASE_URL` — PostgreSQL connection string (required, both Supabase and Local PG)
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — only required when using **Supabase** mode
 - `ERD_ENCRYPTION_KEY` — required for securely storing DB Connect passwords and AI API keys in web/Docker deployments
-- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — required only for licensed Self-host Commercial Team deployments
+- `ERDBPRO_LICENSE_API_URL` + `ERDBPRO_LICENSE_ISSUER` — optional; since version 3.5.6, Self-host Commercial Team uses the official license service by default
 - R2 vars — recommended for full file/image upload functionality
 
 If R2 is not configured, the file/image upload feature will error. For **Local PostgreSQL** mode, ensure the PostgreSQL database is reachable from the container.
