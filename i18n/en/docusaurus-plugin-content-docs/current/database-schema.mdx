@@ -3,1092 +3,1125 @@ sidebar_position: 3
 title: Database Schema
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 import FullscreenERD from '@site/src/components/ERDEmbed/FullscreenERD';
-import { supabaseNodes, supabaseEdges } from '@site/src/components/ERDEmbed/schema-data-supabase';
 import { purePgNodes, purePgEdges } from '@site/src/components/ERDEmbed/schema-data-purepg';
 
 # Database Schema
 
-This page presents the database structure of ERD Builder Pro visually. The diagrams below represent the main tables stored in the PostgreSQL database and how they relate to each other.
+This page shows the ERD Builder Pro 3.5.x database structure for **pure PostgreSQL** mode, which Self-host and Cloud use. The structure comes from `prisma/schema.pg.prisma` in the application repository and has **44 tables**.
 
-The application supports two database modes:
+| Mode | Schema | Tables |
+|------|--------|--------|
+| **Pure PostgreSQL** (Self-host, Cloud) | `prisma/schema.pg.prisma` | 44 |
+| **SQLite** (Desktop, CLI) | `prisma/schema.sqlite.prisma` | 47 |
+| **Supabase** (legacy) | `prisma/schema.prisma` | 30 application tables + Supabase `auth` tables |
 
-| Mode | Description |
-|------|-------------|
-| **Supabase** | Uses Supabase Auth (`auth.users`) with `BigInt` ID types, `auth` and `public` schemas |
-| **Pure PostgreSQL** | Uses a local User model, `Int` ID types, no Supabase Auth dependency — suitable for local/self-hosted development |
-
-## Database Structure Visualization
-
-Use the interactive diagram below to understand the data flow between tables. Select the tab matching your database mode.
-
-<Tabs>
-  <TabItem value="supabase" label="Supabase" default>
-
-<FullscreenERD height="600px" nodes={supabaseNodes} edges={supabaseEdges} />
-
-  </TabItem>
-  <TabItem value="purepg" label="Pure PostgreSQL">
+## Database Structure Diagram
 
 <FullscreenERD height="600px" nodes={purePgNodes} edges={purePgEdges} />
 
-  </TabItem>
-</Tabs>
-
 :::tip Navigation
-Arrow lines indicate *Foreign Key* relationships between tables. Different colors help you identify table categories (e.g., Purple for Project, Pink for Diagram).
+Lines connect each foreign key column to the column it references. Use the fullscreen button to see the whole diagram.
 :::
 
-In **Supabase** mode, auth tables are managed by Supabase Auth (`auth.users`) and are not shown in the diagram. In **Pure PostgreSQL** mode, local `users` and `sessions` tables replace Supabase Auth.
+### Group Colors
 
----
+| Color | Group |
+|-------|-------|
+| Blue | Accounts, sessions, preferences, and Web MCP OAuth |
+| Indigo | Teams, members, and Project access |
+| Purple | Projects and files (ERD, Notes, Drawings, Flowcharts) |
+| Green | ERD content and Version History |
+| Pink | Discussions, comments, and notifications |
+| Yellow | Storage and backups |
+| Cyan | AI Assistant |
+| Gray | **Cloud only** |
 
-## Full SQL (DDL) Code
+## Table Summary
 
-For developers who want to perform a self-hosted installation or database migration, please use the full SQL schema below matching your selected mode.
+| Table | Purpose |
+|-------|---------|
+| `users` | User accounts. In Cloud they map SSO identities and hold no local password. |
+| `sessions` | Login sessions. |
+| `user_preferences` | User preferences, such as the Desktop backup folder. |
+| `mcp_oauth_clients`, `mcp_oauth_authorizations`, `mcp_oauth_tokens` | OAuth for Web MCP with the `local` provider. |
+| `teams` | Team Workspaces. |
+| `team_members` | Team members and their role (Manager or Staff). |
+| `team_invitations` | Team member invitations. |
+| `team_audit_events` | Audit records of Team changes. |
+| `project_access_grants` | Per-Project member roles (Editor, Commenter, Viewer). |
+| `projects` | Projects, owned by a user (Personal) or a Team. |
+| `diagrams` | ERD files, including the DBML text (`dbml_source`). |
+| `notes`, `drawings`, `flowcharts` | Notes, Drawings, and Flowcharts files. |
+| `entities`, `columns`, `relationships` | Tables, columns, and relationships in an ERD. |
+| `table_constraints`, `table_indexes` | ERD table constraints and indexes. |
+| `entity_changes` | Version History for every file type. |
+| `discussion_threads`, `discussion_messages`, `discussion_reads`, `discussion_contexts` | File and Project discussions. |
+| `comment_threads`, `comment_messages`, `comment_reads` | Comments on objects inside files. |
+| `notifications` | Notification center. |
+| `storage_objects` | Uploaded images (Library). |
+| `storage_usage` | Storage usage summary per workspace. |
+| `backups` | Database Backup history. |
+| `ai_providers`, `ai_models` | AI providers and the model catalog. |
+| `user_ai_configs` | AI provider configuration with encrypted API keys. |
+| `ai_chat_sessions`, `ai_chat_messages` | AI Assistant conversations. |
+| `ai_system_prompts` | System Prompts. |
+| `user_ai_rules` | AI Rules. |
+| `cloud_ai_runtime_configs` | **Cloud only.** AI configuration sent by ERDBPro SaaS. |
+| `cloud_ai_usage_periods`, `cloud_ai_usage_requests` | **Cloud only.** AI credit usage. |
+| `user_trial_surveys` | **Cloud only.** Trial user survey. |
+
+Cloud-only tables are still created in every PostgreSQL database, but they stay empty on Self-host.
+
+## SQLite (Desktop and CLI)
+
+The SQLite database uses the same tables, with these differences:
+- No Web MCP OAuth tables (`mcp_oauth_*`), because Web MCP is not available on Desktop and CLI.
+- DB Client tables: `db_accounts`, `db_catalogs`, `db_clients`, `db_client_layouts`, `db_client_queries`, and `sql_queries`.
+
+The Team tables exist in the SQLite schema, but Team features are not active on Desktop and CLI.
+
+## Supabase (Legacy)
+
+Supabase mode uses Supabase Auth (`auth.users`) instead of `users` and `sessions`, and has no Team, notification, storage, or Web MCP OAuth tables. Its base schema is in `sql/supabase/schema.sql`, and the later tables are in `prisma/migrations` in the application repository.
+
+## Full PostgreSQL DDL
+
+The DDL below is generated from `prisma/schema.pg.prisma` with `prisma migrate diff --from-empty --script`. A normal installation does not need it: `npm run db:push:pg:local` or the Docker entrypoint creates the tables automatically.
 
 <details>
-<summary>Supabase SQL Schema (DDL + RLS Policies + Triggers + Seed)</summary>
+<summary>PostgreSQL SQL schema (44 tables, indexes, and foreign keys)</summary>
 
 ```sql
--- ==========================================
--- SUPABASE SCHEMA — ERD Builder Pro
--- ==========================================
--- Requires: auth.users (Supabase built-in)
--- Run on Supabase SQL Editor or migration.
--- ==========================================
+-- CreateTable
+CREATE TABLE "users" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT,
+    "password" TEXT NOT NULL,
+    "is_super_admin" BOOLEAN,
+    "must_change_password" BOOLEAN NOT NULL DEFAULT false,
+    "login_failed_attempts" INTEGER NOT NULL DEFAULT 0,
+    "login_locked_until" TIMESTAMPTZ(3),
+    "sso_subject" TEXT,
+    "sso_email" TEXT,
+    "cloud_personal_entitlement" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- ========================
--- 1. MAIN APP TABLES
--- ========================
-
--- Projects Table
-CREATE TABLE IF NOT EXISTS projects (
-  id BIGSERIAL PRIMARY KEY,
-  uid UUID DEFAULT gen_random_uuid() UNIQUE,
-  name TEXT NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  is_deleted BOOLEAN DEFAULT FALSE,
-  deleted_at TIMESTAMPTZ DEFAULT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  is_public BOOLEAN DEFAULT FALSE,
-  share_token TEXT,
-  expiry_date TIMESTAMPTZ
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
--- Diagrams Table (ERD Files)
-CREATE TABLE IF NOT EXISTS diagrams (
-  id BIGSERIAL PRIMARY KEY,
-  uid UUID DEFAULT gen_random_uuid() UNIQUE,
-  name TEXT NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
-  is_deleted BOOLEAN DEFAULT FALSE,
-  deleted_at TIMESTAMPTZ DEFAULT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  viewport_x FLOAT DEFAULT 0,
-  viewport_y FLOAT DEFAULT 0,
-  viewport_zoom FLOAT DEFAULT 1.0,
-  is_public BOOLEAN DEFAULT FALSE,
-  share_token TEXT,
-  expiry_date TIMESTAMPTZ,
-  published_at TIMESTAMPTZ,
-  _version INTEGER DEFAULT 0
+-- CreateTable
+CREATE TABLE "sessions" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
 );
 
--- Entities Table
-CREATE TABLE IF NOT EXISTS entities (
-  id TEXT PRIMARY KEY,
-  diagram_id BIGINT REFERENCES diagrams(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  x DOUBLE PRECISION DEFAULT 0,
-  y DOUBLE PRECISION DEFAULT 0,
-  color TEXT DEFAULT '#6366f1',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "mcp_oauth_clients" (
+    "id" TEXT NOT NULL,
+    "metadata" JSONB NOT NULL,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "mcp_oauth_clients_pkey" PRIMARY KEY ("id")
 );
 
--- Columns Table
-CREATE TABLE IF NOT EXISTS columns (
-  id TEXT PRIMARY KEY,
-  entity_id TEXT REFERENCES entities(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL,
-  is_pk BOOLEAN DEFAULT FALSE,
-  is_nullable BOOLEAN DEFAULT TRUE,
-  enum_values TEXT, -- comma separated
-  sort_order INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "mcp_oauth_authorizations" (
+    "id" TEXT NOT NULL,
+    "client_id" TEXT NOT NULL,
+    "user_id" TEXT,
+    "redirect_uri" TEXT NOT NULL,
+    "scopes" TEXT NOT NULL,
+    "state" TEXT,
+    "resource" TEXT NOT NULL,
+    "code_challenge" TEXT NOT NULL,
+    "code_hash" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "expires_at" TIMESTAMPTZ(3) NOT NULL,
+    "approved_at" TIMESTAMPTZ(3),
+    "consumed_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "mcp_oauth_authorizations_pkey" PRIMARY KEY ("id")
 );
 
--- Relationships Table
-CREATE TABLE IF NOT EXISTS relationships (
-  id TEXT PRIMARY KEY,
-  diagram_id BIGINT REFERENCES diagrams(id) ON DELETE CASCADE,
-  source_entity_id TEXT REFERENCES entities(id) ON DELETE CASCADE,
-  target_entity_id TEXT REFERENCES entities(id) ON DELETE CASCADE,
-  source_column_id TEXT,
-  target_column_id TEXT,
-  source_handle TEXT,
-  target_handle TEXT,
-  type TEXT DEFAULT 'one-to-many',
-  label TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "mcp_oauth_tokens" (
+    "id" TEXT NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "grant_id" TEXT NOT NULL,
+    "client_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "scopes" TEXT NOT NULL,
+    "resource" TEXT NOT NULL,
+    "expires_at" TIMESTAMPTZ(3) NOT NULL,
+    "revoked_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "mcp_oauth_tokens_pkey" PRIMARY KEY ("id")
 );
 
--- Notes Table
-CREATE TABLE IF NOT EXISTS notes (
-  id BIGSERIAL PRIMARY KEY,
-  uid UUID DEFAULT gen_random_uuid() UNIQUE,
-  title TEXT NOT NULL,
-  content TEXT DEFAULT '',
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
-  is_deleted BOOLEAN DEFAULT FALSE,
-  deleted_at TIMESTAMPTZ DEFAULT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  is_public BOOLEAN DEFAULT FALSE,
-  share_token TEXT,
-  expiry_date TIMESTAMPTZ,
-  published_at TIMESTAMPTZ,
-  _version INTEGER DEFAULT 0
+-- CreateTable
+CREATE TABLE "teams" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'team',
+    "created_by" TEXT,
+    "sso_organization_id" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "cloud_entitlement" TEXT,
+    "provisioning_signature" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "teams_pkey" PRIMARY KEY ("id")
 );
 
--- Drawings Table
-CREATE TABLE IF NOT EXISTS drawings (
-  id BIGSERIAL PRIMARY KEY,
-  uid UUID DEFAULT gen_random_uuid() UNIQUE,
-  title TEXT NOT NULL,
-  data TEXT DEFAULT '[]',
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
-  is_deleted BOOLEAN DEFAULT FALSE,
-  deleted_at TIMESTAMPTZ DEFAULT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  is_public BOOLEAN DEFAULT FALSE,
-  share_token TEXT,
-  expiry_date TIMESTAMPTZ,
-  published_at TIMESTAMPTZ,
-  _version INTEGER DEFAULT 0
+-- CreateTable
+CREATE TABLE "team_members" (
+    "id" TEXT NOT NULL,
+    "team_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'staff',
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "joined_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "provisioning_signature" TEXT,
+
+    CONSTRAINT "team_members_pkey" PRIMARY KEY ("id")
 );
 
--- Flowcharts Table
-CREATE TABLE IF NOT EXISTS flowcharts (
-  id BIGSERIAL PRIMARY KEY,
-  uid UUID DEFAULT gen_random_uuid() UNIQUE,
-  title TEXT NOT NULL,
-  data TEXT DEFAULT '{"nodes":[], "edges":[]}',
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
-  is_deleted BOOLEAN DEFAULT FALSE,
-  deleted_at TIMESTAMPTZ DEFAULT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  is_public BOOLEAN DEFAULT FALSE,
-  share_token TEXT,
-  expiry_date TIMESTAMPTZ,
-  published_at TIMESTAMPTZ,
-  _version INTEGER DEFAULT 0
+-- CreateTable
+CREATE TABLE "team_invitations" (
+    "id" TEXT NOT NULL,
+    "team_id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "expires_at" TIMESTAMPTZ(3) NOT NULL,
+    "accepted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "team_invitations_pkey" PRIMARY KEY ("id")
 );
 
--- Entity Changes Table (Audit Trail)
-CREATE TABLE IF NOT EXISTS entity_changes (
-  id BIGSERIAL PRIMARY KEY,
-  entity_type TEXT NOT NULL, -- 'diagram', 'note', 'drawing', 'flowchart'
-  entity_id TEXT NOT NULL,
-  version INTEGER NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  changes JSONB NOT NULL, -- {field: old_value, field: new_value, ...}
-  change_type TEXT DEFAULT 'update', -- 'create', 'update', 'delete'
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "team_audit_events" (
+    "id" TEXT NOT NULL,
+    "team_id" TEXT,
+    "actor_id" TEXT,
+    "action" TEXT NOT NULL,
+    "target_type" TEXT,
+    "target_id" TEXT,
+    "metadata" TEXT NOT NULL DEFAULT '{}',
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "team_audit_events_pkey" PRIMARY KEY ("id")
 );
 
--- ========================
--- 2. AI INTEGRATION TABLES
--- ========================
+-- CreateTable
+CREATE TABLE "projects" (
+    "id" SERIAL NOT NULL,
+    "uid" TEXT,
+    "name" TEXT NOT NULL,
+    "user_id" TEXT,
+    "team_id" TEXT,
+    "color" TEXT DEFAULT '#6366f1',
+    "is_deleted" BOOLEAN DEFAULT false,
+    "deleted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "_version" INTEGER DEFAULT 0,
 
--- AI Providers Table
-CREATE TABLE IF NOT EXISTS ai_providers (
-    id BIGSERIAL PRIMARY KEY,
-    name TEXT NOT NULL, -- 'OpenAI', 'Google Gemini', etc.
-    code TEXT NOT NULL UNIQUE, -- 'openai', 'gemini', 'openai_compatible'
-    base_url TEXT DEFAULT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    CONSTRAINT "projects_pkey" PRIMARY KEY ("id")
 );
 
--- AI Models Table
-CREATE TABLE IF NOT EXISTS ai_models (
-    id BIGSERIAL PRIMARY KEY,
-    provider_id BIGINT REFERENCES ai_providers(id) ON DELETE CASCADE,
-    model_identifier TEXT NOT NULL, -- 'gpt-4o', 'gemini-1.5-pro'
-    display_name TEXT NOT NULL,
-    context_window INTEGER DEFAULT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "project_access_grants" (
+    "id" TEXT NOT NULL,
+    "project_id" INTEGER NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "granted_by" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "project_access_grants_pkey" PRIMARY KEY ("id")
 );
 
--- Backups Table
-CREATE TABLE IF NOT EXISTS backups (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending',
-    file_path TEXT,
-    file_size BIGINT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "storage_objects" (
+    "key" TEXT NOT NULL,
+    "scope_type" TEXT NOT NULL,
+    "scope_id" TEXT NOT NULL,
+    "uploaded_by" TEXT,
+    "feature" TEXT NOT NULL,
+    "document_uid" TEXT,
+    "mime_type" TEXT NOT NULL,
+    "bytes" INTEGER NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "unreferenced_since" TIMESTAMPTZ(3),
+    "deleted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "storage_objects_pkey" PRIMARY KEY ("key")
 );
 
--- User Preferences Table
-CREATE TABLE IF NOT EXISTS user_preferences (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-    backup_folder TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "storage_usage" (
+    "scope_type" TEXT NOT NULL,
+    "scope_id" TEXT NOT NULL,
+    "document_bytes" BIGINT NOT NULL DEFAULT 0,
+    "revision_bytes" BIGINT NOT NULL DEFAULT 0,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "storage_usage_pkey" PRIMARY KEY ("scope_type","scope_id")
 );
 
--- User AI Configurations Table
-CREATE TABLE IF NOT EXISTS user_ai_configs (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    provider_id BIGINT REFERENCES ai_providers(id) ON DELETE CASCADE,
-    selected_model_id BIGINT REFERENCES ai_models(id) ON DELETE SET NULL,
-    api_key TEXT NOT NULL,
-    is_enabled BOOLEAN DEFAULT TRUE,
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, provider_id)
+-- CreateTable
+CREATE TABLE "diagrams" (
+    "id" SERIAL NOT NULL,
+    "uid" TEXT,
+    "name" TEXT NOT NULL,
+    "user_id" TEXT,
+    "project_id" INTEGER,
+    "is_deleted" BOOLEAN DEFAULT false,
+    "deleted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "viewport_x" DOUBLE PRECISION DEFAULT 0,
+    "viewport_y" DOUBLE PRECISION DEFAULT 0,
+    "viewport_zoom" DOUBLE PRECISION DEFAULT 1.0,
+    "_version" INTEGER DEFAULT 0,
+    "is_public" BOOLEAN DEFAULT false,
+    "public_access" TEXT NOT NULL DEFAULT 'off',
+    "share_token" TEXT,
+    "share_token_hash" TEXT,
+    "expiry_date" TIMESTAMPTZ(3),
+    "share_expires_at" TIMESTAMPTZ(3),
+    "published_at" TIMESTAMPTZ(3),
+    "source_type" TEXT DEFAULT 'blank',
+    "source_connection_id" INTEGER,
+    "data" TEXT,
+    "dbml_source" TEXT,
+
+    CONSTRAINT "diagrams_pkey" PRIMARY KEY ("id")
 );
 
--- AI Chat Sessions Table
-CREATE TABLE IF NOT EXISTS ai_chat_sessions (
-    id BIGSERIAL PRIMARY KEY,
-    uid UUID DEFAULT gen_random_uuid() UNIQUE,
-    user_id UUID,
-    project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
-    entity_type TEXT DEFAULT NULL,
-    entity_uid TEXT DEFAULT NULL,
-    title TEXT DEFAULT 'New Conversation',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "notes" (
+    "id" SERIAL NOT NULL,
+    "uid" TEXT,
+    "title" TEXT NOT NULL,
+    "content" TEXT DEFAULT '',
+    "user_id" TEXT,
+    "project_id" INTEGER,
+    "is_deleted" BOOLEAN DEFAULT false,
+    "deleted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "_version" INTEGER DEFAULT 0,
+    "is_public" BOOLEAN DEFAULT false,
+    "public_access" TEXT NOT NULL DEFAULT 'off',
+    "share_token" TEXT,
+    "share_token_hash" TEXT,
+    "expiry_date" TIMESTAMPTZ(3),
+    "share_expires_at" TIMESTAMPTZ(3),
+    "published_at" TIMESTAMPTZ(3),
+
+    CONSTRAINT "notes_pkey" PRIMARY KEY ("id")
 );
 
--- AI Chat Messages Table
-CREATE TABLE IF NOT EXISTS ai_chat_messages (
-    id BIGSERIAL PRIMARY KEY,
-    session_id BIGINT REFERENCES ai_chat_sessions(id) ON DELETE CASCADE NOT NULL,
-    role TEXT CHECK (role IN ('system', 'user', 'assistant')) NOT NULL,
-    content TEXT NOT NULL,
-    selection_text TEXT DEFAULT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "drawings" (
+    "id" SERIAL NOT NULL,
+    "uid" TEXT,
+    "title" TEXT NOT NULL,
+    "data" TEXT DEFAULT '[]',
+    "user_id" TEXT,
+    "project_id" INTEGER,
+    "is_deleted" BOOLEAN DEFAULT false,
+    "deleted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "_version" INTEGER DEFAULT 0,
+    "is_public" BOOLEAN DEFAULT false,
+    "public_access" TEXT NOT NULL DEFAULT 'off',
+    "share_token" TEXT,
+    "share_token_hash" TEXT,
+    "expiry_date" TIMESTAMPTZ(3),
+    "share_expires_at" TIMESTAMPTZ(3),
+    "published_at" TIMESTAMPTZ(3),
+
+    CONSTRAINT "drawings_pkey" PRIMARY KEY ("id")
 );
 
--- System Prompts Table
-CREATE TABLE IF NOT EXISTS ai_system_prompts (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    category VARCHAR(50) NOT NULL DEFAULT 'custom', -- 'system', 'context', 'format', 'custom'
-    is_default BOOLEAN DEFAULT false,
-    is_built_in BOOLEAN DEFAULT false,
-    user_id VARCHAR(255),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+-- CreateTable
+CREATE TABLE "flowcharts" (
+    "id" SERIAL NOT NULL,
+    "uid" TEXT,
+    "title" TEXT NOT NULL,
+    "data" TEXT DEFAULT '{"nodes":[], "edges":[]}',
+    "user_id" TEXT,
+    "project_id" INTEGER,
+    "is_deleted" BOOLEAN DEFAULT false,
+    "deleted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "_version" INTEGER DEFAULT 0,
+    "is_public" BOOLEAN DEFAULT false,
+    "public_access" TEXT NOT NULL DEFAULT 'off',
+    "share_token" TEXT,
+    "share_token_hash" TEXT,
+    "expiry_date" TIMESTAMPTZ(3),
+    "share_expires_at" TIMESTAMPTZ(3),
+    "published_at" TIMESTAMPTZ(3),
+
+    CONSTRAINT "flowcharts_pkey" PRIMARY KEY ("id")
 );
 
--- AI Rules Table
-CREATE TABLE IF NOT EXISTS user_ai_rules (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    view_type TEXT NOT NULL CHECK (view_type IN ('erd', 'notes', 'flowchart')),
-    content TEXT NOT NULL DEFAULT '',
-    is_enabled BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(user_id, view_type)
+-- CreateTable
+CREATE TABLE "entities" (
+    "id" TEXT NOT NULL,
+    "diagram_id" INTEGER,
+    "name" TEXT NOT NULL,
+    "x" DOUBLE PRECISION NOT NULL,
+    "y" DOUBLE PRECISION NOT NULL,
+    "color" TEXT DEFAULT '#6366f1',
+    "comment" TEXT,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "entities_pkey" PRIMARY KEY ("id")
 );
 
--- ========================
--- 3. INDEXES
--- ========================
+-- CreateTable
+CREATE TABLE "columns" (
+    "id" TEXT NOT NULL,
+    "entity_id" TEXT,
+    "name" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "is_pk" BOOLEAN DEFAULT false,
+    "is_nullable" BOOLEAN DEFAULT true,
+    "is_unique" BOOLEAN DEFAULT false,
+    "default_value" TEXT,
+    "enum_values" TEXT,
+    "comment" TEXT,
+    "max_length" INTEGER,
+    "numeric_precision" INTEGER,
+    "numeric_scale" INTEGER,
+    "sort_order" INTEGER DEFAULT 0,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
-CREATE INDEX IF NOT EXISTS idx_entity_changes_lookup ON entity_changes(entity_type, entity_id, version DESC);
-CREATE INDEX IF NOT EXISTS idx_entity_changes_user ON entity_changes(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_entity_changes_retention ON entity_changes(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_entity_changes_entity_id ON entity_changes(entity_id);
-
-CREATE INDEX IF NOT EXISTS idx_diagrams_version ON diagrams(_version);
-CREATE INDEX IF NOT EXISTS idx_diagrams_updated_at ON diagrams(updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_notes_version ON notes(_version);
-CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_drawings_version ON drawings(_version);
-CREATE INDEX IF NOT EXISTS idx_drawings_updated_at ON drawings(updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_flowcharts_version ON flowcharts(_version);
-CREATE INDEX IF NOT EXISTS idx_flowcharts_updated_at ON flowcharts(updated_at DESC);
-
--- ========================
--- 4. ROW LEVEL SECURITY
--- ========================
-
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE diagrams ENABLE ROW LEVEL SECURITY;
-ALTER TABLE entities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE columns ENABLE ROW LEVEL SECURITY;
-ALTER TABLE relationships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE drawings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE flowcharts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE entity_changes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE backups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
-
--- AI tables
-ALTER TABLE ai_providers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_models ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_ai_configs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_chat_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_chat_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_system_prompts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_ai_rules ENABLE ROW LEVEL SECURITY;
-
--- Projects Policies
-CREATE POLICY "Users can view their own projects" ON projects FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own projects" ON projects FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own projects" ON projects FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own projects" ON projects FOR DELETE USING (auth.uid() = user_id);
-
--- Diagrams Policies
-CREATE POLICY "Anyone can view public diagrams" ON diagrams FOR SELECT USING (is_public = true AND (expiry_date IS NULL OR expiry_date > NOW()));
-CREATE POLICY "Users can view their own diagrams" ON diagrams FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own diagrams" ON diagrams FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own diagrams" ON diagrams FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own diagrams" ON diagrams FOR DELETE USING (auth.uid() = user_id);
-
--- Notes Policies
-CREATE POLICY "Anyone can view public notes" ON notes FOR SELECT USING (is_public = true AND (expiry_date IS NULL OR expiry_date > NOW()));
-CREATE POLICY "Users can view their own notes" ON notes FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own notes" ON notes FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own notes" ON notes FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own notes" ON notes FOR DELETE USING (auth.uid() = user_id);
-
--- Drawings Policies
-CREATE POLICY "Anyone can view public drawings" ON drawings FOR SELECT USING (is_public = true AND (expiry_date IS NULL OR expiry_date > NOW()));
-CREATE POLICY "Users can view their own drawings" ON drawings FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own drawings" ON drawings FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own drawings" ON drawings FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own drawings" ON drawings FOR DELETE USING (auth.uid() = user_id);
-
--- Flowcharts Policies
-CREATE POLICY "Anyone can view public flowcharts" ON flowcharts FOR SELECT USING (is_public = true AND (expiry_date IS NULL OR expiry_date > NOW()));
-CREATE POLICY "Users can view their own flowcharts" ON flowcharts FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own flowcharts" ON flowcharts FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own flowcharts" ON flowcharts FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own flowcharts" ON flowcharts FOR DELETE USING (auth.uid() = user_id);
-
--- Backups Policies
-CREATE POLICY "Users can view their own backups" ON backups FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own backups" ON backups FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Service role can update backups" ON backups FOR UPDATE USING (true);
-
--- User Preferences Policies
-CREATE POLICY "Users can view their own preferences" ON user_preferences FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert their own preferences" ON user_preferences FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own preferences" ON user_preferences FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete their own preferences" ON user_preferences FOR DELETE USING (auth.uid() = user_id);
-
--- Entity Changes Policies
-CREATE POLICY "Users can insert their own entity changes" ON entity_changes FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can view their own entity changes" ON entity_changes FOR SELECT TO authenticated USING (auth.uid() = user_id);
-
--- Entities Policies
-CREATE POLICY "Anyone can view entities of public diagrams" ON entities FOR SELECT USING (EXISTS (SELECT 1 FROM diagrams WHERE diagrams.id = entities.diagram_id AND diagrams.is_public = true AND (diagrams.expiry_date IS NULL OR diagrams.expiry_date > NOW())));
-CREATE POLICY "Users can manage entities in their own diagrams" ON entities FOR ALL USING (EXISTS (SELECT 1 FROM diagrams WHERE diagrams.id = entities.diagram_id AND diagrams.user_id = auth.uid()));
-
--- Columns Policies
-CREATE POLICY "Anyone can view columns of public diagrams" ON columns FOR SELECT USING (EXISTS (SELECT 1 FROM entities JOIN diagrams ON diagrams.id = entities.diagram_id WHERE entities.id = columns.entity_id AND diagrams.is_public = true AND (diagrams.expiry_date IS NULL OR diagrams.expiry_date > NOW())));
-CREATE POLICY "Users can manage columns in their own diagrams" ON columns FOR ALL USING (EXISTS (SELECT 1 FROM entities JOIN diagrams ON diagrams.id = entities.diagram_id WHERE entities.id = columns.entity_id AND diagrams.user_id = auth.uid()));
-
--- Relationships Policies
-CREATE POLICY "Anyone can view relationships of public diagrams" ON relationships FOR SELECT USING (EXISTS (SELECT 1 FROM diagrams WHERE diagrams.id = relationships.diagram_id AND diagrams.is_public = true AND (diagrams.expiry_date IS NULL OR diagrams.expiry_date > NOW())));
-CREATE POLICY "Users can manage relationships in their own diagrams" ON relationships FOR ALL USING (EXISTS (SELECT 1 FROM diagrams WHERE diagrams.id = relationships.diagram_id AND diagrams.user_id = auth.uid()));
-
--- AI Providers Policies (Publicly readable)
-CREATE POLICY "Users can view active providers"
-ON ai_providers
-FOR SELECT
-TO public
-USING (is_active = true);
-
--- AI Models Policies (Publicly readable)
-CREATE POLICY "Users can view active models"
-ON ai_models
-FOR SELECT
-TO public
-USING (is_active = true);
-
-CREATE POLICY "Users can manage models catalog"
-ON ai_models
-FOR ALL
-TO public
-USING (true)
-WITH CHECK (true);
-
--- User AI Configs Policies
-CREATE POLICY "Users can manage their own AI configs"
-ON user_ai_configs
-FOR ALL
-TO public
-USING (auth.uid() = user_id);
-
--- AI Chat Sessions Policies
-DROP POLICY IF EXISTS "policy_ai_chat_sessions_all" ON ai_chat_sessions;
-CREATE POLICY "allow_all_sessions_access"
-ON ai_chat_sessions FOR ALL
-TO public
-USING (true)
-WITH CHECK (true);
-
--- AI Chat Messages Policies
-DROP POLICY IF EXISTS "policy_ai_chat_messages_all" ON ai_chat_messages;
-CREATE POLICY "allow_all_messages_access"
-ON ai_chat_messages FOR ALL
-TO public
-USING (
-    EXISTS (SELECT 1 FROM ai_chat_sessions WHERE ai_chat_sessions.id = ai_chat_messages.session_id)
-)
-WITH CHECK (
-    EXISTS (SELECT 1 FROM ai_chat_sessions WHERE ai_chat_sessions.id = ai_chat_messages.session_id)
+    CONSTRAINT "columns_pkey" PRIMARY KEY ("id")
 );
 
--- AI System Prompts Policies
-CREATE POLICY "Allow application access for ai_system_prompts"
-ON ai_system_prompts
-FOR ALL
-TO public
-USING (true)
-WITH CHECK (true);
+-- CreateTable
+CREATE TABLE "relationships" (
+    "id" TEXT NOT NULL,
+    "diagram_id" INTEGER,
+    "source_entity_id" TEXT,
+    "target_entity_id" TEXT,
+    "source_column_id" TEXT,
+    "target_column_id" TEXT,
+    "type" TEXT DEFAULT 'one-to-many',
+    "source_handle" TEXT,
+    "target_handle" TEXT,
+    "label" TEXT,
+    "on_delete" TEXT,
+    "on_update" TEXT,
+    "constraint_name" TEXT,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
--- AI Rules Policies
-CREATE POLICY "Users can manage own AI rules"
-ON user_ai_rules
-FOR ALL
-TO public
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+    CONSTRAINT "relationships_pkey" PRIMARY KEY ("id")
+);
 
--- ========================
--- 5. TRIGGERS
--- ========================
+-- CreateTable
+CREATE TABLE "table_constraints" (
+    "id" TEXT NOT NULL,
+    "entity_id" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "name" TEXT,
+    "column_ids" TEXT,
+    "expression" TEXT,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
--- Version increment for optimistic locking
-CREATE OR REPLACE FUNCTION increment_version()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW._version = COALESCE(OLD._version, 0) + 1;
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+    CONSTRAINT "table_constraints_pkey" PRIMARY KEY ("id")
+);
 
--- Audit trail: captures full row snapshot
-CREATE OR REPLACE FUNCTION log_entity_changes()
-RETURNS TRIGGER AS $$
-DECLARE
-  v_user_id UUID;
-  v_changes JSONB;
-  v_version INTEGER;
-BEGIN
-  v_user_id := auth.uid();
-  IF v_user_id IS NULL THEN
-    BEGIN
-      v_user_id := NEW.user_id;
-    EXCEPTION WHEN OTHERS THEN
-      v_user_id := NULL;
-    END;
-  END IF;
+-- CreateTable
+CREATE TABLE "table_indexes" (
+    "id" TEXT NOT NULL,
+    "entity_id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "column_ids" TEXT NOT NULL,
+    "is_unique" BOOLEAN DEFAULT false,
+    "algorithm" TEXT,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
-  v_changes := to_jsonb(NEW);
-  v_version := COALESCE((to_jsonb(NEW)->>'_version')::INTEGER, 0);
+    CONSTRAINT "table_indexes_pkey" PRIMARY KEY ("id")
+);
 
-  -- Throttle: skip if last snapshot < 5 min ago
-  IF TG_OP = 'UPDATE' THEN
-    IF EXISTS (
-      SELECT 1 FROM entity_changes
-      WHERE entity_type = TG_TABLE_NAME
-      AND entity_id = NEW.id::TEXT
-      AND created_at > NOW() - INTERVAL '5 minutes'
-    ) THEN
-      RETURN NEW;
-    END IF;
-  END IF;
+-- CreateTable
+CREATE TABLE "entity_changes" (
+    "id" SERIAL NOT NULL,
+    "entity_type" TEXT NOT NULL,
+    "entity_id" TEXT NOT NULL,
+    "version" INTEGER NOT NULL,
+    "user_id" TEXT,
+    "changes" TEXT DEFAULT '{}',
+    "change_type" TEXT DEFAULT 'update',
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
-  INSERT INTO entity_changes (entity_type, entity_id, version, user_id, changes, change_type)
-  VALUES (TG_TABLE_NAME, NEW.id::TEXT, v_version, v_user_id, v_changes, LOWER(TG_OP));
+    CONSTRAINT "entity_changes_pkey" PRIMARY KEY ("id")
+);
 
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- CreateTable
+CREATE TABLE "backups" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT,
+    "name" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "file_path" TEXT,
+    "file_size" INTEGER,
+    "destinations" TEXT,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
--- Apply version + audit triggers per table
--- Diagrams
-DROP TRIGGER IF EXISTS tr_diagrams_version ON diagrams;
-CREATE TRIGGER tr_diagrams_version BEFORE UPDATE ON diagrams FOR EACH ROW EXECUTE FUNCTION increment_version();
+    CONSTRAINT "backups_pkey" PRIMARY KEY ("id")
+);
 
--- Notes
-DROP TRIGGER IF EXISTS tr_notes_version ON notes;
-CREATE TRIGGER tr_notes_version BEFORE UPDATE ON notes FOR EACH ROW EXECUTE FUNCTION increment_version();
-DROP TRIGGER IF EXISTS tr_notes_audit ON notes;
-CREATE TRIGGER tr_notes_audit AFTER INSERT OR UPDATE ON notes FOR EACH ROW EXECUTE FUNCTION log_entity_changes();
+-- CreateTable
+CREATE TABLE "ai_providers" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "base_url" TEXT,
+    "is_active" BOOLEAN DEFAULT true,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
--- Drawings
-DROP TRIGGER IF EXISTS tr_drawings_version ON drawings;
-CREATE TRIGGER tr_drawings_version BEFORE UPDATE ON drawings FOR EACH ROW EXECUTE FUNCTION increment_version();
-DROP TRIGGER IF EXISTS tr_drawings_audit ON drawings;
-CREATE TRIGGER tr_drawings_audit AFTER INSERT OR UPDATE ON drawings FOR EACH ROW EXECUTE FUNCTION log_entity_changes();
+    CONSTRAINT "ai_providers_pkey" PRIMARY KEY ("id")
+);
 
--- Flowcharts
-DROP TRIGGER IF EXISTS tr_flowcharts_audit ON flowcharts;
-CREATE TRIGGER tr_flowcharts_audit AFTER INSERT OR UPDATE ON flowcharts FOR EACH ROW EXECUTE FUNCTION log_entity_changes();
+-- CreateTable
+CREATE TABLE "ai_models" (
+    "id" SERIAL NOT NULL,
+    "provider_id" INTEGER,
+    "model_identifier" TEXT NOT NULL,
+    "display_name" TEXT NOT NULL,
+    "context_window" INTEGER,
+    "is_active" BOOLEAN DEFAULT true,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
--- AI: ensure only one default prompt per user
-CREATE OR REPLACE FUNCTION handle_single_default_prompt()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.is_default = true THEN
-        UPDATE ai_system_prompts
-        SET is_default = false
-        WHERE id != NEW.id AND user_id = NEW.user_id;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+    CONSTRAINT "ai_models_pkey" PRIMARY KEY ("id")
+);
 
-DROP TRIGGER IF EXISTS single_default_prompt_trigger ON ai_system_prompts;
-CREATE TRIGGER single_default_prompt_trigger
-BEFORE INSERT OR UPDATE ON ai_system_prompts
-FOR EACH ROW EXECUTE FUNCTION handle_single_default_prompt();
+-- CreateTable
+CREATE TABLE "user_ai_configs" (
+    "id" SERIAL NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "provider_id" INTEGER,
+    "selected_model_id" INTEGER,
+    "api_key" TEXT,
+    "is_enabled" BOOLEAN DEFAULT true,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
--- Auto-update updated_at on AI rules
-CREATE OR REPLACE FUNCTION update_ai_rules_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+    CONSTRAINT "user_ai_configs_pkey" PRIMARY KEY ("id")
+);
 
-DROP TRIGGER IF EXISTS ai_rules_updated_at_trigger ON user_ai_rules;
-CREATE TRIGGER ai_rules_updated_at_trigger
-BEFORE UPDATE ON user_ai_rules
-FOR EACH ROW EXECUTE FUNCTION update_ai_rules_timestamp();
+-- CreateTable
+CREATE TABLE "ai_chat_sessions" (
+    "id" SERIAL NOT NULL,
+    "uid" TEXT,
+    "user_id" TEXT,
+    "project_id" INTEGER,
+    "title" TEXT DEFAULT 'New Conversation',
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "entity_uid" TEXT,
+    "entity_type" TEXT,
 
--- ========================
--- 6. SEED DATA
--- ========================
+    CONSTRAINT "ai_chat_sessions_pkey" PRIMARY KEY ("id")
+);
 
--- Seed AI Providers
-INSERT INTO ai_providers (name, code, base_url) VALUES
-('OpenAI', 'openai', 'https://api.openai.com/v1'),
-('Google Gemini', 'gemini', NULL),
-('OpenAI Compatible', 'openai_compatible', 'https://ai.paas.id')
-ON CONFLICT (code) DO NOTHING;
+-- CreateTable
+CREATE TABLE "ai_chat_messages" (
+    "id" SERIAL NOT NULL,
+    "session_id" INTEGER NOT NULL,
+    "role" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "selection_text" TEXT,
+    "client_message_id" VARCHAR(64),
+    "is_trusted_assistant" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
 
--- Seed AI Models
-INSERT INTO ai_models (provider_id, model_identifier, display_name)
-SELECT id, 'gpt-4o', 'GPT-4o (Smartest)' FROM ai_providers WHERE code = 'openai'
-UNION ALL
-SELECT id, 'gpt-4o-mini', 'GPT-4o Mini (Fast)' FROM ai_providers WHERE code = 'openai'
-UNION ALL
-SELECT id, 'gemini-1.5-pro', 'Gemini 1.5 Pro' FROM ai_providers WHERE code = 'gemini'
-UNION ALL
-SELECT id, 'gemini-1.5-flash', 'Gemini 1.5 Flash' FROM ai_providers WHERE code = 'gemini'
-ON CONFLICT DO NOTHING;
+    CONSTRAINT "ai_chat_messages_pkey" PRIMARY KEY ("id")
+);
 
--- Seed AI Rules for existing users (auto-seeded server-side also)
-INSERT INTO user_ai_rules (user_id, view_type, content, is_enabled)
-SELECT
-    id,
-    unnest(ARRAY['erd', 'notes', 'flowchart']),
-    unnest(ARRAY[
-        '- Each table must have created_at and updated_at columns with TIMESTAMP type.\n- Use snake_case for all table and column naming.\n- Every table must have a PRIMARY KEY named id with BIGSERIAL type.\n- Use consistent FOREIGN KEY with column names ending in _id.\n- Avoid ENUM — use VARCHAR with CHECK constraint instead.\n- Add a deleted_at column for soft delete on master tables.',
-        '- Write notes in a clear structured format.\n- Use headings, bullet points, and code blocks.\n- Each note should have a summary at the beginning.',
-        '- Use short, clear labels (max 3 words per symbol).\n- Every diagram must have at least one Start and one End node.\n- Use descriptive names for each branch (decision label).'
-    ]),
-    true
-FROM auth.users
-ON CONFLICT (user_id, view_type) DO NOTHING;
+-- CreateTable
+CREATE TABLE "ai_system_prompts" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "category" TEXT NOT NULL DEFAULT 'custom',
+    "is_default" BOOLEAN DEFAULT false,
+    "is_built_in" BOOLEAN DEFAULT false,
+    "user_id" TEXT,
+    "created_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ai_system_prompts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_ai_rules" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "view_type" TEXT NOT NULL,
+    "content" TEXT NOT NULL DEFAULT '',
+    "is_enabled" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_ai_rules_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "cloud_ai_runtime_configs" (
+    "id" TEXT NOT NULL,
+    "revision" INTEGER NOT NULL,
+    "ciphertext" TEXT NOT NULL,
+    "iv" TEXT NOT NULL,
+    "auth_tag" TEXT NOT NULL,
+    "enabled" BOOLEAN NOT NULL DEFAULT true,
+    "expires_at" TIMESTAMPTZ(3),
+    "received_at" TIMESTAMPTZ(3) NOT NULL,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL,
+    "last_error_code" TEXT,
+
+    CONSTRAINT "cloud_ai_runtime_configs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "cloud_ai_usage_periods" (
+    "id" TEXT NOT NULL,
+    "team_id" TEXT NOT NULL,
+    "period_start" TIMESTAMPTZ(3) NOT NULL,
+    "period_end" TIMESTAMPTZ(3),
+    "limit_credits" INTEGER NOT NULL,
+    "consumed_credits" INTEGER NOT NULL DEFAULT 0,
+    "reserved_credits" INTEGER NOT NULL DEFAULT 0,
+    "entitlement_revision" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ(3) NOT NULL,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL,
+
+    CONSTRAINT "cloud_ai_usage_periods_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "cloud_ai_usage_requests" (
+    "id" TEXT NOT NULL,
+    "request_id" TEXT NOT NULL,
+    "team_id" TEXT NOT NULL,
+    "period_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "credits" INTEGER NOT NULL DEFAULT 1,
+    "state" TEXT NOT NULL,
+    "provider_code" TEXT,
+    "model_identifier" TEXT,
+    "error_code" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL,
+
+    CONSTRAINT "cloud_ai_usage_requests_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "discussion_threads" (
+    "id" TEXT NOT NULL,
+    "project_id" BIGINT,
+    "team_id" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'open',
+    "created_by" TEXT NOT NULL,
+    "resolved_by" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "discussion_threads_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "discussion_contexts" (
+    "id" TEXT NOT NULL,
+    "thread_id" TEXT NOT NULL,
+    "feature_type" TEXT NOT NULL,
+    "file_id" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "discussion_contexts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "discussion_messages" (
+    "id" TEXT NOT NULL,
+    "thread_id" TEXT NOT NULL,
+    "author_id" TEXT NOT NULL,
+    "author_name" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "discussion_messages_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "discussion_reads" (
+    "thread_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "last_read_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "discussion_reads_pkey" PRIMARY KEY ("thread_id","user_id")
+);
+
+-- CreateTable
+CREATE TABLE "comment_threads" (
+    "id" TEXT NOT NULL,
+    "project_id" INTEGER NOT NULL,
+    "team_id" TEXT NOT NULL,
+    "feature_type" TEXT NOT NULL,
+    "file_id" TEXT NOT NULL,
+    "anchor_type" TEXT NOT NULL,
+    "anchor_id" TEXT NOT NULL,
+    "anchor_label" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'open',
+    "created_by" TEXT NOT NULL,
+    "resolved_by" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "comment_threads_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "comment_messages" (
+    "id" TEXT NOT NULL,
+    "thread_id" TEXT NOT NULL,
+    "author_id" TEXT NOT NULL,
+    "author_name" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "comment_messages_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "comment_reads" (
+    "thread_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "last_read_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "comment_reads_pkey" PRIMARY KEY ("thread_id","user_id")
+);
+
+-- CreateTable
+CREATE TABLE "user_preferences" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "backup_folder" TEXT,
+    "auto_backup_enabled" BOOLEAN DEFAULT false,
+    "auto_backup_interval" INTEGER DEFAULT 3600,
+    "auto_backup_retention" INTEGER DEFAULT 10,
+    "storage_config" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_preferences_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_trial_surveys" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "team_id" TEXT NOT NULL,
+    "survey_key" TEXT NOT NULL,
+    "hidden_until" TIMESTAMPTZ(3),
+    "submitted_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_trial_surveys_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "notifications" (
+    "id" TEXT NOT NULL,
+    "recipient_user_id" TEXT NOT NULL,
+    "actor_user_id" TEXT,
+    "scope_type" TEXT NOT NULL,
+    "team_id" TEXT,
+    "project_id" INTEGER,
+    "feature_type" TEXT,
+    "file_id" TEXT,
+    "type" TEXT NOT NULL,
+    "entity_type" TEXT NOT NULL,
+    "entity_id" TEXT NOT NULL,
+    "group_key" TEXT,
+    "link" TEXT,
+    "source_event_id" TEXT,
+    "payload" TEXT NOT NULL DEFAULT '{}',
+    "read_at" TIMESTAMPTZ(3),
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_sso_subject_key" ON "users"("sso_subject");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "sessions_token_key" ON "sessions"("token");
+
+-- CreateIndex
+CREATE INDEX "sessions_token_idx" ON "sessions"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "mcp_oauth_authorizations_code_hash_key" ON "mcp_oauth_authorizations"("code_hash");
+
+-- CreateIndex
+CREATE INDEX "mcp_oauth_authorizations_status_expires_at_idx" ON "mcp_oauth_authorizations"("status", "expires_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "mcp_oauth_tokens_token_hash_key" ON "mcp_oauth_tokens"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "mcp_oauth_tokens_grant_id_kind_idx" ON "mcp_oauth_tokens"("grant_id", "kind");
+
+-- CreateIndex
+CREATE INDEX "mcp_oauth_tokens_client_id_kind_expires_at_idx" ON "mcp_oauth_tokens"("client_id", "kind", "expires_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "teams_sso_organization_id_key" ON "teams"("sso_organization_id");
+
+-- CreateIndex
+CREATE INDEX "idx_team_members_user_status" ON "team_members"("user_id", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "team_members_team_user_key" ON "team_members"("team_id", "user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "team_invitations_token_hash_key" ON "team_invitations"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "idx_team_invitations_team_expires" ON "team_invitations"("team_id", "expires_at");
+
+-- CreateIndex
+CREATE INDEX "idx_team_invitations_email_accepted" ON "team_invitations"("email", "accepted_at");
+
+-- CreateIndex
+CREATE INDEX "idx_team_audit_events_team_created" ON "team_audit_events"("team_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "idx_team_audit_events_actor_created" ON "team_audit_events"("actor_id", "created_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "projects_uid_key" ON "projects"("uid");
+
+-- CreateIndex
+CREATE INDEX "idx_projects_user_deleted" ON "projects"("user_id", "is_deleted");
+
+-- CreateIndex
+CREATE INDEX "idx_projects_team_deleted" ON "projects"("team_id", "is_deleted");
+
+-- CreateIndex
+CREATE INDEX "idx_projects_updated_at" ON "projects"("updated_at");
+
+-- CreateIndex
+CREATE INDEX "idx_project_access_grants_user" ON "project_access_grants"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "project_access_grants_project_user_key" ON "project_access_grants"("project_id", "user_id");
+
+-- CreateIndex
+CREATE INDEX "idx_storage_objects_scope" ON "storage_objects"("scope_type", "scope_id", "status");
+
+-- CreateIndex
+CREATE INDEX "idx_storage_objects_sweep" ON "storage_objects"("status", "unreferenced_since");
+
+-- CreateIndex
+CREATE INDEX "idx_storage_objects_document" ON "storage_objects"("document_uid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "diagrams_uid_key" ON "diagrams"("uid");
+
+-- CreateIndex
+CREATE INDEX "idx_diagrams_project_deleted" ON "diagrams"("project_id", "is_deleted");
+
+-- CreateIndex
+CREATE INDEX "idx_diagrams_updated_at" ON "diagrams"("updated_at");
+
+-- CreateIndex
+CREATE INDEX "idx_diagrams_version" ON "diagrams"("_version");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "notes_uid_key" ON "notes"("uid");
+
+-- CreateIndex
+CREATE INDEX "idx_notes_project_deleted" ON "notes"("project_id", "is_deleted");
+
+-- CreateIndex
+CREATE INDEX "idx_notes_updated_at" ON "notes"("updated_at");
+
+-- CreateIndex
+CREATE INDEX "idx_notes_version" ON "notes"("_version");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "drawings_uid_key" ON "drawings"("uid");
+
+-- CreateIndex
+CREATE INDEX "idx_drawings_project_deleted" ON "drawings"("project_id", "is_deleted");
+
+-- CreateIndex
+CREATE INDEX "idx_drawings_updated_at" ON "drawings"("updated_at");
+
+-- CreateIndex
+CREATE INDEX "idx_drawings_version" ON "drawings"("_version");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "flowcharts_uid_key" ON "flowcharts"("uid");
+
+-- CreateIndex
+CREATE INDEX "idx_flowcharts_project_deleted" ON "flowcharts"("project_id", "is_deleted");
+
+-- CreateIndex
+CREATE INDEX "idx_flowcharts_updated_at" ON "flowcharts"("updated_at");
+
+-- CreateIndex
+CREATE INDEX "idx_flowcharts_version" ON "flowcharts"("_version");
+
+-- CreateIndex
+CREATE INDEX "idx_table_constraints_entity" ON "table_constraints"("entity_id");
+
+-- CreateIndex
+CREATE INDEX "idx_table_indexes_entity" ON "table_indexes"("entity_id");
+
+-- CreateIndex
+CREATE INDEX "idx_entity_changes_lookup" ON "entity_changes"("entity_type", "entity_id", "version");
+
+-- CreateIndex
+CREATE INDEX "idx_entity_changes_retention" ON "entity_changes"("created_at");
+
+-- CreateIndex
+CREATE INDEX "idx_entity_changes_user" ON "entity_changes"("user_id", "created_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ai_providers_code_key" ON "ai_providers"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_ai_configs_user_id_provider_id_key" ON "user_ai_configs"("user_id", "provider_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ai_chat_sessions_uid_key" ON "ai_chat_sessions"("uid");
+
+-- CreateIndex
+CREATE INDEX "idx_ai_chat_sessions_entity" ON "ai_chat_sessions"("entity_type", "entity_uid");
+
+-- CreateIndex
+CREATE INDEX "idx_ai_chat_sessions_project_id" ON "ai_chat_sessions"("project_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ai_chat_messages_session_id_client_message_id_key" ON "ai_chat_messages"("session_id", "client_message_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_ai_rules_user_id_view_type_key" ON "user_ai_rules"("user_id", "view_type");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "cloud_ai_usage_period_team_start" ON "cloud_ai_usage_periods"("team_id", "period_start");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "cloud_ai_usage_requests_request_id_key" ON "cloud_ai_usage_requests"("request_id");
+
+-- CreateIndex
+CREATE INDEX "cloud_ai_usage_requests_team_created" ON "cloud_ai_usage_requests"("team_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "discussion_threads_project_updated" ON "discussion_threads"("team_id", "project_id", "updated_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "discussion_contexts_thread" ON "discussion_contexts"("thread_id");
+
+-- CreateIndex
+CREATE INDEX "discussion_contexts_file" ON "discussion_contexts"("feature_type", "file_id");
+
+-- CreateIndex
+CREATE INDEX "discussion_messages_thread_created" ON "discussion_messages"("thread_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "discussion_reads_user_thread" ON "discussion_reads"("user_id", "thread_id");
+
+-- CreateIndex
+CREATE INDEX "comment_threads_file_updated" ON "comment_threads"("team_id", "project_id", "feature_type", "file_id", "updated_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "comment_messages_thread_created" ON "comment_messages"("thread_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "comment_reads_user_thread" ON "comment_reads"("user_id", "thread_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_preferences_user_id_key" ON "user_preferences"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_trial_surveys_user_team_survey_key" ON "user_trial_surveys"("user_id", "team_id", "survey_key");
+
+-- CreateIndex
+CREATE INDEX "notifications_recipient_unread" ON "notifications"("recipient_user_id", "read_at", "created_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "notifications_recipient_created" ON "notifications"("recipient_user_id", "created_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "notifications_scope_created" ON "notifications"("team_id", "project_id", "created_at" DESC);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "notifications_recipient_source_event_key" ON "notifications"("recipient_user_id", "source_event_id");
+
+-- AddForeignKey
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "mcp_oauth_authorizations" ADD CONSTRAINT "mcp_oauth_authorizations_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "mcp_oauth_clients"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "mcp_oauth_tokens" ADD CONSTRAINT "mcp_oauth_tokens_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "mcp_oauth_clients"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "teams" ADD CONSTRAINT "teams_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "team_members" ADD CONSTRAINT "team_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "team_invitations" ADD CONSTRAINT "team_invitations_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "team_audit_events" ADD CONSTRAINT "team_audit_events_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "team_audit_events" ADD CONSTRAINT "team_audit_events_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "projects" ADD CONSTRAINT "projects_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "projects" ADD CONSTRAINT "projects_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "project_access_grants" ADD CONSTRAINT "project_access_grants_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "diagrams" ADD CONSTRAINT "diagrams_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "diagrams" ADD CONSTRAINT "diagrams_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "notes" ADD CONSTRAINT "notes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "notes" ADD CONSTRAINT "notes_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "drawings" ADD CONSTRAINT "drawings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "drawings" ADD CONSTRAINT "drawings_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "flowcharts" ADD CONSTRAINT "flowcharts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "flowcharts" ADD CONSTRAINT "flowcharts_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "entities" ADD CONSTRAINT "entities_diagram_id_fkey" FOREIGN KEY ("diagram_id") REFERENCES "diagrams"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "columns" ADD CONSTRAINT "columns_entity_id_fkey" FOREIGN KEY ("entity_id") REFERENCES "entities"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "relationships" ADD CONSTRAINT "relationships_diagram_id_fkey" FOREIGN KEY ("diagram_id") REFERENCES "diagrams"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "relationships" ADD CONSTRAINT "relationships_source_entity_id_fkey" FOREIGN KEY ("source_entity_id") REFERENCES "entities"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "relationships" ADD CONSTRAINT "relationships_target_entity_id_fkey" FOREIGN KEY ("target_entity_id") REFERENCES "entities"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "table_constraints" ADD CONSTRAINT "table_constraints_entity_id_fkey" FOREIGN KEY ("entity_id") REFERENCES "entities"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "table_indexes" ADD CONSTRAINT "table_indexes_entity_id_fkey" FOREIGN KEY ("entity_id") REFERENCES "entities"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "entity_changes" ADD CONSTRAINT "entity_changes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "backups" ADD CONSTRAINT "backups_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ai_models" ADD CONSTRAINT "ai_models_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "ai_providers"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "user_ai_configs" ADD CONSTRAINT "user_ai_configs_provider_id_fkey" FOREIGN KEY ("provider_id") REFERENCES "ai_providers"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "user_ai_configs" ADD CONSTRAINT "user_ai_configs_selected_model_id_fkey" FOREIGN KEY ("selected_model_id") REFERENCES "ai_models"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "user_ai_configs" ADD CONSTRAINT "user_ai_configs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ai_chat_sessions" ADD CONSTRAINT "ai_chat_sessions_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ai_chat_sessions" ADD CONSTRAINT "ai_chat_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ai_chat_messages" ADD CONSTRAINT "ai_chat_messages_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "ai_chat_sessions"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ai_system_prompts" ADD CONSTRAINT "ai_system_prompts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "user_ai_rules" ADD CONSTRAINT "user_ai_rules_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "user_trial_surveys" ADD CONSTRAINT "user_trial_surveys_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "user_trial_surveys" ADD CONSTRAINT "user_trial_surveys_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_recipient_user_id_fkey" FOREIGN KEY ("recipient_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_actor_user_id_fkey" FOREIGN KEY ("actor_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 ```
 
 </details>
-
-<details>
-<summary>Pure PostgreSQL SQL Schema (DDL + Foreign Keys + Indexes)</summary>
-
-```sql
--- -------------------------------------------------------------
--- TablePlus 6.0.0(550)
---
--- Database: erdbuilderpro
--- Generation Time: 2026-06-16 07:09:40.8790
--- -------------------------------------------------------------
-
-CREATE SEQUENCE IF NOT EXISTS ai_chat_messages_id_seq;
-
-CREATE TABLE "public"."ai_chat_messages" (
-    "id" int4 NOT NULL DEFAULT nextval('ai_chat_messages_id_seq'::regclass),
-    "session_id" int4 NOT NULL,
-    "role" text NOT NULL,
-    "content" text NOT NULL,
-    "selection_text" text,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS ai_chat_sessions_id_seq;
-
-CREATE TABLE "public"."ai_chat_sessions" (
-    "id" int4 NOT NULL DEFAULT nextval('ai_chat_sessions_id_seq'::regclass),
-    "uid" text,
-    "user_id" text,
-    "project_id" int4,
-    "title" text DEFAULT 'New Conversation'::text,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "entity_uid" text,
-    "entity_type" text,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS ai_models_id_seq;
-
-CREATE TABLE "public"."ai_models" (
-    "id" int4 NOT NULL DEFAULT nextval('ai_models_id_seq'::regclass),
-    "provider_id" int4,
-    "model_identifier" text NOT NULL,
-    "display_name" text NOT NULL,
-    "context_window" int4,
-    "is_active" bool DEFAULT true,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS ai_providers_id_seq;
-
-CREATE TABLE "public"."ai_providers" (
-    "id" int4 NOT NULL DEFAULT nextval('ai_providers_id_seq'::regclass),
-    "name" text NOT NULL,
-    "code" text NOT NULL,
-    "base_url" text,
-    "is_active" bool DEFAULT true,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."ai_system_prompts" (
-    "id" text NOT NULL,
-    "name" text NOT NULL,
-    "content" text NOT NULL,
-    "category" text NOT NULL DEFAULT 'custom'::text,
-    "is_default" bool DEFAULT false,
-    "is_built_in" bool DEFAULT false,
-    "user_id" text,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."backups" (
-    "id" text NOT NULL,
-    "user_id" text,
-    "name" text NOT NULL,
-    "status" text NOT NULL DEFAULT 'pending'::text,
-    "file_path" text,
-    "file_size" int4,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."columns" (
-    "id" text NOT NULL,
-    "entity_id" text,
-    "name" text NOT NULL,
-    "type" text NOT NULL,
-    "is_pk" bool DEFAULT false,
-    "is_nullable" bool DEFAULT true,
-    "enum_values" text,
-    "sort_order" int4 DEFAULT 0,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS db_accounts_id_seq;
-
-CREATE TABLE "public"."db_accounts" (
-    "id" int4 NOT NULL DEFAULT nextval('db_accounts_id_seq'::regclass),
-    "user_id" text NOT NULL,
-    "name" text NOT NULL,
-    "type" text NOT NULL,
-    "host" text,
-    "port" int4,
-    "user" text,
-    "password" text,
-    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS db_catalogs_id_seq;
-
-CREATE TABLE "public"."db_catalogs" (
-    "id" int4 NOT NULL DEFAULT nextval('db_catalogs_id_seq'::regclass),
-    "account_id" int4 NOT NULL,
-    "database_name" text NOT NULL,
-    "label" text,
-    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS diagrams_id_seq;
-
-CREATE TABLE "public"."diagrams" (
-    "id" int4 NOT NULL DEFAULT nextval('diagrams_id_seq'::regclass),
-    "uid" text,
-    "name" text NOT NULL,
-    "user_id" text,
-    "project_id" int4,
-    "is_deleted" bool DEFAULT false,
-    "deleted_at" timestamp(3),
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "viewport_x" float8 DEFAULT 0,
-    "viewport_y" float8 DEFAULT 0,
-    "viewport_zoom" float8 DEFAULT 1.0,
-    "_version" int4 DEFAULT 0,
-    "is_public" bool DEFAULT false,
-    "share_token" text,
-    "expiry_date" timestamp(3),
-    "published_at" timestamp(3),
-    "source_connection_id" int4,
-    "source_type" text DEFAULT 'blank'::text,
-    "data" text,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS drawings_id_seq;
-
-CREATE TABLE "public"."drawings" (
-    "id" int4 NOT NULL DEFAULT nextval('drawings_id_seq'::regclass),
-    "uid" text,
-    "title" text NOT NULL,
-    "data" text DEFAULT '[]'::text,
-    "user_id" text,
-    "project_id" int4,
-    "is_deleted" bool DEFAULT false,
-    "deleted_at" timestamp(3),
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "_version" int4 DEFAULT 0,
-    "is_public" bool DEFAULT false,
-    "share_token" text,
-    "expiry_date" timestamp(3),
-    "published_at" timestamp(3),
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."entities" (
-    "id" text NOT NULL,
-    "diagram_id" int4,
-    "name" text NOT NULL,
-    "x" float8 NOT NULL,
-    "y" float8 NOT NULL,
-    "color" text DEFAULT '#6366f1'::text,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS entity_changes_id_seq;
-
-CREATE TABLE "public"."entity_changes" (
-    "id" int4 NOT NULL DEFAULT nextval('entity_changes_id_seq'::regclass),
-    "entity_type" text NOT NULL,
-    "entity_id" text NOT NULL,
-    "version" int4 NOT NULL,
-    "user_id" text,
-    "changes" text DEFAULT '{}'::text,
-    "change_type" text DEFAULT 'update'::text,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS flowcharts_id_seq;
-
-CREATE TABLE "public"."flowcharts" (
-    "id" int4 NOT NULL DEFAULT nextval('flowcharts_id_seq'::regclass),
-    "uid" text,
-    "title" text NOT NULL,
-    "data" text DEFAULT '{"nodes":[], "edges":[]}'::text,
-    "user_id" text,
-    "project_id" int4,
-    "is_deleted" bool DEFAULT false,
-    "deleted_at" timestamp(3),
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "_version" int4 DEFAULT 0,
-    "is_public" bool DEFAULT false,
-    "share_token" text,
-    "expiry_date" timestamp(3),
-    "published_at" timestamp(3),
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS notes_id_seq;
-
-CREATE TABLE "public"."notes" (
-    "id" int4 NOT NULL DEFAULT nextval('notes_id_seq'::regclass),
-    "uid" text,
-    "title" text NOT NULL,
-    "content" text DEFAULT ''::text,
-    "user_id" text,
-    "project_id" int4,
-    "is_deleted" bool DEFAULT false,
-    "deleted_at" timestamp(3),
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "_version" int4 DEFAULT 0,
-    "is_public" bool DEFAULT false,
-    "share_token" text,
-    "expiry_date" timestamp(3),
-    "published_at" timestamp(3),
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS projects_id_seq;
-
-CREATE TABLE "public"."projects" (
-    "id" int4 NOT NULL DEFAULT nextval('projects_id_seq'::regclass),
-    "uid" text,
-    "name" text NOT NULL,
-    "user_id" text,
-    "color" text DEFAULT '#6366f1'::text,
-    "is_deleted" bool DEFAULT false,
-    "deleted_at" timestamp(3),
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    "_version" int4 DEFAULT 0,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."relationships" (
-    "id" text NOT NULL,
-    "diagram_id" int4,
-    "source_entity_id" text,
-    "target_entity_id" text,
-    "source_column_id" text,
-    "target_column_id" text,
-    "type" text DEFAULT 'one-to-many'::text,
-    "source_handle" text,
-    "target_handle" text,
-    "label" text,
-    "created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."sessions" (
-    "id" text NOT NULL,
-    "token" text NOT NULL,
-    "user_id" text NOT NULL,
-    "email" text NOT NULL,
-    "name" text,
-    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE SEQUENCE IF NOT EXISTS user_ai_configs_id_seq;
-
-CREATE TABLE "public"."user_ai_configs" (
-    "id" int4 NOT NULL DEFAULT nextval('user_ai_configs_id_seq'::regclass),
-    "user_id" text NOT NULL,
-    "provider_id" int4,
-    "selected_model_id" int4,
-    "api_key" text,
-    "is_enabled" bool DEFAULT true,
-    "updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."user_ai_rules" (
-    "id" text NOT NULL,
-    "user_id" text NOT NULL,
-    "view_type" text NOT NULL,
-    "content" text NOT NULL DEFAULT ''::text,
-    "is_enabled" bool NOT NULL DEFAULT true,
-    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."user_preferences" (
-    "id" text NOT NULL,
-    "user_id" text NOT NULL,
-    "backup_folder" text,
-    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
-CREATE TABLE "public"."users" (
-    "id" text NOT NULL,
-    "email" text NOT NULL,
-    "name" text,
-    "password" text NOT NULL,
-    "is_super_admin" bool,
-    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY ("id")
-);
-
--- Foreign Keys
-ALTER TABLE "public"."ai_chat_messages" ADD FOREIGN KEY ("session_id") REFERENCES "public"."ai_chat_sessions"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."ai_chat_sessions" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-ALTER TABLE "public"."ai_chat_sessions" ADD FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE SET NULL;
-
--- Indices
-CREATE UNIQUE INDEX ai_chat_sessions_uid_key ON public.ai_chat_sessions USING btree (uid);
-CREATE INDEX idx_ai_chat_sessions_entity ON public.ai_chat_sessions USING btree (entity_type, entity_uid);
-CREATE INDEX idx_ai_chat_sessions_project_id ON public.ai_chat_sessions USING btree (project_id);
-ALTER TABLE "public"."ai_models" ADD FOREIGN KEY ("provider_id") REFERENCES "public"."ai_providers"("id") ON DELETE CASCADE;
-
--- Indices
-CREATE UNIQUE INDEX ai_providers_code_key ON public.ai_providers USING btree (code);
-ALTER TABLE "public"."ai_system_prompts" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-ALTER TABLE "public"."backups" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."columns" ADD FOREIGN KEY ("entity_id") REFERENCES "public"."entities"("id") ON DELETE CASCADE;
-
--- Indices
-CREATE INDEX idx_db_accounts_user ON public.db_accounts USING btree (user_id);
-ALTER TABLE "public"."db_catalogs" ADD FOREIGN KEY ("account_id") REFERENCES "public"."db_accounts"("id") ON DELETE CASCADE;
-
--- Indices
-CREATE INDEX idx_db_catalogs_account ON public.db_catalogs USING btree (account_id);
-ALTER TABLE "public"."diagrams" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-ALTER TABLE "public"."diagrams" ADD FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE SET NULL;
-
--- Indices
-CREATE UNIQUE INDEX diagrams_uid_key ON public.diagrams USING btree (uid);
-CREATE INDEX idx_diagrams_project_deleted ON public.diagrams USING btree (project_id, is_deleted);
-CREATE INDEX idx_diagrams_updated_at ON public.diagrams USING btree (updated_at);
-CREATE INDEX idx_diagrams_version ON public.diagrams USING btree (_version);
-ALTER TABLE "public"."drawings" ADD FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE SET NULL;
-ALTER TABLE "public"."drawings" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-
--- Indices
-CREATE UNIQUE INDEX drawings_uid_key ON public.drawings USING btree (uid);
-CREATE INDEX idx_drawings_project_deleted ON public.drawings USING btree (project_id, is_deleted);
-CREATE INDEX idx_drawings_updated_at ON public.drawings USING btree (updated_at);
-CREATE INDEX idx_drawings_version ON public.drawings USING btree (_version);
-ALTER TABLE "public"."entities" ADD FOREIGN KEY ("diagram_id") REFERENCES "public"."diagrams"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."entity_changes" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-
--- Indices
-CREATE INDEX idx_entity_changes_lookup ON public.entity_changes USING btree (entity_type, entity_id, version);
-CREATE INDEX idx_entity_changes_retention ON public.entity_changes USING btree (created_at);
-CREATE INDEX idx_entity_changes_user ON public.entity_changes USING btree (user_id, created_at);
-ALTER TABLE "public"."flowcharts" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-ALTER TABLE "public"."flowcharts" ADD FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE SET NULL;
-
--- Indices
-CREATE UNIQUE INDEX flowcharts_uid_key ON public.flowcharts USING btree (uid);
-CREATE INDEX idx_flowcharts_project_deleted ON public.flowcharts USING btree (project_id, is_deleted);
-CREATE INDEX idx_flowcharts_updated_at ON public.flowcharts USING btree (updated_at);
-CREATE INDEX idx_flowcharts_version ON public.flowcharts USING btree (_version);
-ALTER TABLE "public"."notes" ADD FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE SET NULL;
-ALTER TABLE "public"."notes" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-
--- Indices
-CREATE UNIQUE INDEX notes_uid_key ON public.notes USING btree (uid);
-CREATE INDEX idx_notes_project_deleted ON public.notes USING btree (project_id, is_deleted);
-CREATE INDEX idx_notes_updated_at ON public.notes USING btree (updated_at);
-CREATE INDEX idx_notes_version ON public.notes USING btree (_version);
-ALTER TABLE "public"."projects" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-
--- Indices
-CREATE UNIQUE INDEX projects_uid_key ON public.projects USING btree (uid);
-CREATE INDEX idx_projects_user_deleted ON public.projects USING btree (user_id, is_deleted);
-CREATE INDEX idx_projects_updated_at ON public.projects USING btree (updated_at);
-ALTER TABLE "public"."relationships" ADD FOREIGN KEY ("source_entity_id") REFERENCES "public"."entities"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."relationships" ADD FOREIGN KEY ("target_entity_id") REFERENCES "public"."entities"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."relationships" ADD FOREIGN KEY ("diagram_id") REFERENCES "public"."diagrams"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."sessions" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
-
--- Indices
-CREATE UNIQUE INDEX sessions_token_key ON public.sessions USING btree (token);
-CREATE INDEX sessions_token_idx ON public.sessions USING btree (token);
-ALTER TABLE "public"."user_ai_configs" ADD FOREIGN KEY ("provider_id") REFERENCES "public"."ai_providers"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."user_ai_configs" ADD FOREIGN KEY ("selected_model_id") REFERENCES "public"."ai_models"("id") ON DELETE SET NULL;
-ALTER TABLE "public"."user_ai_configs" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
-
--- Indices
-CREATE UNIQUE INDEX user_ai_configs_user_id_provider_id_key ON public.user_ai_configs USING btree (user_id, provider_id);
-ALTER TABLE "public"."user_ai_rules" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
-
--- Indices
-CREATE UNIQUE INDEX user_ai_rules_user_id_view_type_key ON public.user_ai_rules USING btree (user_id, view_type);
-ALTER TABLE "public"."user_preferences" ADD FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
-
--- Indices
-CREATE UNIQUE INDEX user_preferences_user_id_key ON public.user_preferences USING btree (user_id);
-
--- Indices
-CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
-```
-
-</details>
-
-### Main Table Summary
-
-| Table | Schema | Category | Description |
-|-------|--------|----------|-------------|
-| `users` | Supabase: `auth` / Pure: `public` | Auth | User data (Supabase: `auth.users` via Supabase Auth; Pure: local model with email/password) |
-| `sessions` | `public` (Pure only) | Auth | Session token for local auth (Pure PostgreSQL only) |
-| `projects` | `public` | Project | Main container for all files (diagrams, notes, drawings, flowcharts) |
-| `diagrams` | `public` | Diagram | Parent table for ERD files, stores viewport, sharing metadata, and source settings |
-| `entities` | `public` | ERD | Stores individual tables within an ERD diagram |
-| `columns` | `public` | ERD | Stores fields/columns of each entity |
-| `relationships` | `public` | ERD | Stores relationship lines between entities (one-to-one, one-to-many, many-to-many) |
-| `entity_changes` | `public` | Audit | Entity change history for version history / snapshot feature |
-| `notes` | `public` | Content | Rich text notes with soft-delete and sharing |
-| `drawings` | `public` | Content | Freeform drawings based on JSON |
-| `flowcharts` | `public` | Content | Flowcharts with nodes/edges data in JSON format |
-| `backups` | `public` | Utility | Database backup history per user |
-| `ai_providers` | `public` | AI | List of AI providers (OpenAI, Anthropic, etc.) |
-| `ai_models` | `public` | AI | AI models available per provider |
-| `user_ai_configs` | `public` | AI | Per-user AI configuration (provider, model, API key) |
-| `ai_chat_sessions` | `public` | AI | AI Chat conversation sessions |
-| `ai_chat_messages` | `public` | AI | Individual messages within an AI Chat session |
-| `ai_system_prompts` | `public` | AI | System prompts for AI (built-in & custom) |
-| `user_ai_rules` | `public` | AI | Per-view AI rules (e.g., rules for ERD, flowchart, etc.) |
-| `user_preferences` | `public` | Utility | Desktop app user preferences |
-
-
-### Key Differences Between Supabase and Pure PostgreSQL
-
-| Aspect | Supabase | Pure PostgreSQL |
-|--------|----------|----------------|
-| **User model** | `auth.users` (from Supabase) | Local `users` (UUID, email, password) |
-| **Auth tables** | ~30 auth tables (identities, sessions, mfa, sso, etc.) | 1 `sessions` table |
-| **ID type** | `BIGSERIAL` / `BigInt` | `SERIAL` / `Int` |
-| **Timestamps** | `TIMESTAMPTZ(6)` with precision | `TIMESTAMP(3)` / `TIMESTAMPTZ` |
-| **Project** | no `color`, `updatedAt`, `version` | has `color`, `updated_at`, `_version` |
-| **EntityChange.changes** | `JSONB` | `TEXT` (serialized JSON) |
-| **Backup.file_size** | `BIGINT` | `INTEGER` |
-| **Best for** | Production with Supabase | Local development / self-hosted |
