@@ -1,29 +1,47 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 slug: /workspace/search-and-filter
 ---
 # Pencarian & Filter
 
-Menemukan file di antara puluhan proyek bisa memakan waktu. ERD Builder Pro menyediakan fitur pencarian yang cepat dan sistem filter yang cerdas untuk membantu Anda menavigasi workspace dengan efisien.
+Gunakan **Search** untuk menemukan Project dan file dengan cepat di workspace yang sedang aktif.
 
-## Pencarian Real-time
-Fitur pencarian dapat diakses langsung melalui kolom pencarian di bagian atas sidebar. 
-- **Kecepatan**: Hasil akan langsung muncul secara *real-time* saat Anda mulai mengetik karakter pertama.
-- **Cakupan**: Sistem akan mencari kecocokan pada **Nama File** dan **Nama Proyek**.
+## Membuka Search
 
-## Filter Berdasarkan Tipe Dokumen
-Jika Anda hanya ingin fokus pada satu jenis pekerjaan, Anda dapat menggunakan tombol filter kategori. Ini sangat berguna jika satu proyek memiliki banyak file campuran.
+- Klik **Search** di sidebar, atau
+- tekan `⌘K` (macOS) / `Ctrl+K` (Windows dan Linux).
 
-Filter yang tersedia meliputi:
-- **ERD Diagrams**: Menampilkan semua rancangan skema database.
-- **Flowcharts**: Menampilkan semua diagram alur logika.
-- **Notes**: Menampilkan semua dokumentasi teks (Tiptap).
-- **Drawings**: Menampilkan semua sketsa desain bebas (Excalidraw).
+Dialog pencarian terbuka dengan kolom *Search files and projects*. Tekan `Esc` untuk menutupnya. Search dinonaktifkan saat koneksi ke server terputus.
 
-## Tips Navigasi Cepat
-1.  **Gunakan Keyword Singkat**: Anda tidak perlu mengetik nama lengkap. Mengetik `user` akan memunculkan `users_table`, `user_flowchart`, dan proyek `User_Module`.
-2.  **Kombinasi Filter**: Aktifkan filter **Notes** lalu ketik kata kunci untuk mencari dokumentasi spesifik tanpa terganggu oleh file diagram.
-3.  **Visual Feedback**: File yang sesuai dengan kriteria pencarian akan tetap menyala di sidebar, sementara yang tidak cocok akan disembunyikan sementara.
+## Cara Kerja
 
----
-*Dengan sistem ini, Anda tetap bisa mengelola ratusan dokumen tanpa merasa kewalahan oleh struktur folder yang rumit.*
+- Ketik minimal 2 karakter (maksimal 100).
+- Pencarian mencocokkan **nama Project dan judul file**, bukan isi dokumen.
+- Hasil diurutkan dari yang terbaru, maksimal 5 per jenis dan 20 secara total.
+- File di Trash tidak ikut dicari.
+
+## Filter Jenis
+
+Pilih **Filter** untuk mempersempit hasil:
+
+- **All**
+- **Projects**
+- **ERD Builder**
+- **DB Client** (Desktop/CLI)
+- **Notes**
+- **Flowcharts**
+- **Drawings**
+
+## Cakupan
+
+| Workspace | Yang dicari |
+| :--- | :--- |
+| **Personal** | File dan Project pribadi Anda |
+| **Team** | Semua file di Project milik Team tersebut |
+| **Desktop dan CLI** | Semua file lokal Anda |
+
+Untuk mencari di workspace lain, pindah workspace lebih dulu lewat pemilih di sidebar.
+
+## Tips
+- Tidak perlu mengetik nama lengkap. `user` akan menemukan `users_table`, `user_flowchart`, dan Project `User_Module`.
+- Pilih filter **Notes** lalu ketik kata kunci untuk mencari dokumentasi tanpa tercampur diagram.

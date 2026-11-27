@@ -1,45 +1,46 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 slug: /core-features/sql-generator
 ---
-# SQL Generator
+# Export Schema & Code
 
-Once you have finished designing the ERD, you can export it to various database schema formats and programming code using the **Export All** feature.
+After designing an ERD, you can export the whole schema to SQL and framework code, or download the diagram as SVG.
 
-## Available Export Formats
+## Opening Export
 
-ERD Builder Pro supports various generators:
+1. Open an ERD diagram.
+2. Click the **Actions** menu (⋯) in the header, then **Export All**.
+3. Choose **Export Schemas** for SQL and code, or **Download SVG** for an image.
 
-### Schema (SQL)
-- **PostgreSQL**: Standard SQL schema with `CREATE TABLE` and `ALTER TABLE` for Foreign Keys.
-- **MySQL**: MySQL-compatible SQL schema with appropriate FK handling.
+The **Export All** dialog shows the number of tables and relationships, followed by the format tabs.
 
-### Backend Framework
-- **Laravel Migration**: PHP migration files for the Laravel framework (download as `.zip`).
-- **Laravel Model**: PHP model files for Eloquent ORM (download as `.zip`).
+## Available Formats
 
-### Type Safety
-- **TypeScript Interface**: TypeScript interfaces for type-safe development (download as `.zip`).
-- **Prisma Schema**: Schema for Node.js/TypeScript projects with Prisma ORM (download as `.zip`).
-- **Zod Schema**: Schema for data validation on the application side (download as `.zip`).
+| Category | Format | Downloaded file |
+| :--- | :--- | :--- |
+| **SQL** | MySQL, PostgreSQL | One `<diagram>_schema.sql` file |
+| **Laravel** | Migration, Model | `.zip` archive |
+| **Goravel** | Model, Migration | `.zip` archive |
+| **TypeScript** | Interface, Zod | `.zip` archive |
+| **Prisma** | Schema | One `<diagram>_schema.prisma` file |
 
-### Visual
-- **PDF**: Export the entire ERD canvas as a PDF document.
-- **SVG**: Export the entire ERD canvas as an SVG image.
+- **SQL** contains one `CREATE TABLE` per table, followed by `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` for relationships.
+- **Prisma** contains all models in one file, with the `generator client` and `datasource db` (PostgreSQL) blocks.
+- Contents of the `.zip` archives:
+  - Laravel: `migrations/<timestamp>_create_<table>_table.php` and `models/<Class>.php`.
+  - Goravel: `models/<Struct>.go` and `migrations/create_<table>_table.go`.
+  - TypeScript: `<Class>.ts`; Zod: `<Class>Schema.ts`.
 
-:::tip Batch Export
-Non-SQL formats (Laravel, TypeScript, Prisma, Zod) produce one file per table wrapped in a `.zip` archive. Meanwhile, MySQL and PostgreSQL produce a single `.sql` file ready to be executed.
-:::
+## Downloading and Copying
 
-## How to Export
+- Single-file formats use the **Download** button; archive formats use **Download .zip**.
+- The **Copy** button is available for single-file formats (SQL and Prisma).
+- The code preview uses syntax highlighting.
 
-1. Click the **"Export All"** button in the top right corner of the ERD view.
-2. Select the desired format from the available tabs.
-3. For SQL formats (MySQL/PostgreSQL), you can copy the code or download the file.
-4. For other formats, click **"Download .zip"** to download an archive containing all files.
+## Per-Table Export
 
-### Additional Features
+The table editor (double-click a table) has a **Schema** tab with the same formats for a single table. Use **Download** or **Copy** in that tab.
 
-- **Code Preview**: All schema formats are displayed using CodeMirror with syntax highlighting.
-- **Copy to Clipboard**: Only available for single SQL formats (MySQL/PostgreSQL).
-- **Experimental Badge**: The PDF and SVG tabs are marked as "Experimental" because they are new visual features.
+## Image Export (SVG)
+
+**Download SVG** downloads the tables and relationships as `<diagram>.svg` in the light or dark theme that is currently active. PNG and PDF export are not available for ERDs.

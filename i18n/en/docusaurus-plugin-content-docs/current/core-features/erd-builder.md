@@ -4,23 +4,39 @@ slug: /core-features/erd-builder
 ---
 # ERD Builder
 
-![ERD Toolbar](/img/docs/erd-toolbar.png)
+ERD Builder is the core feature for designing database schemas visually with *drag-and-drop*. The same schema can be edited with [DBML](./dbml-editor.md), populated from [Import SQL](./import-sql.md), and exported to SQL and code with [Export Schema & Code](./sql-generator.md).
 
-ERD Builder is a core feature that allows you to visually design database schemas with a drag-and-drop interface.
+## Toolbar
 
-## How to Create a Table
-1. Click the **"Add Table"** button on the toolbar.
-2. Enter the table name (example: `users`).
-3. Click the **"+"** icon on the table to add a new column.
+The floating toolbar sits at the top left of the canvas (vertical on desktop, horizontal on small screens):
+
+| Button | Function |
+| :--- | :--- |
+| **Explorer** (`⇧⌘F` / `Ctrl+Shift+F`) | Panel that lists tables and relationships, with search. |
+| **Add Table** | Adds a new table in the center of the screen. |
+| **Import SQL** | Creates or updates tables from SQL. See [Import SQL](./import-sql.md). |
+| **DBML** | Opens the DBML editor at the bottom of the canvas. See [DBML Editor](./dbml-editor.md). |
+| **Repository** | Desktop and CLI: compares the ERD with the schema in a Git repository. See [Git Repository](./git-repository.md). |
+| **Auto Layout** | Rearranges table positions. |
+| **Undo** (`⌘Z` / `Ctrl+Z`) and **Redo** (`⇧⌘Z` / `Ctrl+Y`) | Undoes or redoes changes. |
+
+Zoom and *fit view* controls are at the bottom left of the canvas. Users with read-only access do not see the buttons that change the diagram.
+
+## Creating a Table
+
+1. Click **Add Table**. A table named `NewTable` (or `NewTable_1`, `NewTable_2`, and so on) appears with one `id` column of type `INT` as the primary key.
+2. Double-click the table to open the table editor. The editor has the **Properties**, **Schema** (the table's code in several formats), and **DBML** (read-only) tabs.
+3. Press `Esc` to close the table editor.
+
+The table menu contains **Edit**, **Duplicate**, **Comment** (Team only), and **Delete Table**. Right-clicking a table also shows **Delete**.
 
 ## Configuring Columns
-Each column supports various properties:
-- **Primary Key (PK)**: Unique row identifier.
-- **Data Type**: Choose the data type that matches your database needs.
-- **Constraints**: Such as `not null`, `unique`, or `default value`.
+Each column supports the following properties:
+- **Primary Key (PK)**: unique row identifier.
+- **Data Type**: the data type that matches your database.
+- **Constraints**: `not null`, `unique`, and a `default` value.
 
 ### Supported Data Types
-ERD Builder Pro supports a variety of standard MySQL and PostgreSQL data types. The table below shows the data type categories and their database system support:
 
 | Category | Data Type | Database |
 | :--- | :--- | :--- |
@@ -33,30 +49,33 @@ ERD Builder Pro supports a variety of standard MySQL and PostgreSQL data types. 
 | **Boolean** | `BOOLEAN` | MySQL / PostgreSQL |
 | **Binary/Blob** | `BINARY`, `VARBINARY`, `BLOB`, `TINYBLOB`, `MEDIUMBLOB`, `LONGBLOB` | MySQL |
 | | `BYTEA` | PostgreSQL |
-| **Identity & Special** | `BIT`, `ENUM`, `JSON`, `ULID` | MySQL / PostgreSQL |
-| | `UUID`, `JSONB` | PostgreSQL |
+| **Identity & Special** | `BIT`, `ENUM`, `JSON` | MySQL / PostgreSQL |
+| | `UUID`, `ULID`, `JSONB` | PostgreSQL |
 | **Network & Search** | `INET`, `CIDR`, `MACADDR`, `MACADDR8`, `TSVECTOR`, `TSQUERY` | PostgreSQL |
 
 ## Creating Relationships
-To create relationships between tables (Foreign Key):
-1. Point your cursor to the handle (white dot) next to the column.
-2. Click and drag a line to the column in the target table.
-3. You can set the relationship type (*one-to-one*, *one-to-many*) through that connector line.
+
+1. Hover over one of the connection points (*handles*) on the sides of a column. Each column has four handles.
+2. Drag a line to a column in the target table. The new relationship is labeled `1:N`.
+3. Click the relationship line, or the ✎ icon in Explorer, to set **Relationship Cardinality** (`1:1`, `1:N`, `N:M`) and **Foreign Key Actions** (*On delete* and *On update*).
+
+The app rejects a relationship when:
+- the two columns have different types (**Type Mismatch**);
+- the same relationship already exists (**Relation already exists**);
+- the foreign key column is already connected to another primary key (**FK already related**).
+
+## Explorer
+
+The **Explorer** panel has **Tables** and **Relationships** tabs, each with a search box. Click an item to select it on the canvas.
 
 ## Auto Layout
-If your diagram starts to look cluttered or tables overlap each other, you can use the **Auto Layout** feature:
-1. Click the **"Auto Layout"** icon (grid/layout icon) on the toolbar.
-2. The system will automatically calculate the optimal position for each table based on existing relationships to minimize intersecting lines (*edge crossing*).
+
+Click **Auto Layout** to arrange tables from left to right: referenced tables go on the left and referencing tables on the right. Groups of tables that are not connected to each other are stacked separately. The result is saved and can be reverted with **Undo**.
 
 ## Editing with DBML
 
-In addition to the visual drag-and-drop interface, you can also define database schemas using **DBML** (*Database Markup Language*) — a concise text-based markup language.
+Click **DBML** in the toolbar to open the text editor at the bottom of the canvas. Changes apply in both directions: edits on the canvas update the DBML, and valid DBML updates the canvas.
 
-1. Click the **DBML Editor** button (the `</>` icon) on the toolbar in the top-right corner of the canvas.
-2. The editor panel appears on the right — type DBML syntax and the diagram updates automatically.
-3. Changes are **bidirectional**: edits on the canvas update the DBML text, and vice versa.
-
-Example:
 ```dbml
 Table users {
   id integer [pk, increment]
@@ -67,11 +86,15 @@ Table users {
 Ref: posts.user_id > users.id
 ```
 
-> [!NOTE]
-> See the [DBML Editor](/core-features/dbml-editor) page for a complete guide to DBML syntax, autocomplete, and other editor features.
+See [DBML Editor](./dbml-editor.md) for the full guide.
 
-## Export Diagram (Experimental)
-> [!CAUTION]
-> The diagram export feature to image format (PNG/SVG) or PDF is currently in **Experimental** stage. You may encounter slight visual differences in the exported file compared to the editor view.
+## Collaboration and History
 
-To export the diagram, click the **Download** icon on the editor toolbar.
+- In a Team Workspace, members can comment on tables and relationships. See [Comments & Discussions](../collaboration/comments-discussions.md).
+- Every saved change can be viewed and restored from [Version History](../collaboration/version-history.md).
+
+## Export Diagram
+
+Open the **Actions** menu (⋯) in the header, then **Export All**:
+- **Export Schemas** for SQL and code. See [Export Schema & Code](./sql-generator.md).
+- **Download SVG** for an image of the diagram in the theme currently in use.

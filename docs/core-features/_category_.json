@@ -4,6 +4,6 @@
   "link": {
     "type": "generated-index",
     "slug": "/core-features",
-    "description": "Eksplorasi kemampuan inti aplikasi seperti ERD Builder, SQL Generator, Flowchart, dan sistem dokumentasi."
+    "description": "Kemampuan inti aplikasi: ERD Builder, DBML, Import SQL, Export, Notes, Flowchart, Drawings, AI Assistant, DB Client, dan Git Repository."
   }
 }

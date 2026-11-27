@@ -2,50 +2,35 @@
 sidebar_position: 2
 slug: /security-backup/auto-backup
 ---
-# Auto Backup (GitHub Actions)
+# Auto Backup
 
-ERD Builder Pro uses **GitHub Actions** to run database backup routines automatically and reliably. This feature ensures your data is always safe even if a system failure occurs on the main server.
+**Auto Backup** creates database backups on a schedule from inside the app. It is available in Self-host (PostgreSQL), Desktop, and CLI, in the same place as [Database Backup](./manual-backup.md). Cloud does not have this menu.
 
-## Backup Workflow
+## Enabling Auto Backup
 
-The backup system works through the following flow:
+1. Open **Settings → Database Backup**, then the **Settings** tab.
+2. Check **Auto Backup**.
+3. Choose the **Interval**: 15 minutes, 30 minutes, 1 hour, 6 hours, 12 hours, or 24 hours.
+4. Choose **Keep**: keep the last 3, 5, 10, 20, 30, or 50 backups.
 
-1. **Trigger**: The workflow is executed based on a schedule (every day at 00:00 UTC), manual trigger from the application dashboard, or manually from the Actions tab on GitHub.
-2. **Preparation**: GitHub Actions runner installs **PostgreSQL Client v17**.
-3. **Execution**: The database is dumped using the `pg_dump` command and compressed into `.sql.gz`.
-4. **Storage**: The file is uploaded to **Cloudflare R2** via the S3 protocol.
-5. **Finalization**: The workflow sends a status update to the Supabase database to update the backup history in the application dashboard.
+Defaults: disabled, every 1 hour, keeping 10 backups.
 
-## Important Configuration (Prerequisites)
+The server checks the schedule every minute, so Auto Backup only runs while the server (or the Desktop/CLI app) is running.
 
-For the workflow to run successfully, several technical requirements must be met:
+## Retention Rules
 
-### 1. Use Supabase Pooler (Port 6543)
+:::caution
+The **Keep** setting counts **all** completed backups, including manual backups and `PreRestore_…` safety backups. After each Auto Backup, older backups beyond that number are deleted from the local folder together with their records. Copies in storage are not deleted.
 
-> [!IMPORTANT]
-> GitHub Actions runs on runners that currently **do not support IPv6**. Since new projects on Supabase often only support IPv6 for direct connections (port 5432), you **MUST** use the **Transaction Pooler** (Port 6543) in the `SUPABASE_DB_URL` variable.
+If you need to keep a specific backup longer, download it and store it somewhere else.
+:::
 
-**Correct URL format:**
-`postgresql://postgres.xxxxx:[PASSWORD]@aws-0-xxxx.pooler.supabase.com:6543/postgres?pgbouncer=true`
+## Routine Checks
 
-### 2. Setup GitHub Secrets
+- Check the **Histories** tab regularly to make sure backups have the **Completed** status.
+- Test a restore in a separate environment from time to time. See [Restore & Recovery](./disaster-recovery.md).
+- In Docker, make sure the backup folder is on a persistent volume or that storage is configured. See [Backups in Docker](../getting-started/deployment.md#backup-di-docker).
 
-Make sure all the following variables have been registered in **Settings > Secrets and variables > Actions** of your GitHub repository:
-- `SUPABASE_URL` & `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_DB_URL` (Use Port 6543)
-- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`
+## Supabase (Legacy)
 
-## How to Run Manually via GitHub
-
-If you want to ensure the backup system works without waiting for the automatic schedule:
-1. Open your repository on GitHub.
-2. Click the **Actions** tab.
-3. Select the **Database Auto Backup Routine** workflow on the left side.
-4. Click the **Run workflow** button.
-
-## Troubleshooting
-
-If the backup status in the application dashboard is stuck at **Processing**:
-1. Check the **Actions** tab on GitHub to see the error log.
-2. Make sure `SUPABASE_DB_URL` is using port 6543.
-3. Make sure the R2 API Token has *Read & Write* permissions (not just Read).
+Legacy Supabase deployments do not have Auto Backup in the app. In that mode, the **Create Backup** button triggers a GitHub Actions workflow (a `repository_dispatch` named `database-backup`) when `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, and `GITHUB_REPO_NAME` are set. The `auto-backup.yml` workflow in the repository also runs daily at 00:00 UTC, runs `pg_dump` on `SUPABASE_DB_URL`, then uploads the result to R2 at `erd-builder-pro/backups/`. Set these secrets in your GitHub repository: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`, and the `R2_*` variables.

@@ -1,36 +1,53 @@
 ---
-sidebar_position: 2
+sidebar_position: 5
 slug: /workspace/trash-system
 ---
 # Trash & Data Recovery
 
-Your data security is our priority. ERD Builder Pro uses a **Soft Delete** system, which means files you delete are not permanently gone immediately but are moved to a temporary storage area.
+ERD Builder Pro uses **soft delete**: a deleted file or Project is moved to **Trash** first, so it can still be restored.
 
-## Understanding Soft Delete
-When you click the delete icon on any file (ERD, Flowchart, Note, or Drawing):
-- The file will be marked as `deleted`.
-- The file will be hidden from the active project sidebar to avoid distracting your focus.
-- All data and relationships within the file remain intact and safe in the **Trash** folder.
+## Opening Trash
 
-> [!WARNING]
-> **Project/Workspace Deletion**: If you delete a **Project** or **Workspace**, all files (ERD, Flowchart, Note, and Drawing) within it will be automatically deleted as well. Make sure to move important files to another project before performing a project-level deletion.
+Click the profile menu at the bottom left of the sidebar, then select **Trash**. The **Trash Bin** page has the tabs **Projects**, **ERD**, **DB Client** (Desktop/CLI), **Notes**, **Drawings**, and **Flowcharts**.
 
-## Restoring Files (Restore)
-If you accidentally delete a file or need an old document back:
-1. Click the **Trash** menu at the bottom of the main sidebar.
-2. Find the file you want to restore.
-3. Click the **Restore** button.
-4. **Result**: The file will automatically return to its original project with all data exactly the same as before deletion.
+Trash shows the contents of the active workspace, including items deleted by other members in a Team Workspace. The Trash menu is disabled while the connection to the server is lost.
 
-## Permanent Deletion
-Permanent deletion is an **irreversible** action. Use this feature only if you are sure you no longer need the data.
+## Restoring Items
 
-1. Open the **Trash** menu.
-2. Click **Delete Permanently** on the selected file.
+1. Open the tab for the file type.
+2. Click **Restore** on the item you want to restore.
 
-### What Happens When You Delete Permanently?
-- **Database**: The file record and all its contents (ERD tables, note contents, etc.) will be completely deleted from the Supabase database.
-- **Storage (R2)**: If the file is a **Note** containing images, the system will also attempt to delete those image assets from your **Cloudflare R2** bucket to free up storage space.
+The file returns to its original Project with the same content it had before it was deleted.
 
-> [!CAUTION]
-> We highly recommend periodically reviewing the contents of your Trash folder before performing permanent cleanup.
+- Only the creator of an item can restore or delete it. Items owned by others show **Creator only**.
+- A file cannot be restored while its Project is still in Trash. Restore the Project first.
+- Restoring a Project also restores the files in it. Only the Project creator can restore a Project, and only if they also created every file in it.
+
+## Deleting Permanently
+
+1. Click **Delete** on the item.
+2. Confirm with **Permanently Delete**.
+
+Permanent deletion **cannot be undone**. The file record, all of its content, and its [Version History](../collaboration/version-history.md) are deleted too.
+
+### Empty Trash (Cloud)
+
+On Cloud, the **Empty Trash** button permanently deletes all items **you created** in the active workspace. Items created by other members remain.
+
+## Automatic Deletion
+
+| Option | Behavior |
+| :--- | :--- |
+| **Cloud** | Items in Trash are permanently deleted after **30 days**. The Trash page shows a warning and each item's deletion date (*Deleted permanently on …*). |
+| **Self-host** | No automatic deletion, unless an administrator sets `TRASH_RETENTION_DAYS`. See [Environment Variables](../configuration/env-variables.md#retensi-data-opsional). |
+| **Desktop and CLI** | No automatic deletion. |
+
+## Images in Storage
+
+Images used by Notes or Drawings are not removed from storage right away:
+- **Cloud and Self-host**: images that are no longer used are flagged by a daily cleanup, then deleted from the bucket after 30 days. See [Library](../cloud-storage/library.md).
+- **Desktop and CLI**: images are deleted from storage when the file is permanently deleted.
+
+:::caution
+Check the contents of Trash regularly before deleting anything permanently. On Cloud, restore files within 30 days if you still need them.
+:::

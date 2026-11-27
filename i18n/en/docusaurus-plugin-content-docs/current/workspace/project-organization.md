@@ -1,32 +1,58 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 slug: /workspace/project-organization
 ---
 # Project Organization
 
-ERD Builder Pro uses a project-based organization system to ensure your documentation stays structured and easy to find.
+Documentation in ERD Builder Pro is grouped into **Projects** so it stays structured and easy to find.
 
-## Workspace Hierarchy
-Your documentation is organized into three main levels:
-1.  **Workspace**: Your global workspace (connected to a single Supabase database).
-2.  **Project**: A logical container for a specific application or client.
-3.  **Files**: Technical documents within that project.
+## Hierarchy
 
-## Document Types in a Project
-Each project is highly flexible. You can combine the following document types within the same project:
+1. **Workspace**: the active Personal Workspace or Team Workspace. See [Personal & Team Workspace](./personal-team-workspace.md).
+2. **Project**: a container for one application, module, or client.
+3. **File**: a document inside a Project.
 
-- **ERD Diagrams**: Focus on designing PostgreSQL/MySQL database schemas.
-- **Flowcharts**: Used to map out application logic or business processes.
-- **Notes & Documentation**: A place to record business rules, API documentation, or technical guides.
-- **Drawings (Excalidraw)**: A freeform canvas for UI mockups, brainstorming, or architecture sketches.
+## File Types
 
-> [!TIP]
-> A project is not limited to a single file. You can have, for example, 3 ERD Diagrams (for different modules), 5 Note files, and several Drawing sketches within one project named "E-Commerce Application".
+A Project can contain several file types:
 
-## File & Project Management
-- **Grouping**: Use descriptive project names (e.g., `Backend-CRM-V2`) to separate work focuses.
-- **Moving Files**: If a file seems more suitable for another project, you can move it via the settings menu in each file without losing data.
-- **Search**: Use the filter/search feature in the sidebar to quickly find files by name or file type.
+- **ERD**: database schema design.
+- **Notes**: text documentation, business rules, or API notes.
+- **Flowcharts**: logic flows and business processes.
+- **Drawings**: a freeform canvas based on Excalidraw.
+- **DB Client** (Desktop/CLI): a connection to a database that is already running.
 
-> [!CAUTION]
-> **Caution When Deleting a Project**: Deleting a project will mass delete **all** documents within it. Although these files go to the Trash, restoring a large number of files can be time-consuming. Always double-check the project contents before deleting.
+A Project can have many files of each type, for example 3 ERDs for different modules and 5 Notes.
+
+## Creating a Project
+
+- In the **Projects** sidebar, click **+** (**New Project**), fill in **Project name**, then click **Create**.
+- Or, when creating a new file: click **+** next to the Project selector, enter a name, then **Add project**.
+
+Projects are created in the active workspace. In a Team Workspace, every member can create Projects. The name **Uncategorized** is reserved by the system.
+
+Every new file must belong to a Project. Older files without a Project are shown in the **Unassigned** section.
+
+## Moving Files
+
+1. Open the file, then select **Actions → Edit** (or **Edit** on the file's row on the Project page).
+2. Select the destination **Project**, then click **Save Changes**.
+
+Only the file creator can move it, and the destination must be in the same workspace.
+
+## Deleting a Project
+
+1. In the sidebar, click **⋯** on the Project row, then **Delete**.
+2. Confirm in the dialog. The Project and all files in it are moved to **Trash**.
+
+- Only the Project creator can rename or delete it. Other members see *Only the creator can rename or delete*.
+- The Project creator cannot delete a Project that contains files created by other members.
+- Restoring a Project from Trash also restores its files. See [Trash & Data Recovery](./trash-system.md).
+
+:::caution
+Deleting a Project moves **all** files in it to Trash. On Cloud, Trash contents are permanently deleted after 30 days.
+:::
+
+## Tips
+- Use descriptive Project names, for example `Backend-CRM-V2`.
+- Use [Search](./search-and-filter.md) (`⌘K` / `Ctrl+K`) to find files quickly.

@@ -27,14 +27,19 @@ MCP Web dinonaktifkan secara default dan tidak dapat diaktifkan pada Desktop ata
 | --- | --- | --- |
 | Transport | `stdio` | Streamable HTTP melalui HTTPS |
 | Autentikasi | User instalasi lokal | OAuth 2.1 dengan PKCE (`local` atau `supabase`) |
-| Notes, Flowcharts, Drawings, ERD reguler | Ya | Ya, read-only |
+| Notes, Flowcharts, ERD reguler | Ya | Ya, read-only |
+| Drawings | Tidak | Ya, read-only |
+| Cari file berdasarkan nama atau path (`workspace_search`) | Ya | Ya |
+| Cari workspace dari folder repositori (`workspace_resolve_repository`) | Ya | Tidak |
 | Riwayat dokumen | Read dan restore terkonfirmasi | Read-only |
 | DB Client / `production_db` | Read-only terbatas | **Tidak tersedia** |
 | Operasi write | Proposal/apply tertentu | **Tidak tersedia** |
 
-## MCP Web (public API)
+## MCP Web (public API) {/* #mcp-web-public-api */}
 
-Endpoint Web mengikuti [spesifikasi otorisasi MCP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Server memublikasikan OAuth Protected Resource Metadata, mengembalikan challenge Bearer untuk request tanpa token, memvalidasi issuer, audience, masa berlaku, dan `client_id`. Setiap query hanya dapat membaca dokumen pribadi user OAuth atau dokumen pada Team yang membership-nya masih aktif; MCP tidak menerima scope Team dari klien.
+Endpoint Web mengikuti [spesifikasi otorisasi MCP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Server memublikasikan OAuth Protected Resource Metadata, mengembalikan challenge Bearer untuk request tanpa token, memvalidasi issuer, audience, masa berlaku, dan `client_id`. Setiap query hanya dapat membaca dokumen pribadi user OAuth atau dokumen pada Team yang membership-nya masih aktif; MCP tidak menerima scope Team dari klien. Endpoint dibatasi 60 request per menit.
+
+Di aplikasi Web, **Settings → MCP Integration** menampilkan bagian **Public MCP Integration** beserta **Public MCP URL (Streamable HTTP)** yang dapat disalin ke klien.
 
 ### Menentukan domain
 
@@ -120,6 +125,7 @@ Di klien MCP yang mendukung remote OAuth, tambahkan URL `https://app.example.com
 | Tool | Fungsi |
 | --- | --- |
 | `workspace_list_files` | Daftar project aktif, Notes, Flowcharts, Drawings, dan ERD reguler. |
+| `workspace_search` | Mencari project atau file berdasarkan nama atau path. |
 | `document_read` | Membaca satu dokumen Web App yang diizinkan. |
 | `history_list` | Daftar revisi riwayat dokumen yang diizinkan. |
 | `history_read` | Membaca satu revisi tanpa restore. |
@@ -181,7 +187,7 @@ Perintah `erdbpro mcp` menggunakan `stdio`, sehingga tidak menampilkan antarmuka
 
 ### Konfigurasi dari aplikasi Desktop atau CLI
 
-Pada aplikasi Desktop atau CLI, buka **Settings → MCP Integration**. Halaman ini menampilkan launcher `stdio` yang sesuai dengan instalasi aktif dan menyediakan konfigurasi siap salin untuk:
+Pada aplikasi Desktop atau CLI, buka **Settings → MCP Integration**. Bagian **Connect AI Clients** menampilkan launcher `stdio` yang sesuai dengan instalasi aktif dan menyediakan konfigurasi siap salin untuk:
 
 - JetBrains AI;
 - VS Code;
@@ -238,6 +244,8 @@ Setelah koneksi berhasil, uji dengan permintaan read-only seperti “daftarkan p
 | Tool | Akses | Fungsi |
 | --- | --- | --- |
 | `workspace_list_files` | Read-only | Daftar project, Notes, Flowchart, dan ERD. |
+| `workspace_search` | Read-only | Mencari project atau file berdasarkan nama atau path. |
+| `workspace_resolve_repository` | Read-only | Menemukan workspace yang terhubung dengan folder repositori yang sedang dikerjakan klien AI. |
 | `document_read` | Read-only | Membaca satu Note, Flowchart, atau ERD. |
 | `history_list` | Read-only | Daftar snapshot pada `entity_changes`. |
 | `history_read` | Read-only | Membaca satu snapshot tanpa melakukan restore. |
@@ -249,7 +257,21 @@ Setelah koneksi berhasil, uji dengan permintaan read-only seperti “daftarkan p
 | `note_append_propose` | Read-only | Membuat preview penambahan teks pada Note. |
 | `note_append_apply` | Write | Menerapkan proposal Append yang telah dikonfirmasi. |
 
-Drawings belum disertakan. Write untuk Flowchart, ERD, struktur database, dan record DB Client juga belum tersedia.
+Drawings belum disertakan pada MCP lokal. Write untuk Flowchart, ERD, struktur database, dan record DB Client juga belum tersedia.
+
+### Mencari file dan workspace
+
+`workspace_search` tersedia di MCP lokal dan Web. Klien AI bisa mencari dengan nama atau path, misalnya `Backend > Notes > Aturan Bisnis`, lalu membaca hasilnya dengan `document_read`.
+
+| Parameter | Keterangan |
+| --- | --- |
+| `query` | Kata kunci nama atau path, 1–500 karakter. |
+| `type` | Opsional: `projects`, `notes`, `flowcharts`, `drawings`, `diagrams`, atau `db_clients` (khusus lokal). |
+| `limit` | Opsional, 1–50. Bawaan 20. |
+
+Hasilnya memuat `type`, `uid`, `name`, `path`, `project_uid`, dan `updated_at`.
+
+`workspace_resolve_repository` hanya tersedia di MCP lokal. Tool ini menerima `repository_path`, yaitu folder repositori atau subfolder yang sedang dikerjakan klien AI. Tool mencocokkannya dengan ERD yang terhubung ke repositori lewat panel [Git Repository](../core-features/git-repository.md), lalu mengembalikan informasi repositori, project, ERD yang terhubung, dan daftar file workspace tersebut.
 
 ### Perlindungan data lokal
 

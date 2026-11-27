@@ -4,53 +4,49 @@ slug: /troubleshooting/faq
 ---
 # Frequently Asked Questions (FAQ)
 
-Berikut adalah jawaban atas pertanyaan yang paling sering diajukan mengenai penggunaan dan konfigurasi ERD Builder Pro.
+Jawaban atas pertanyaan yang sering diajukan tentang penggunaan dan konfigurasi ERD Builder Pro.
 
-### Mengapa saya harus menggunakan Port 6543 untuk Backup?
-GitHub Actions dijalankan di lingkungan yang hanya mendukung **IPv4**. Karena database Supabase versi terbaru seringkali menggunakan **IPv6**, koneksi langsung melalui port default `5432` akan gagal. Port `6543` adalah **Transaction Pooler** yang menyediakan jalur IPv4 stabil untuk proses backup.
+### Apa beda Cloud, Self-host, Desktop, dan CLI?
+Cloud dikelola oleh tim ERD Builder Pro dan memakai akun ERDBPro SaaS. Self-host dipasang di server Anda dengan PostgreSQL. Desktop dan CLI berjalan di komputer Anda dengan SQLite untuk satu pengguna. Lihat [Pilihan Penggunaan](../getting-started/intro.md#pilihan-penggunaan).
 
-### Bagaimana aplikasi ini bekerja saat Offline?
-ERD Builder Pro dirancang dengan pendekatan **Offline-First**. 
-- Semua perubahan yang Anda buat disimpan terlebih dahulu ke **IndexedDB** di dalam browser Anda.
-- Saat koneksi internet tersedia, sistem akan secara otomatis mencoba mensinkronkan data lokal tersebut ke database Supabase (Cloud).
+### Apakah Desktop bisa memakai PostgreSQL?
+Tidak sebagai database aplikasi; Desktop dan CLI selalu memakai SQLite. Namun Anda bisa membuka database PostgreSQL, MySQL, atau SQLite lain lewat [DB Client](../core-features/db-client.md).
 
-### Apakah aman menggunakan Public Bucket di Cloudflare R2?
-Meskipun bucket disetel ke *Public*, data Anda tetap aman karena:
-1. **Nama File Acak**: Setiap gambar diberi nama UUID unik yang mustahil ditebak.
-2. **CORS Policy**: Anda dapat membatasi agar gambar hanya bisa dimuat dari domain resmi aplikasi Anda.
-3. **Tanpa Indexing**: Selama link gambar tidak disebar di situs publik, mesin pencari seperti Google tidak akan bisa menemukannya.
+### Bagaimana aplikasi bekerja saat koneksi terputus?
+Notes menyimpan draft di browser (IndexedDB) sebelum dikirim ke server, sehingga ketikan terakhir tidak langsung hilang. Selama koneksi terputus, beberapa menu seperti Search, Trash, Version History, dan Share dinonaktifkan.
 
-### Apa maksud label "Eksperimental" pada beberapa fitur?
-Fitur dengan label Eksperimental (seperti Import Notes atau Export PDF) adalah fitur yang sudah berfungsi namun masih dalam tahap pengembangan aktif. Anda mungkin akan menemui sedikit masalah visual atau bug kecil. Kami menyarankan untuk selalu melakukan backup database sebelum mencoba fitur-fitur ini secara intensif.
+### Apakah gambar yang saya unggah bisa diakses publik?
+Tidak secara langsung. Gambar disimpan di bucket privat dan ditampilkan melalui signed URL yang berlaku 15 menit, dibuat ulang setiap kali dokumen dibuka. Karena itu `R2_PUBLIC_URL` harus dikosongkan. Lihat [Konfigurasi R2](../cloud-storage/r2-config.md).
 
-### Bisakah saya mengganti warna tema (Dark/Light Mode)?
-ERD Builder Pro saat ini dioptimalkan untuk **Dark Mode** guna memberikan pengalaman perancangan yang fokus dan elegan. Dukungan tema terang (Light Mode) sedang dalam peta jalan pengembangan kami.
+### Apa maksud label "Experimental"?
+Fitur berlabel Experimental, seperti Import dan Export Notes, sudah berfungsi tetapi masih dikembangkan. Hasilnya bisa belum sempurna. Buat backup sebelum memakainya secara intensif.
+
+### Bisakah saya memakai tema terang (Light Mode)?
+Bisa. Buka **Settings → Appearance** lalu pilih **Light**, **Dark**, atau **System**.
+
+### Mengapa menu Team tidak muncul?
+Team hanya ada di Cloud dan Self-host dengan PostgreSQL murni. Di Self-host, Team memerlukan lisensi Self-host Commercial. Desktop dan CLI tidak memiliki Team.
 
 ### Di mana saya bisa melihat riwayat perubahan aplikasi?
-Anda dapat melihat daftar fitur baru, perbaikan bug, dan pembaruan versi secara langsung melalui menu **[Changelog](/changelog)** yang terhubung langsung dengan rilis GitHub kami.
+Lihat halaman **[Changelog](../changelog.mdx)** yang mengambil catatan rilis dari GitHub, atau **Settings → What's New** di aplikasi.
 
-### Bagaimana jika saya lupa password Supabase?
-Karena autentikasi menggunakan Supabase, Anda dapat mereset password atau mengelola akun pengguna melalui dashboard **Supabase > Authentication > Users**.
-
-### Bagaimana jika saya lupa password di mode self-hosted (Local PostgreSQL / Docker)?
-Untuk mode self-hosted yang menggunakan autentikasi lokal (bukan Supabase), gunakan script CLI berikut dari direktori proyek:
+### Bagaimana jika saya lupa password di Self-host?
+Jalankan script berikut dari folder proyek (atau dengan `docker exec` di container):
 
 ```bash
-npm run reset-password -- --email email-admin-anda@example.com --password passwordbaru123
+npm run reset-password -- --email email-anda@example.com --password passwordbaru123
 ```
 
-Script ini akan:
-- Mencari user berdasarkan email
-- Meng-hash password baru dengan algoritma `scrypt` (sama seperti login normal)
-- Memperbarui password di database
+Script ini mencari pengguna berdasarkan email, meng-hash password baru dengan `scrypt` (sama seperti login normal), lalu memperbarui database. Tidak perlu restart.
 
-Tidak perlu restart aplikasi. User bisa langsung login dengan password baru.
+### Bagaimana jika saya lupa password di deployment Supabase lama?
+Reset password atau kelola akun melalui dashboard **Supabase → Authentication → Users**.
 
-### Mengapa login `admin@local.dev` / `admin123` tidak valid di self-host?
-Kombinasi tersebut hanya kredensial bootstrap untuk Desktop/CLI. Self-host Local PostgreSQL menolaknya agar deployment bersama tidak berjalan dengan password default. Setelah database kosong, gunakan halaman **Create administrator account** untuk membuat akun super admin dengan email dan password baru.
+### Mengapa login `admin@local.dev` / `admin123` tidak valid di Self-host?
+Kombinasi tersebut hanya kredensial internal Desktop/CLI. Self-host menolaknya agar deployment bersama tidak berjalan dengan password bawaan. Pada database kosong, gunakan halaman **Create administrator account** untuk membuat SuperAdmin.
 
-### Mengapa halaman registrasi super admin muncul lagi?
-Halaman tersebut muncul jika database belum memiliki super admin yang dikonfigurasi atau masih berisi akun bootstrap. Pastikan registrasi menggunakan email/password baru dan aplikasi memakai `DATABASE_URL` yang sama dengan database yang Anda seed. `/api/auth-config` membaca status setup langsung dari database.
+### Mengapa halaman registrasi administrator muncul lagi?
+Halaman tersebut muncul jika database belum memiliki SuperAdmin. Pastikan aplikasi memakai `DATABASE_URL` yang sama dengan database yang Anda siapkan.
 
 ### Apa yang terjadi jika `ERD_ENCRYPTION_KEY` hilang atau berubah?
-Password DB Connect dan API key AI yang tersimpan tidak dapat didekripsi. Pulihkan kunci yang sama dari secret manager atau backup environment. Jangan membuat kunci baru untuk database lama kecuali Anda siap menyimpan ulang seluruh kredensial terenkripsi.
+API key AI yang tersimpan (dan kredensial DB Client di Desktop/CLI) tidak dapat didekripsi. Pulihkan kunci yang sama dari secret manager atau backup environment. Jangan membuat kunci baru untuk database lama kecuali Anda siap menyimpan ulang semua kredensial.

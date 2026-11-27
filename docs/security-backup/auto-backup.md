@@ -2,43 +2,35 @@
 sidebar_position: 2
 slug: /security-backup/auto-backup
 ---
-# Auto Backup (GitHub Actions)
+# Auto Backup
 
-ERD Builder Pro menggunakan **GitHub Actions** untuk menjalankan rutinitas backup database secara otomatis dan andal. Fitur ini memastikan data Anda selalu aman bahkan jika terjadi kegagalan sistem pada server utama.
+**Auto Backup** membuat backup database secara terjadwal dari dalam aplikasi. Tersedia di Self-host (PostgreSQL), Desktop, dan CLI, di tempat yang sama dengan [Database Backup](./manual-backup.md). Cloud tidak memiliki menu ini.
 
-## Alur Kerja Backup
-Sistem backup bekerja melalui alur berikut:
-1.  **Pemicu (Trigger)**: Workflow dijalankan berdasarkan jadwal (setiap jam 00:00 UTC), pemicu manual dari dashboard aplikasi, atau manual dari tab Actions di GitHub.
-2.  **Persiapan**: Runner GitHub Actions menginstal **PostgreSQL Client v17**.
-3.  **Eksekusi**: Database di-dump menggunakan perintah `pg_dump` dan dikompres menjadi `.sql.gz`.
-4.  **Penyimpanan**: File diunggah ke **Cloudflare R2** melalui protokol S3.
-5.  **Finalisasi**: Workflow mengirimkan pembaruan status ke database Supabase untuk memperbarui riwayat backup di dashboard aplikasi.
+## Mengaktifkan Auto Backup
 
-## Konfigurasi Penting (Syarat Wajib)
-Agar workflow berhasil dijalankan, ada beberapa persyaratan teknis yang harus dipenuhi:
+1. Buka **Settings → Database Backup**, lalu tab **Settings**.
+2. Centang **Auto Backup**.
+3. Pilih **Interval**: 15 minutes, 30 minutes, 1 hour, 6 hours, 12 hours, atau 24 hours.
+4. Pilih **Keep**: simpan 3, 5, 10, 20, 30, atau 50 backup terakhir.
 
-### 1. Gunakan Supabase Pooler (Port 6543)
-> [!IMPORTANT]
-> GitHub Actions dijalankan pada runner yang saat ini **tidak mendukung IPv6**. Karena proyek baru di Supabase seringkali hanya mendukung IPv6 untuk koneksi langsung (port 5432), Anda **WAJIB** menggunakan **Transaction Pooler** (Port 6543) pada variabel `SUPABASE_DB_URL`.
+Nilai bawaan: nonaktif, setiap 1 jam, menyimpan 10 backup.
 
-**Format URL yang benar:**
-`postgresql://postgres.xxxxx:[PASSWORD]@aws-0-xxxx.pooler.supabase.com:6543/postgres?pgbouncer=true`
+Server memeriksa jadwal setiap menit, jadi Auto Backup hanya berjalan selama server (atau aplikasi Desktop/CLI) menyala.
 
-### 2. Setup GitHub Secrets
-Pastikan semua variabel berikut telah didaftarkan di **Settings > Secrets and variables > Actions** pada repositori GitHub Anda:
-- `SUPABASE_URL` & `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_DB_URL` (Gunakan Port 6543)
-- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`
+## Aturan Retensi
 
-## Cara Menjalankan Secara Manual via GitHub
-Jika Anda ingin memastikan sistem backup berfungsi tanpa harus menunggu jadwal otomatis:
-1. Buka repositori Anda di GitHub.
-2. Klik tab **Actions**.
-3. Pilih workflow **Database Auto Backup Routine** di sisi kiri.
-4. Klik tombol **Run workflow**.
+:::caution
+Pengaturan **Keep** menghitung **semua** backup yang selesai, termasuk backup manual dan backup pengaman `PreRestore_…`. Setelah setiap Auto Backup, backup yang lebih lama dari jumlah tersebut dihapus dari folder lokal beserta catatannya. Salinan di storage tidak ikut dihapus.
 
-## Troubleshooting
-Jika status backup di dashboard aplikasi tertahan di **Processing**:
-1. Periksa tab **Actions** di GitHub untuk melihat log error.
-2. Pastikan `SUPABASE_DB_URL` sudah menggunakan port 6543.
-3. Pastikan API Token R2 memiliki izin *Read & Write* (bukan hanya Read).
+Bila Anda perlu menyimpan backup tertentu lebih lama, unduh dan simpan di tempat lain.
+:::
+
+## Pemeriksaan Rutin
+
+- Lihat tab **Histories** secara berkala untuk memastikan backup berstatus **Completed**.
+- Uji pemulihan di lingkungan terpisah sesekali. Lihat [Restore & Pemulihan](./disaster-recovery.md).
+- Di Docker, pastikan folder backup berada di volume persisten atau storage dikonfigurasi. Lihat [Backup di Docker](../getting-started/deployment.md#backup-di-docker).
+
+## Supabase (Legacy)
+
+Deployment Supabase lama tidak memiliki Auto Backup di aplikasi. Tombol **Create Backup** di mode itu memicu workflow GitHub Actions (`repository_dispatch` bernama `database-backup`) bila `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, dan `GITHUB_REPO_NAME` diisi. Workflow `auto-backup.yml` di repositori juga berjalan harian pukul 00:00 UTC, menjalankan `pg_dump` atas `SUPABASE_DB_URL`, lalu mengunggah hasilnya ke R2 di `erd-builder-pro/backups/`. Atur secret `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`, dan variabel `R2_*` di repositori GitHub Anda.

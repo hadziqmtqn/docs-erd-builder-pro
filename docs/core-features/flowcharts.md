@@ -1,30 +1,55 @@
 ---
-sidebar_position: 3
+sidebar_position: 6
 slug: /core-features/flowcharts
 ---
 # Flowcharts
 
 ![Flowchart Toolbar](/img/docs/flowchart-toolbar.png)
 
-Fitur **Flowchart** dirancang khusus untuk memvisualisasikan alur logika, proses bisnis, atau urutan algoritma dalam aplikasi Anda.
+**Flowchart** dipakai untuk memvisualkan alur logika, proses bisnis, atau urutan algoritma aplikasi Anda.
 
-## Komponen Flowchart
-Anda dapat menggunakan berbagai simbol standar industri:
-- **Terminator**: Menandai awal atau akhir alur.
-- **Process**: Langkah-langkah atau operasi teknis.
-- **Decision**: Titik percabangan (Ya/Tidak).
-- **Data**: Input atau output data.
+## Toolbar
 
-## Cara Membuat Alur
-1. Tambahkan simbol melalui menu **Add Symbol**.
-2. Hubungkan simbol dengan menarik garis konektor.
-3. Klik pada konektor untuk menambahkan teks label.
+| Tombol | Fungsi |
+| :--- | :--- |
+| **Auto Layout** | Menata ulang posisi simbol berdasarkan alur koneksinya. |
+| **Add Symbol** | Menambah simbol baru. |
+| **Undo** / **Redo** | Membatalkan atau mengulang perubahan. |
+| **Clear Canvas** | Mengosongkan canvas. |
+
+## Jenis Simbol
+
+| Bentuk | Kegunaan |
+| :--- | :--- |
+| **Oval (Start/End)** | Awal atau akhir alur |
+| **Rectangle (Process)** | Langkah atau operasi |
+| **Diamond (Decision)** | Percabangan Ya/Tidak |
+| **Parallelogram (Input/Output)** | Input atau output data |
+| **Cylinder (Database)** | Penyimpanan data |
+| **Document** | Dokumen atau laporan |
+| **Cloud (External System)** | Sistem eksternal |
+| **Circle (Connector)** | Penghubung antarbagian alur |
+
+## Membuat Alur
+
+1. Klik **Add Symbol**. Di dialog **Create New Symbol**, isi label, **Group Title** (opsional, untuk mengelompokkan simbol), **Shape Type**, dan **Color**.
+2. Hubungkan dua simbol dengan menarik garis dari titik sambung salah satu simbol ke simbol lain.
+3. Klik garis untuk membuka **Connector Properties**: **Text Label**, **Line Style** (*Solid Line* atau *Dashed Line*), dan **Arrow Style** (panah di akhir, di awal, di kedua ujung, atau tanpa panah).
+4. Klik simbol untuk mengubahnya lewat **Symbol Properties**.
 
 ## Auto Layout
-Jika simbol-simbol flowchart Anda mulai berantakan atau saling tumpang tindih, Anda dapat menggunakan fitur **Auto Layout**:
-1. Klik ikon **"Auto Layout"** (ikon grid/susunan) pada toolbar.
-2. Sistem akan secara otomatis menata ulang posisi simbol berdasarkan alur koneksinya agar lebih rapi dan mudah dibaca.
 
-## Export Flowchart (Eksperimental)
-> [!CAUTION]
-> Fitur ekspor ke format gambar (PNG/SVG) atau PDF pada modul Flowchart saat ini masih dalam tahap **Eksperimental**. Pastikan Anda memeriksa hasil ekspor sebelum menggunakannya di dokumen resmi.
+Klik **Auto Layout** bila simbol mulai berantakan atau saling tumpang tindih. Sistem menata ulang posisi simbol mengikuti arah koneksinya.
+
+## AI Assistant
+
+AI Assistant dapat membuat atau melanjutkan flowchart dari deskripsi teks. Perubahan dari AI ditinjau dulu di **Preview Flowchart Changes** sebelum diterapkan. Lihat [AI Integration](./ai-integration.md).
+
+## Kolaborasi dan Riwayat
+
+- Di Team Workspace, klik kanan simbol lalu pilih **Comment**. Lihat [Komentar & Diskusi](../collaboration/comments-discussions.md).
+- Perubahan yang tersimpan dapat dipulihkan dari [Version History](../collaboration/version-history.md).
+
+## Export
+
+Export Flowchart ke gambar atau PDF saat ini tidak tersedia. Flowchart tetap dapat dibagikan dengan [link publik](../collaboration/public-share.md).

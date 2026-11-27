@@ -4,144 +4,175 @@ slug: /configuration/env-variables
 ---
 # Environment Variables
 
-This application uses environment variables to manage database, authentication, API, and optional feature configurations. These variables must be placed in a `.env` file in the project root during local development or set as *Secrets* on the deployment platform (Vercel/VPS).
+The ERD Builder Pro server is configured through environment variables. During development, set them in the `.env` file in the project root. For deployment, set them in Docker, your container panel, or your system service. The full list with comments is in [`.env.example`](https://github.com/hadziqmtqn/erd-builder-pro/blob/master/.env.example).
 
-ERD Builder Pro supports **two PostgreSQL database modes**:
+## Database and Authentication Modes
 
-- **Supabase (Production/Cloud)**: PostgreSQL via Supabase pooler, Supabase Auth (JWT) authentication, `BigInt` ID type.
-- **Local PostgreSQL (Development/Self-hosted)**: PostgreSQL running directly on local/server, local authentication (email + password), `Int` ID type.
+The server selects the mode based on `DATABASE_URL` and the Supabase variables:
 
-For complete setup guides, see [Database Setup](./database-setup).
+| Mode | When active | Authentication | Team Workspace |
+| :--- | :--- | :--- | :--- |
+| **Pure PostgreSQL** (primary) | `DATABASE_URL` starts with `postgresql://` and neither `SUPABASE_URL` nor `VITE_SUPABASE_URL` is set | Local accounts (email + password) | Yes, with a Self-host Commercial license |
+| **Supabase** (legacy) | `SUPABASE_URL` or `VITE_SUPABASE_URL` is set, or a PostgreSQL URL with another prefix such as `postgres://` | Supabase Auth | No |
+| **SQLite** (Desktop, CLI) | `DATABASE_URL` is empty, starts with `file:`, or ends with `.db` | Automatic single-user login | No |
+
+The official Cloud uses pure PostgreSQL plus `AUTH_MODE=sso` and is managed by the ERD Builder Pro team. Guides for each mode are in [Database Setup](./database-setup.md).
+
+:::caution
+Use the `postgresql://` prefix in `DATABASE_URL`. The `postgres://` prefix is not recognized as pure PostgreSQL, so the server runs in Supabase mode.
+:::
 
 ## Self-host Profiles: Free Personal and Commercial Team
 
-This section separates plans only for Local PostgreSQL Self-host Web. Supabase Auth/Cloud SaaS is a separate deployment mode and does not use this Self-host plan split.
+This section distinguishes the **Self-host plans**. Cloud SaaS uses its own Cloud configuration.
 
 | Profile | Use | License environment |
 | --- | --- | --- |
-| **Self-host Personal (free)** | One local Personal Workspace; no Teams or Team members | Does not need the Team license client variables below |
-| **Self-host Commercial Team (paid)** | The application owner’s Personal Workspace plus Team Workspaces and licensed member capacity | Uses the official license service by default, with no extra variables; license state and installation identity must persist |
+| **Self-host Personal (free)** | One Personal Workspace per account; no Teams or Team members | Does not need the Team license client environment below |
+| **Self-host Commercial Team (paid)** | Personal Workspace plus Team Workspaces and a member quota set by the instance license | The official license server is built in, with no extra variables; the license state and installation identity must be persistent |
 
-Both profiles still use shared server settings such as `DATABASE_URL` and `ERD_ENCRYPTION_KEY` below. Upgrade from Personal to Commercial Team by activating a license in **Application Settings**. Do not put a license key in `.env`.
+Both profiles use `DATABASE_URL` and `ERD_ENCRYPTION_KEY` from the sections below. Teams are available only in pure PostgreSQL mode. To upgrade from Personal to Commercial Team, activate a license in **Settings → Application License**. Do not put the license key in `.env`.
 
-## Self-host Commercial Team License (Paid)
+## Self-host Commercial Team License (Paid) {/* #self-host-commercial-team-license-berbayar */}
 
-These variables apply only when the installation uses Team capacity licensing. Since version 3.5.6, the runtime uses the official license service by default, so `ERDBPRO_LICENSE_API_URL` and `ERDBPRO_LICENSE_ISSUER` can stay unset. Earlier versions still require both; update to 3.5.6 or later.
+The following variables apply only when the installation uses a Team capacity license. Since version 3.5.6, the runtime uses the official license server by default, so `ERDBPRO_LICENSE_API_URL` and `ERDBPRO_LICENSE_ISSUER` do not need to be set. Earlier versions still require both; update to 3.5.6 or later.
 
-- `ERDBPRO_LICENSE_API_URL`: **Optional**. Default: `https://license.erdbuilderpro.com`. Set it only to use another license service, such as a staging environment. The value is an origin without an endpoint path, such as `https://license.example.com`; the app appends the activation and license-check routes. Production must use HTTPS.
-- `ERDBPRO_LICENSE_ISSUER`: **Optional**. Default: the official issuers `https://erdbuilderpro.com` and `https://www.erdbuilderpro.com`. When set, only this value is accepted, so set it together with `ERDBPRO_LICENSE_API_URL` to the exact issuer in that license service's signed entitlements. Do not infer it from a plan name.
-- `ERDBPRO_LICENSE_STATE_FILE`: Optional full path to the license state file, for example `/app/data/.erdbpro/license-state.json` in Docker. Choose an absolute path on persistent storage that the server process can write to. This variable only selects a path; it does not create or attach a volume. The file contains a client token and signed entitlement, so treat it as secret.
-- `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Optional override for the installation identity path. When unset, `installation-identity.json` is placed beside the license state file. It contains the local private key and must be preserved with the state file.
+- `ERDBPRO_LICENSE_API_URL`: **Optional**. Default: `https://license.erdbuilderpro.com`. Set it only to use a different license server, such as a staging environment. The value is an origin without an endpoint path, for example `https://license.example.com`; the app appends the activation and license-check paths. Production must use HTTPS.
+- `ERDBPRO_LICENSE_ISSUER`: **Optional**. Default: the official issuers `https://erdbuilderpro.com` and `https://www.erdbuilderpro.com`. When set, only this value is accepted, so set it together with `ERDBPRO_LICENSE_API_URL` to the exact issuer from that license server's signed entitlement. Do not guess the value from the plan name.
+- `ERDBPRO_LICENSE_STATE_FILE`: Optional full path to the license state file, for example `/app/data/.erdbpro/license-state.json` in Docker. Choose an absolute path on a persistent filesystem that the server process can write to. This variable only selects the path; it does not create or mount a volume. The file contains a client token and a signed entitlement, so treat it as a secret.
+- `ERDBPRO_INSTALLATION_IDENTITY_FILE`: Optional path override for the installation identity. When it is not set, `installation-identity.json` is created next to the license state file. This file contains a local private key and must be kept together with the state file.
+- `ERDBPRO_LEGACY_TEAM_ID`: Optional. The UUID of an active Team that the administrator chooses to hold older Projects from an installation that predates the Team feature. Older Projects are not moved into a Team without this explicit mapping.
 
-The official verification key is bundled with the server. Do not set a custom public key or key ID in production. Free Personal does not need the Team license client variables to run its Personal Workspace.
+The official public verification key is bundled with the server. Do not set a custom public key or key ID in production. For Free Personal, do not set the Team license client variables just to run a Personal Workspace.
 
-The path value differs for Docker, managed containers, VPS, and Vercel. See the [path table by deployment type](../getting-started/deployment#path-values-by-deployment-type) and the [Docker/Easypanel notes](../getting-started/deployment#docker-and-easypanel-notes). When moving an existing installation, copy the state, identity, and any installation marker files to persistent storage before changing the path or recreating the server. Do not replace the existing installation identity with a newly generated one.
+The server needs outbound HTTPS access to the license server. If the license server is unreachable, Teams keep working for up to 72 hours after the last successful check.
+
+The correct path value differs for Docker, managed containers, VPS, and Vercel. See the [path table by deployment type](../getting-started/deployment.md#nilai-path-per-jenis-deployment) and the [Docker/Easypanel notes](../getting-started/deployment.md#catatan-docker-dan-easypanel). When moving an existing installation, copy the existing state, identity, and installation marker files to persistent storage before changing the path or recreating the server. Do not create a new identity to replace the old installation identity.
 
 ## Core (Required)
-These variables are mandatory for the application to function.
-- `DATABASE_URL`: PostgreSQL connection string.
-  - **Supabase**: Use the pooler string (port `6543`, with `pgbouncer=true&connection_limit=10`).
-  - **Local PostgreSQL**: Use `postgresql://user:password@localhost:5432/database_name`.
-- `PORT`: Backend server port (default: 3000).
+- `DATABASE_URL`: Database connection string.
+  - **Pure PostgreSQL**: `postgresql://user:password@localhost:5432/database_name`.
+  - **Supabase (legacy)**: the Supabase pooler string.
+- `PORT`: Server port (default `3000`).
+- `APP_TIMEZONE`: Time zone for time formatting and logs on the server, for example `Asia/Jakarta`. Default `UTC`. Timestamps in the database are still stored as absolute time (UTC).
 
 ## Secret Encryption (Required for Web/Self-host)
-Database connection passwords and AI API keys are stored encrypted on the server.
+AI API keys are stored encrypted in the database. On Desktop and CLI, the same key also encrypts DB Client connection credentials.
 
-- `ERD_ENCRYPTION_KEY`: Secret key required for web, Docker, and server deployments. Use a random value of at least 32 characters and keep the same value on every instance using the same database.
-- `ERD_ENCRYPTION_KEY_FILE`: Key-file path for Desktop/CLI when `ERD_ENCRYPTION_KEY` is not set. Desktop/CLI creates a local key beside the database when neither value is configured.
+- `ERD_ENCRYPTION_KEY`: Secret key for web, Docker, and server deployments. Use a random value of at least 32 characters (for example, the output of `openssl rand -hex 32`) and use the same value on every instance that reads the same database.
+- `ERD_ENCRYPTION_KEY_FILE`: Key file path for Desktop/CLI when `ERD_ENCRYPTION_KEY` is not set. Desktop/CLI creates a local key file next to the database when neither is set.
 
-> [!CAUTION]
-> Never commit or share `ERD_ENCRYPTION_KEY`, the key file, or `.env`. If the key is lost or changed, stored DB Connect passwords and AI API keys cannot be decrypted.
+:::caution
+Do not commit or share `ERD_ENCRYPTION_KEY`, the key file, or `.env`. If the key is lost or changed, stored AI API keys (and DB Client credentials on Desktop/CLI) cannot be decrypted.
+:::
 
-## Authentication (Optional — Mode-Dependent)
-The following variables are **only required for Supabase mode**. Not needed for Local PostgreSQL.
+## Cloud Authentication Mode (`AUTH_MODE`)
 
-- `SUPABASE_URL`: Your Supabase project API URL.
-- `SUPABASE_ANON_KEY`: The anon/public key used by the server to validate Supabase sessions.
-- `SUPABASE_SERVICE_ROLE_KEY`: The service role key for server-side operations. **Never expose this key to the frontend.**
+- `AUTH_MODE`: Only for the official Cloud deployment, with the value `sso`. This value turns off local password login and hands login over to ERDBPro SaaS.
+
+:::warning
+Do not set `AUTH_MODE` on Self-host. Without the Cloud SSO configuration, users cannot log in. Desktop and CLI always ignore this variable.
+:::
+
+## Supabase (Legacy)
+The following variables are **only for older Supabase deployments**. Leave them empty on pure PostgreSQL, because setting them switches the server to Supabase mode.
+
+- `SUPABASE_URL`: Supabase project API URL.
+- `SUPABASE_ANON_KEY`: The anon/public key the server uses to validate Supabase sessions.
+- `SUPABASE_SERVICE_ROLE_KEY`: The *service_role* key for server-side operations. Never share it.
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`: Fallback values that the **server** reads when `SUPABASE_URL` or `SUPABASE_ANON_KEY` is empty. The browser does not read these variables.
 
 ## Web MCP (Optional — Web App)
 
-Public MCP runs only in the Web App over HTTPS. Desktop and CLI continue to use local MCP over `stdio`.
+Public MCP runs only on the Web App over HTTPS. Desktop and CLI keep using local MCP over `stdio`.
 
-- `MCP_PUBLIC_URL`: Canonical HTTPS URL of the MCP Streamable HTTP endpoint, including its path, such as `https://app.example.com/api/mcp` or `https://mcp.example.com/api/mcp`. Setting this variable enables public MCP.
-- `MCP_AUTH_PROVIDER`: MCP OAuth provider: `local` for Pure PostgreSQL or `supabase` for Supabase Auth. When unset, the server selects `supabase` when `SUPABASE_URL` is present and `local` otherwise; set it explicitly in deployments.
-- `MCP_CONSENT_URL`: OAuth consent page URL for the `local` provider. It defaults to the origin of `MCP_PUBLIC_URL` with the `/oauth/consent` path.
-- `MCP_AUTH_ISSUER_URL`: OAuth issuer override for the `supabase` provider only. Leave unset to use `${SUPABASE_URL}/auth/v1`; set it only when Supabase Auth uses a custom domain.
+- `MCP_PUBLIC_URL`: Canonical HTTPS URL of the MCP Streamable HTTP endpoint, including the path, for example `https://app.example.com/api/mcp` or `https://mcp.example.com/api/mcp`. Setting this variable enables public MCP.
+- `MCP_AUTH_PROVIDER`: MCP OAuth provider: `local` for pure PostgreSQL or `supabase` for Supabase Auth. When it is empty, the server selects `supabase` when `SUPABASE_URL` is set and `local` otherwise; you should set it explicitly in deployments.
+- `MCP_CONSENT_URL`: OAuth consent page URL for the `local` provider. The default is the origin of `MCP_PUBLIC_URL` with the path `/oauth/consent`.
+- `MCP_AUTH_ISSUER_URL`: OAuth issuer override, only for the `supabase` provider. Leave it empty to use `${SUPABASE_URL}/auth/v1`; set it only when Supabase Auth uses a custom domain.
 
-For `MCP_AUTH_PROVIDER=local`, `DATABASE_URL` must point to Pure PostgreSQL and `SUPABASE_URL` must not be set. For `MCP_AUTH_PROVIDER=supabase`, configure Supabase Auth and make the JWT `aud` claim exactly match `MCP_PUBLIC_URL`. See [Web MCP configuration](./mcp#web-mcp-public-api).
+For `MCP_AUTH_PROVIDER=local`, `DATABASE_URL` must point to pure PostgreSQL and `SUPABASE_URL` must not be set. See [Web MCP configuration](./mcp.md#mcp-web-public-api).
 
-## AI, Guest Mode, and Realtime Sync (Optional)
-AI provider, model, and API key configuration is managed through **Settings > AI Configuration** and stored encrypted in the database. The server does not read `AI_API_KEY`, `AI_BASE_URL`, or `AI_MODEL` from `.env`.
+## AI and Guest Mode (Optional)
+The AI provider, model, and API key are set in **Settings → AI Configuration** and stored encrypted in the database. `AI_API_KEY`, `AI_BASE_URL`, and `AI_MODEL` are not read from `.env`. See [AI Configuration](./ai-setup.md).
 
-- `VITE_SUPABASE_URL`: Same as `SUPABASE_URL`, required by the Supabase client in the browser.
-- `VITE_SUPABASE_ANON_KEY`: Anonymous (anon/public) key for public Supabase access.
-- `VITE_ENABLE_GUEST_MODE`: Set to `true` to enable Guest mode (default: `false`).
-- `GUEST_AI_ENABLED`: Set to `true` to let Guests use AI through the server API key (default: `false`). Guests may consume your API quota.
-- `AI_ALLOW_PRIVATE_BASE_URL`: Set to `true` only when intentionally allowing private AI endpoints such as Ollama. Keep `false` for SSRF protection.
+- `AI_ALLOW_PRIVATE_BASE_URL`: Set to `true` only when you intentionally allow AI endpoints on a private network, for example Ollama on the same server. Keep it `false` for SSRF protection.
+- `VITE_ENABLE_GUEST_MODE`: Set to `true` to allow logging in as a Guest (default `false`). The server reads this value at runtime.
+- `GUEST_AI_ENABLED`: Default `false`. Guests currently cannot use AI even when this is `true`, so leave it disabled.
 
 ## Storage - Cloudflare R2 (Recommended)
-It is recommended to store assets (images/files) permanently in Cloudflare R2.
-- `R2_ACCOUNT_ID`: Your Cloudflare account ID.
+Required for uploading images to Notes and Drawings. Images are stored in a private bucket and displayed through signed URLs. See [R2 Configuration](../cloud-storage/r2-config.md).
+
+- `R2_ACCOUNT_ID`: Cloudflare account ID, or the endpoint `https://<account-id>.r2.cloudflarestorage.com`.
 - `R2_ACCESS_KEY_ID`: Access Key from the R2 API Token.
 - `R2_SECRET_ACCESS_KEY`: Secret Key from the R2 API Token.
-- `R2_BUCKET_NAME`: The bucket name used.
-- `R2_PUBLIC_URL`: Public URL or custom domain (CDN) to access files.
+- `R2_BUCKET_NAME`: Bucket name.
+- `R2_PUBLIC_URL`: **Leave empty.** When it is set, every Notes and Drawings image upload is rejected with the message *Private document assets require storage without a public URL.*
 
-## Feedback Integration (Optional)
-Optional feature to send user feedback to the developer via a **Telegram bot**.
+## Data Retention (Optional) {/* #retensi-data-opsional */}
 
-### GitHub
-- `GITHUB_TOKEN`: GitHub Personal Access Token.
-- `GITHUB_REPO_OWNER`: Username or organization owning the repository.
-- `GITHUB_REPO_NAME`: Target repository name.
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `TRASH_RETENTION_DAYS` | Self-host: disabled. Cloud: `30` | Permanently deletes Trash items older than N days. On Self-host, the interface shows no warning, so tell your users if you enable it. |
+| `REVISION_RETENTION_DAYS` | Self-host: disabled. Cloud: `30` | Deletes Version History older than N days. |
+| `NOTIFICATION_READ_RETENTION_DAYS` | `90` | Deletes read notifications after N days. |
+| `NOTIFICATION_RETENTION_DAYS` | `180` | Deletes all notifications after N days. |
 
-## Platform Requirements Matrix
+Trash and Version History retention runs only in PostgreSQL mode.
 
-This matrix summarizes general application environment requirements. Commercial Team license state paths depend on the hosting platform and are listed separately in the [license path table](../getting-started/deployment#path-values-by-deployment-type).
+## Image Limits per Document (Optional)
 
-| Variable Name | Local / Dev | Vercel / VPS | Usage |
+- `DOCUMENT_IMAGE_LIMIT`: Maximum number of images per document (default `15`).
+- `DOCUMENT_IMAGE_BYTES`: Total image size per document in bytes (default `2097152`, which is 2 MB).
+
+## Feedback (Optional)
+
+The **Feedback** menu in the app sends messages to the ERD Builder Pro team through the default endpoint `https://api.erdbuilderpro.com/api/feedback`.
+
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`: When set, the `/api/feedback` endpoint on this server forwards each feedback message to that Telegram chat. If either one is empty, the endpoint responds with `503`. Keep them on the server only; do not put them in `VITE_*` variables.
+- `VITE_FEEDBACK_API_URL`: Build-time variable that replaces the feedback endpoint used by the frontend.
+
+## GitHub (Legacy Supabase)
+
+- `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`: Used only by the older Supabase mode to trigger the GitHub Actions backup workflow (a `repository_dispatch` named `database-backup`). Other modes do not use them.
+
+## Network and Logging (Optional)
+
+- `CORS_ORIGINS`: Comma-separated list of HTTPS origins, without trailing slashes, for example `https://app.example.com,https://www.example.com`. Needed only when the frontend is opened from an origin different from the API, such as an MCP subdomain. Requests from the same host do not need it.
+- `VITE_API_URL`: Build-time variable for a custom backend URL. Default: relative URL.
+- `LOG_LEVEL`, `LOG_SERVICE`, `LOG_ENVIRONMENT`, `LOG_REGION`: Configure structured logs. Production containers write JSON logs to stdout/stderr.
+
+## Requirements Matrix
+
+| Variable | Self-host (PostgreSQL) | Desktop / CLI | Purpose |
 | :--- | :---: | :---: | :--- |
-| `DATABASE_URL` | ✅ | ✅ | DB Connection |
-| `ERD_ENCRYPTION_KEY` | ✅¹ | ✅ | DB password and AI API key encryption |
-| `ERD_ENCRYPTION_KEY_FILE` | 💡² | 💡² | Desktop/CLI key file |
-| `SUPABASE_URL` | 💡¹ | 💡¹ | Supabase Auth |
-| `SUPABASE_ANON_KEY` | 💡¹ | 💡¹ | Supabase session validation |
-| `SUPABASE_SERVICE_ROLE_KEY` | 💡¹ | 💡¹ | Admin Auth |
-| `MCP_PUBLIC_URL` | 💡 | 💡 | Public Web MCP + OAuth resource |
-| `MCP_AUTH_PROVIDER` | 💡 | 💡 | MCP OAuth provider: `local` or `supabase` |
-| `MCP_CONSENT_URL` | 💡 | 💡 | Local OAuth consent URL |
-| `MCP_AUTH_ISSUER_URL` | 💡 | 💡 | Custom Supabase OAuth issuer |
-| `R2_ACCOUNT_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
-| `R2_ACCESS_KEY_ID` | ⭐️ | ⭐️ | Cloudflare R2 |
-| `R2_SECRET_ACCESS_KEY` | ⭐️ | ⭐️ | Cloudflare R2 |
-| `R2_BUCKET_NAME` | ⭐️ | ⭐️ | Cloudflare R2 |
-| `R2_PUBLIC_URL` | ⭐️ | ⭐️ | Cloudflare R2 |
-| `VITE_SUPABASE_URL` | 💡² | 💡² | AI & Realtime |
-| `VITE_SUPABASE_ANON_KEY` | 💡² | 💡² | AI & Realtime |
-| `VITE_ENABLE_GUEST_MODE` | 💡 | 💡 | Guest Mode (disabled by default) |
-| `GUEST_AI_ENABLED` | 💡 | 💡 | Guest AI (disabled by default) |
-| `AI_ALLOW_PRIVATE_BASE_URL` | 💡 | 💡 | Private AI endpoints (disabled by default) |
-| `VITE_API_URL` | ❌ | 💡 | Custom Backend URL |
+| `DATABASE_URL` | ✅ | ❌ (automatic) | Database connection |
+| `ERD_ENCRYPTION_KEY` | ✅ | 💡 | AI API key encryption |
+| `ERD_ENCRYPTION_KEY_FILE` | ❌ | 💡 | Desktop/CLI key file |
+| `APP_TIMEZONE` | 💡 | 💡 | Server time zone |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` | ⭐️ | 💡 (or Settings → Storage) | Image uploads |
+| `ERDBPRO_LICENSE_STATE_FILE` | ⭐️ (Commercial Team) | ❌ | Persistent license state |
+| `MCP_PUBLIC_URL`, `MCP_AUTH_PROVIDER` | 💡 | ❌ | Public Web MCP |
+| `AI_ALLOW_PRIVATE_BASE_URL` | 💡 | 💡 | Private AI endpoints |
+| `TRASH_RETENTION_DAYS`, `REVISION_RETENTION_DAYS` | 💡 | ❌ | Data retention |
+| `CORS_ORIGINS` | 💡 | ❌ | Other frontend origins |
+| `AUTH_MODE` | ❌ | ❌ | Official Cloud only |
 
-*Note: ✅ Required | ⭐️ Recommended | 💡 Optional | ❌ Not Required*
-*¹ Required for web/Docker/self-host; Desktop/CLI can generate a local key | ² Desktop/CLI key-file alternative*
+*Legend: ✅ Required | ⭐️ Recommended | 💡 Optional | ❌ Not used*
 
 ## Setup Guide
 
 ### 1. Local (`.env`)
-Copy the `.env.example` file to `.env` in the project root:
+Copy `.env.example` to `.env` in the project root, then fill in the values:
 ```bash
 cp .env.example .env
 ```
-Fill in the variable values according to each service provider's dashboard.
 
-### 2. Deployment (Docker, VPS, or Vercel)
-- Add required variables in the provider dashboard or service configuration.
-- For Docker, pass variables with `.env` or the `-e` flag to `docker run`; the license path must point to a persistent volume mounted inside the container.
-- For a VPS without containers, use an absolute path writable by the service user.
-- Vercel does not currently support the persistent license state files required by Self-host Commercial Team. See the [deployment guide](../getting-started/deployment).
-- Make sure the `VITE_` variables are checked for all environments (Production & Preview).
+### 2. Deployment (Docker, VPS, or Panel)
+- Enter the variables in the panel dashboard or the service configuration.
+- For Docker, pass the variables with `--env-file .env` or the `-e` flag on `docker run`; the license path must point to a persistent volume in the container.
+- For a VPS without containers, use an absolute path that the service user can write to.
+- Vercel does not support the persistent license state file that Self-host Commercial Team requires. See the [deployment guide](../getting-started/deployment.md).
 
 ---
-*For more information on database setup, see [Database Setup](./database-setup).*
+*Guides for each database mode are in [Database Setup](./database-setup.md).*

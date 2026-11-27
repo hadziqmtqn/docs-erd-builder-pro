@@ -4,58 +4,105 @@ slug: /troubleshooting/common-issues
 ---
 # Common Issues
 
-This page summarizes several technical issues you may encounter and practical solutions to resolve them.
+This page summarizes frequently encountered technical problems and their solutions.
 
-## 1. Data Sync Failure (Offline Sync)
-**Symptoms**: Recently changed data does not appear when opened on another device or after the app is restarted.
-**Solutions**:
-- Ensure the app stays open for a while after an internet connection is detected to allow synchronization time.
-- Check the **Network** tab in the browser (Developer Tools) to ensure there are no 403 or 401 errors when the app attempts to push data to Supabase.
-- If synchronization still fails, refresh the page (make sure the data is saved in your browser's local storage).
+## 1. "Create administrator account" Page Appears Again or `admin@local.dev` Login Is Rejected
 
-## 2. Database Connection Failure (GitHub Actions)
-**Symptoms**: Error `psql: error: could not connect to server: Connection timed out` during automatic backup.
-**Solutions**: 
-- Make sure you are using the **Transaction Pooler** (Port 6543) and not the direct connection (5432).
-- Check if `SUPABASE_DB_URL` in GitHub Secrets is correct and uses the proper URI format.
-
-## 3. Images Not Appearing (Cloudflare R2)
-**Symptoms**: Images in Notes or Drawings are broken or not displayed.
-**Solutions**:
-- Ensure the API Token in Cloudflare has "Edit" or "Admin" permission for the bucket.
-- Check if `R2_ACCOUNT_ID` and `R2_BUCKET_NAME` in the `.env` file are correct.
-- Ensure **CORS** in the Cloudflare R2 dashboard is allowed for your app's official domain.
-
-## 4. AI Not Responding Issue
-**Symptoms**: Chat AI stops in the middle or displays a connection error message.
-**Solutions**:
-- Check the **API Key** in Settings > AI Configuration. Make sure the key is still active and has sufficient quota.
-- If using **Custom/OpenAI Compatible**, make sure the **Base URL** is correct and includes `/v1` at the end (e.g., `http://localhost:20128/v1`).
-- Check the terminal logs (if running locally) or the Network tab in the browser for error details from the API provider.
-
-## 5. SQL Parsing Error
-**Symptoms**: The entered SQL does not convert to a diagram or an error occurs during parsing.
-**Solutions**:
-- Make sure the SQL syntax uses the **PostgreSQL** dialect (the main supported dialect).
-- Check for unsupported special characters or overly complex syntax. Try parsing table by table if the SQL file is too large.
-
-## 6. Docker Issue (Deployment)
-**Symptoms**: Docker container is not accessible on port 3000.
-**Solutions**:
-- Make sure port 3000 is not already in use by another application on the host machine.
-- Check container logs with the `docker logs erd-app` command for startup error messages.
-- Ensure the `.env` file is included when running the container (`--env-file .env`).
-
-## 8. 403 Forbidden Error When Managing Model Catalog
-
-**Symptoms**: A 403 Forbidden error appears when creating or editing data in **Settings > Model Catalog**.
-
-**Cause**: Your Supabase account is missing the `is_super_admin` flag in user metadata. The application checks this flag to grant access to the Model Catalog feature.
+**Cause**: `admin@local.dev` / `admin123` is an internal Desktop/CLI credential and is deliberately rejected on Self-host. Self-host does not create a default account; the SuperAdmin is created through the **Create administrator account** page.
 
 **Solution**:
-1. Open your Supabase Dashboard.
-2. Navigate to **SQL Editor**.
-3. Create a new query and run the following command, adjusting the email to match your admin account:
+- Create an account with a new email and password through the **Create administrator account** page.
+- Make sure the server and the seed command use the same `DATABASE_URL`.
+- Make sure `ERD_ENCRYPTION_KEY` stays the same across restarts and deployments.
+
+## 2. Forgot Password on Self-host
+
+There is no "Forgot Password" feature in the Self-host interface. Run the following script from the project folder:
+
+```bash
+npm run reset-password -- --email your-email@example.com --password newpassword123
+```
+
+For Docker:
+
+```bash
+docker exec -it erd-builder-pro npm run reset-password -- --email your-email@example.com --password newpassword123
+```
+
+The password must be at least 6 characters. The script supports pure PostgreSQL and SQLite and does not require a restart. Supabase mode uses the Supabase dashboard to reset passwords. Desktop and CLI do not use passwords.
+
+## 3. AI API Key Cannot Be Decrypted
+
+**Symptom**: AI shows an error that the stored API key cannot be decrypted, or DB Client connections on Desktop/CLI fail after moving to another computer.
+
+**Cause**: `ERD_ENCRYPTION_KEY` is missing or changed, or the `.erd-encryption-key` file on Desktop/CLI was left behind.
+
+**Solution**:
+- Restore the same `ERD_ENCRYPTION_KEY` value from your secret manager or `.env` backup.
+- For Desktop/CLI, make sure the `.erd-encryption-key` file next to the database is still there, or set `ERD_ENCRYPTION_KEY_FILE`.
+- If the old key cannot be recovered, save the API key again in **Settings → AI Configuration**.
+
+## 4. Image Upload Fails
+
+| Message | Cause and solution |
+| :--- | :--- |
+| *Storage is not configured. Please add storage configuration in Settings.* | Storage is not configured. Fill in the `R2_*` variables on the server, or **Settings → Storage** on Desktop/CLI. See [R2 Configuration](../cloud-storage/r2-config.md). |
+| *Private document assets require storage without a public URL.* | `R2_PUBLIC_URL` (or **Public URL** in Settings → Storage) is set. Clear it, then restart the server. |
+| *File type is not allowed. Use JPEG, PNG, WebP or SVG.* | The image format is not supported. |
+| *The image is still larger than 1 MB after compression...* | Crop the image or use a smaller image. |
+| *A document can hold up to 15 images and 2 MB of images...* | The per-document image limit has been reached. Delete other images in that document. |
+| *This workspace has used its storage limit...* | (Cloud) The storage quota is full. See [Cloud Quota](../cloud-storage/cloud-quota.md). |
+
+## 5. AI Does Not Respond
+
+- Make sure a provider is configured and enabled in **Settings → AI Configuration**. On Self-host, this menu is visible only to the SuperAdmin.
+- Save the configuration first, then click **Test Connection**; that button tests the API key that is already saved.
+- For **OpenAI Compatible**, make sure the Base URL is correct. Many providers require the `/v1` suffix.
+- Endpoints on a private network or localhost (for example Ollama) are blocked unless the server uses `AI_ALLOW_PRIVATE_BASE_URL=true`.
+- In Cloud, the AI Assistant requires a Team plan that includes AI and has credits remaining.
+- Check the server log or the browser's Network tab for error messages from the provider.
+
+## 6. Import SQL Fails
+
+**Symptom**: *No valid CREATE TABLE statements found.* or *Failed to parse SQL. Check your syntax.*
+
+**Solution**:
+- Use PostgreSQL or MySQL syntax, and end each statement with a semicolon (`;`).
+- Make sure the SQL contains at least one `CREATE TABLE`. SQL that contains only `ALTER TABLE` cannot be imported.
+- If a large file fails to process, import it in parts.
+
+See [Import SQL](../core-features/import-sql.md). SQL text pasted into the DBML editor is not converted; use Import SQL.
+
+## 7. "This file was changed by someone else"
+
+Another Team member saved the same file. Your changes were not sent, so nothing was overwritten. Click **Load latest** to load the latest version; your local changes are saved as a recovery copy in the browser. See [Live Sync](../collaboration/live-sync.md).
+
+## 8. Docker Container Is Not Accessible
+
+- Make sure port `3000` on the host is not used by another application.
+- Check the logs with `docker logs erd-builder-pro`.
+- Make sure `.env` is included (`--env-file .env`) and `DATABASE_URL` is reachable from the container.
+- The container waits up to 30 seconds for PostgreSQL at startup. Make sure the database is already running.
+
+## 9. License State Cannot Be Written
+
+Check `ERDBPRO_LICENSE_STATE_FILE` and the persistent volume. See [Persistent License State](../getting-started/deployment.md#persistent-license-state-paid-self-host).
+
+## 10. Team Menu Does Not Appear
+
+- Teams are available only in pure PostgreSQL mode: `DATABASE_URL` starts with `postgresql://` and no Supabase variables are set.
+- On Self-host, Teams require an active Commercial license. Without a license, **Add Team** shows the **Unlock Teams** dialog.
+- Desktop and CLI do not have Teams.
+
+## 11. 403 Error When Managing AI Models (Supabase Legacy)
+
+**Symptom**: 403 Forbidden when creating or editing data in **Settings → AI Configuration → AI Models** on a Supabase deployment.
+
+**Cause**: The Supabase account does not have the `is_super_admin` flag or the `admin` role in its user metadata.
+
+**Solution**:
+1. Open the **SQL Editor** in the Supabase dashboard.
+2. Run the following query with your admin email:
 
 ```sql
 UPDATE auth.users
@@ -63,58 +110,8 @@ UPDATE auth.users
     WHERE email = 'admin@example.com';
 ```
 
-   Replace `admin@example.com` with your actual admin account email.
+3. Log out, then log in again.
 
-4. After running the query, **logout** and **login again** to the ERD Builder Pro application.
+## 12. Menus Cannot Be Clicked While Offline
 
-> **Note**: This issue is specific to **Supabase (PostgreSQL)** mode. Local PostgreSQL has a local super admin created through initial setup; Desktop/CLI use local automatic access.
-
-## 9. Forgot Password in Self-Hosted Mode (Local PostgreSQL / Docker)
-
-**Symptoms**: Cannot log in to a self-hosted ERD Builder Pro deployment using Local PostgreSQL or Docker mode.
-
-**Cause**: Self-hosted mode uses local authentication, not Supabase. There is no "Forgot Password" feature in the UI.
-
-**Solution**:
-1. Open a terminal in the server or ERD Builder Pro project directory.
-2. Run the following command, replacing the email and password:
-
-```bash
-npm run reset-password -- --email your-admin-email@example.com --password newpassword123
-```
-
-3. The script will find the user, hash the password, and update the database.
-4. No application restart required — the user can log in immediately with the new password.
-
-> **Note**: Replace the email with the actual super-admin email. This solution is specific to **Local PostgreSQL** and **Docker** modes. Supabase mode uses the Supabase dashboard for password reset. Desktop/CLI use local auto-login and do not use the web login form.
-
-## 10. Repeated Super-Admin Registration or Invalid Credentials
-
-**Symptoms**: After logout, the application returns to **Create administrator account**, or logging in with `admin@local.dev` / `admin123` shows `Invalid credentials`.
-
-**Cause**: `admin@local.dev` / `admin123` is the Desktop/CLI bootstrap credential and is deliberately rejected in Local PostgreSQL self-host mode. Self-host seeding does not create default credentials; the super admin must be created through the initial setup screen.
-
-**Solutions**:
-- Create an account with a new email and password through **Create administrator account**.
-- Ensure the server and seed command use `DB_VARIANT=pg` and the same `DATABASE_URL`.
-- Keep the same `ERD_ENCRYPTION_KEY` across restarts and deployments.
-- If the UI does not match the database, verify that the application is not using a different database or stale backend build.
-
-## 11. AI API Key or DB Connect Password Cannot Be Used
-
-**Symptoms**: DB Connect requests fail after deployment, or AI reports that a stored API key cannot be decrypted.
-
-**Cause**: `ERD_ENCRYPTION_KEY` is missing or changed. This key encrypts database connection passwords and AI API keys.
-
-**Solutions**:
-- Restore the same `ERD_ENCRYPTION_KEY` from your secret manager or `.env` backup.
-- For Desktop/CLI, keep `.erd-encryption-key` beside the database, or set `ERD_ENCRYPTION_KEY_FILE`.
-- After restoring the key, save the affected credentials again if needed.
-
-## 12. Canvas Feels Heavy/Laggy After Generate
-**Symptoms**: After you click the action button below the AI response in the Chat Panel (such as *Replace All*, *Append*, *Create or Update ERD from SQL*, or *Create or Update Flowchart*) for the first time, moving tables or symbols on the canvas feels heavy or "janky".
-
-**Cause**: This is a technical limitation with the initial canvas state synchronization when receiving a large amount of new data from AI.
-
-**Solutions**:
-- Simply **Reload/Refresh your browser page** once. After refreshing, the canvas will return to being smooth and normal.
+When the connection to the server is lost, **Search**, **Trash**, **Version History**, and **Share** are disabled until the connection returns.

@@ -4,58 +4,105 @@ slug: /troubleshooting/common-issues
 ---
 # Masalah Umum
 
-Halaman ini merangkum beberapa kendala teknis yang mungkin Anda temui dan solusi praktis untuk mengatasinya.
+Halaman ini merangkum kendala teknis yang sering ditemui beserta solusinya.
 
-## 1. Gagal Sinkronisasi Data (Offline Sync)
-**Gejala**: Data yang baru saja diubah tidak muncul saat dibuka di perangkat lain atau setelah aplikasi di-restart.
-**Solusi**:
-- Pastikan aplikasi tetap terbuka beberapa saat setelah koneksi internet kembali terdeteksi untuk memberi waktu proses sinkronisasi.
-- Cek tab **Network** di browser (Developer Tools) untuk memastikan tidak ada error 403 atau 401 saat aplikasi mencoba melakukan *push* data ke Supabase.
-- Jika sinkronisasi tetap gagal, lakukan *refresh* halaman (pastikan data sudah tersimpan di *local storage* browser Anda).
+## 1. Halaman "Create administrator account" Muncul Lagi atau Login `admin@local.dev` Ditolak
 
-## 2. Koneksi Database Gagal (GitHub Actions)
-**Gejala**: Error `psql: error: could not connect to server: Connection timed out` saat backup otomatis.
-**Solusi**: 
-- Pastikan Anda menggunakan **Transaction Pooler** (Port 6543) dan bukan koneksi langsung (5432).
-- Cek apakah `SUPABASE_DB_URL` di GitHub Secrets sudah benar dan menggunakan format URI yang tepat.
-
-## 3. Gambar Tidak Muncul (Cloudflare R2)
-**Gejala**: Gambar di Notes atau Drawings pecah atau tidak tampil.
-**Solusi**:
-- Pastikan API Token di Cloudflare memiliki izin "Edit" atau "Admin" untuk bucket tersebut.
-- Cek apakah `R2_ACCOUNT_ID` dan `R2_BUCKET_NAME` di file `.env` sudah sesuai.
-- Pastikan **CORS** di dashboard Cloudflare R2 sudah diizinkan untuk domain resmi aplikasi Anda.
-
-## 4. Masalah AI Tidak Merespon
-**Gejala**: Chat AI berhenti di tengah jalan atau menampilkan pesan error koneksi.
-**Solusi**:
-- Cek **API Key** di menu Settings > AI Configuration. Pastikan key masih aktif dan memiliki kuota yang cukup.
-- Jika menggunakan **Custom/OpenAI Compatible**, pastikan **Base URL** sudah benar dan menyertakan `/v1` di akhir (contoh: `http://localhost:20128/v1`).
-- Periksa log di terminal (jika menjalankan di lokal) atau cek tab Network di browser untuk melihat detail error dari API provider.
-
-## 5. Error Parsing SQL
-**Gejala**: SQL yang dimasukkan tidak berubah menjadi diagram atau terjadi error saat parsing.
-**Solusi**:
-- Pastikan syntax SQL menggunakan dialek **PostgreSQL** (dialek utama yang didukung).
-- Periksa apakah ada karakter khusus yang tidak didukung atau syntax yang terlalu kompleks. Cobalah untuk mem-parse tabel per tabel jika file SQL terlalu besar.
-
-## 6. Masalah Docker (Deployment)
-**Gejala**: Kontainer Docker tidak bisa diakses di port 3000.
-**Solusi**:
-- Pastikan port 3000 tidak digunakan oleh aplikasi lain di komputer host.
-- Periksa log kontainer dengan perintah `docker logs erd-app` untuk melihat pesan error saat startup.
-- Pastikan file `.env` sudah disertakan saat menjalankan kontainer (`--env-file .env`).
-
-## 8. Error 403 Forbidden saat Mengelola Model Catalog
-
-**Gejala**: Muncul error 403 Forbidden saat membuat atau mengedit data di menu **Settings > Model Catalog**.
-
-**Penyebab**: Akun Supabase Anda tidak memiliki flag `is_super_admin` di metadata pengguna. Aplikasi memeriksa flag ini untuk memberikan akses ke fitur Model Catalog.
+**Penyebab**: `admin@local.dev` / `admin123` adalah kredensial internal Desktop/CLI dan sengaja ditolak di Self-host. Self-host tidak membuat akun bawaan; SuperAdmin dibuat melalui halaman **Create administrator account**.
 
 **Solusi**:
-1. Buka Dashboard Supabase Anda.
-2. Masuk ke menu **SQL Editor**.
-3. Buat query baru dan jalankan perintah berikut, sesuaikan email dengan akun admin yang Anda gunakan:
+- Buat akun dengan email dan password baru melalui halaman **Create administrator account**.
+- Pastikan server dan perintah seed memakai `DATABASE_URL` yang sama.
+- Pastikan `ERD_ENCRYPTION_KEY` tetap sama pada setiap restart dan deployment.
+
+## 2. Lupa Password di Self-host
+
+Tidak ada fitur "Lupa Password" di antarmuka Self-host. Jalankan script berikut dari folder proyek:
+
+```bash
+npm run reset-password -- --email email-anda@example.com --password passwordbaru123
+```
+
+Untuk Docker:
+
+```bash
+docker exec -it erd-builder-pro npm run reset-password -- --email email-anda@example.com --password passwordbaru123
+```
+
+Password minimal 6 karakter. Script ini mendukung PostgreSQL murni dan SQLite, dan tidak perlu restart. Mode Supabase memakai dashboard Supabase untuk reset password. Desktop dan CLI tidak memakai password.
+
+## 3. API Key AI Tidak Dapat Didekripsi
+
+**Gejala**: AI menampilkan error bahwa API key tersimpan tidak dapat didekripsi, atau koneksi DB Client di Desktop/CLI gagal setelah pindah komputer.
+
+**Penyebab**: `ERD_ENCRYPTION_KEY` hilang atau berubah, atau file `.erd-encryption-key` di Desktop/CLI tidak ikut dipindahkan.
+
+**Solusi**:
+- Pulihkan nilai `ERD_ENCRYPTION_KEY` yang sama dari secret manager atau backup `.env`.
+- Untuk Desktop/CLI, pastikan file `.erd-encryption-key` di samping database tetap ada, atau atur `ERD_ENCRYPTION_KEY_FILE`.
+- Bila kunci lama tidak bisa dipulihkan, simpan ulang API key di **Settings → AI Configuration**.
+
+## 4. Gambar Gagal Diunggah
+
+| Pesan | Penyebab dan solusi |
+| :--- | :--- |
+| *Storage is not configured. Please add storage configuration in Settings.* | Storage belum diatur. Isi variabel `R2_*` di server, atau **Settings → Storage** di Desktop/CLI. Lihat [Konfigurasi R2](../cloud-storage/r2-config.md). |
+| *Private document assets require storage without a public URL.* | `R2_PUBLIC_URL` (atau **Public URL** di Settings → Storage) diisi. Kosongkan, lalu restart server. |
+| *File type is not allowed. Use JPEG, PNG, WebP or SVG.* | Format gambar tidak didukung. |
+| *The image is still larger than 1 MB after compression...* | Potong gambar atau gunakan gambar yang lebih kecil. |
+| *A document can hold up to 15 images and 2 MB of images...* | Batas gambar per dokumen tercapai. Hapus gambar lain di dokumen tersebut. |
+| *This workspace has used its storage limit...* | (Cloud) Kuota storage penuh. Lihat [Kuota Cloud](../cloud-storage/cloud-quota.md). |
+
+## 5. AI Tidak Merespons
+
+- Pastikan provider sudah diatur dan aktif di **Settings → AI Configuration**. Di Self-host, menu ini hanya terlihat oleh SuperAdmin.
+- Simpan konfigurasi dulu, lalu klik **Test Connection**; tombol itu menguji API key yang sudah tersimpan.
+- Untuk **OpenAI Compatible**, pastikan Base URL benar. Banyak provider memerlukan akhiran `/v1`.
+- Endpoint di jaringan privat atau localhost (misalnya Ollama) diblokir kecuali server memakai `AI_ALLOW_PRIVATE_BASE_URL=true`.
+- Di Cloud, AI Assistant memerlukan paket Team yang mencakup AI dan kredit yang tersisa.
+- Periksa log server atau tab Network di browser untuk melihat pesan error dari provider.
+
+## 6. Import SQL Gagal
+
+**Gejala**: *No valid CREATE TABLE statements found.* atau *Failed to parse SQL. Check your syntax.*
+
+**Solusi**:
+- Gunakan sintaks PostgreSQL atau MySQL, dan akhiri setiap statement dengan titik koma (`;`).
+- Pastikan SQL berisi setidaknya satu `CREATE TABLE`. SQL yang hanya berisi `ALTER TABLE` tidak dapat diimpor.
+- Bila file besar gagal diproses, impor per bagian.
+
+Lihat [Import SQL](../core-features/import-sql.md). Teks SQL yang ditempel ke editor DBML tidak dikonversi; gunakan Import SQL.
+
+## 7. "This file was changed by someone else"
+
+Anggota Team lain menyimpan file yang sama. Perubahan Anda tidak dikirim, jadi tidak ada yang tertimpa. Klik **Load latest** untuk memuat versi terbaru; perubahan lokal Anda disimpan sebagai salinan pemulihan di browser. Lihat [Live Sync](../collaboration/live-sync.md).
+
+## 8. Container Docker Tidak Bisa Diakses
+
+- Pastikan port `3000` di host tidak dipakai aplikasi lain.
+- Periksa log dengan `docker logs erd-builder-pro`.
+- Pastikan `.env` ikut dipakai (`--env-file .env`) dan `DATABASE_URL` dapat dijangkau dari container.
+- Container menunggu PostgreSQL hingga 30 detik saat start. Pastikan database sudah berjalan.
+
+## 9. State Lisensi Tidak Dapat Ditulis
+
+Periksa `ERDBPRO_LICENSE_STATE_FILE` dan volume persisten. Lihat [Persistent License State](../getting-started/deployment.md#persistent-license-state-paid-self-host).
+
+## 10. Menu Team Tidak Muncul
+
+- Team hanya tersedia pada mode PostgreSQL murni: `DATABASE_URL` diawali `postgresql://` tanpa variabel Supabase.
+- Di Self-host, Team memerlukan lisensi Commercial yang aktif. Tanpa lisensi, **Add Team** menampilkan dialog **Unlock Teams**.
+- Desktop dan CLI tidak memiliki Team.
+
+## 11. Error 403 saat Mengelola AI Models (Supabase Legacy)
+
+**Gejala**: 403 Forbidden saat membuat atau mengubah data di **Settings → AI Configuration → AI Models** pada deployment Supabase.
+
+**Penyebab**: Akun Supabase tidak memiliki flag `is_super_admin` atau role `admin` di metadata pengguna.
+
+**Solusi**:
+1. Buka **SQL Editor** di dashboard Supabase.
+2. Jalankan query berikut dengan email admin Anda:
 
 ```sql
 UPDATE auth.users
@@ -63,58 +110,8 @@ UPDATE auth.users
     WHERE email = 'admin@example.com';
 ```
 
-   Ganti `admin@example.com` dengan email akun admin yang Anda gunakan.
+3. Logout lalu login kembali.
 
-4. Setelah menjalankan query, **logout** dan **login kembali** ke aplikasi ERD Builder Pro.
+## 12. Menu Tidak Bisa Diklik saat Offline
 
-> **Catatan**: Masalah ini khusus untuk mode **Supabase (PostgreSQL)**. Local PostgreSQL memiliki super admin lokal dari setup awal; Desktop/CLI memakai akses lokal otomatis.
-
-## 9. Lupa Password di Mode Self-Hosted (Local PostgreSQL / Docker)
-
-**Gejala**: Tidak bisa login ke ERD Builder Pro yang di-deploy secara self-hosted dengan mode Local PostgreSQL atau Docker.
-
-**Penyebab**: Mode self-hosted menggunakan autentikasi lokal, bukan Supabase. Tidak ada fitur "Lupa Password" di UI.
-
-**Solusi**:
-1. Buka terminal di server atau direktori proyek ERD Builder Pro.
-2. Jalankan perintah berikut, sesuaikan email dan password:
-
-```bash
-npm run reset-password -- --email email-admin-anda@example.com --password passwordbaru123
-```
-
-3. Script akan mencari user, meng-hash password, dan memperbarui database.
-4. Tidak perlu restart aplikasi — user bisa langsung login dengan password baru.
-
-> **Catatan**: Ganti email dengan email super admin yang sebenarnya. Solusi ini khusus untuk mode **Local PostgreSQL** dan **Docker**. Mode Supabase menggunakan dashboard Supabase untuk reset password. Mode Desktop/CLI memakai auto-login lokal dan tidak menggunakan form login web.
-
-## 10. Registrasi Super Admin Berulang atau Invalid Credentials
-
-**Gejala**: Setelah logout, halaman kembali ke **Create administrator account**, atau login dengan `admin@local.dev` / `admin123` menampilkan `Invalid credentials`.
-
-**Penyebab**: `admin@local.dev` / `admin123` adalah kredensial bootstrap Desktop/CLI dan sengaja ditolak pada self-host Local PostgreSQL. Self-host tidak membuat akun default saat seed; akun super admin harus dibuat melalui setup awal.
-
-**Solusi**:
-- Buat akun dengan email dan password baru melalui halaman **Create administrator account**.
-- Pastikan server dan perintah seed memakai `DB_VARIANT=pg` serta `DATABASE_URL` yang sama.
-- Pastikan `ERD_ENCRYPTION_KEY` tetap sama pada setiap restart/deployment.
-- Jika data di database sudah memiliki akun tetapi UI tidak sesuai, cek bahwa aplikasi tidak memakai database atau build backend yang berbeda.
-
-## 11. API Key AI atau Password DB Connect Tidak Dapat Dipakai
-
-**Gejala**: Request DB Connect gagal setelah deployment, atau AI menampilkan error bahwa API key tersimpan tidak dapat didekripsi.
-
-**Penyebab**: `ERD_ENCRYPTION_KEY` hilang atau berubah. Kunci ini mengenkripsi password koneksi database dan API key AI.
-
-**Solusi**:
-- Pulihkan nilai `ERD_ENCRYPTION_KEY` yang sama dari secret manager atau backup `.env`.
-- Untuk Desktop/CLI, pastikan file `.erd-encryption-key` di dekat database tetap ada, atau atur `ERD_ENCRYPTION_KEY_FILE`.
-- Setelah kunci dipulihkan, simpan ulang kredensial yang gagal jika diperlukan.
-
-## 12. Canvas Terasa Berat/Lag Setelah Generate
-**Gejala**: Setelah Anda menekan tombol aksi di bawah balasan AI pada Chat Panel (seperti tombol *Replace All*, *Append*, *Create or Update ERD from SQL*, atau *Create or Update Flowchart*) untuk pertama kalinya, pergerakan tabel atau simbol di canvas terasa berat atau "patah-patah".
-
-**Penyebab**: Ini adalah kendala teknis pada sinkronisasi state awal canvas saat menerima data baru dalam jumlah besar dari AI.
-
-**Solusi**:
-- Cukup lakukan **Reload/Refresh halaman browser** Anda satu kali. Setelah di-refresh, canvas akan kembali lancar dan normal.
+Saat koneksi ke server terputus, **Search**, **Trash**, **Version History**, dan **Share** dinonaktifkan sampai koneksi kembali.

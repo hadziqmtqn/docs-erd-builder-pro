@@ -4,6 +4,6 @@
   "link": {
     "type": "generated-index",
     "slug": "/configuration",
-    "description": "Panduan pengaturan variabel lingkungan, Supabase, dan integrasi platform lainnya."
+    "description": "Panduan environment variables, database, AI, MCP, dan Settings."
   }
 }

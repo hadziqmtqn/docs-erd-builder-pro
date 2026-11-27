@@ -4,23 +4,39 @@ slug: /core-features/erd-builder
 ---
 # ERD Builder
 
-![ERD Toolbar](/img/docs/erd-toolbar.png)
+ERD Builder adalah fitur inti untuk merancang skema database secara visual dengan *drag-and-drop*. Skema yang sama bisa diedit lewat [DBML](./dbml-editor.md), diisi dari [Import SQL](./import-sql.md), lalu diexport ke SQL dan kode lewat [Export Schema & Kode](./sql-generator.md).
 
-ERD Builder adalah fitur inti yang memungkinkan Anda merancang skema database secara visual dengan antarmuka *drag-and-drop*.
+## Toolbar
 
-## Cara Membuat Tabel
-1. Klik tombol **"Add Table"** pada toolbar.
-2. Masukkan nama tabel (contoh: `users`).
-3. Klik ikon **"+"** pada tabel untuk menambahkan kolom baru.
+Toolbar mengambang berada di kiri atas canvas (vertikal di desktop, horizontal di layar kecil):
+
+| Tombol | Fungsi |
+| :--- | :--- |
+| **Explorer** (`⇧⌘F` / `Ctrl+Shift+F`) | Panel daftar tabel dan relasi, lengkap dengan pencarian. |
+| **Add Table** | Menambah tabel baru di tengah layar. |
+| **Import SQL** | Membuat atau memperbarui tabel dari SQL. Lihat [Import SQL](./import-sql.md). |
+| **DBML** | Membuka editor DBML di bagian bawah canvas. Lihat [DBML Editor](./dbml-editor.md). |
+| **Repository** | Desktop dan CLI: membandingkan ERD dengan skema di repositori Git. Lihat [Git Repository](./git-repository.md). |
+| **Auto Layout** | Menata ulang posisi tabel. |
+| **Undo** (`⌘Z` / `Ctrl+Z`) dan **Redo** (`⇧⌘Z` / `Ctrl+Y`) | Membatalkan atau mengulang perubahan. |
+
+Kontrol zoom dan *fit view* ada di kiri bawah canvas. Pengguna dengan akses baca saja tidak melihat tombol yang mengubah diagram.
+
+## Membuat Tabel
+
+1. Klik **Add Table**. Tabel bernama `NewTable` (atau `NewTable_1`, `NewTable_2`, dan seterusnya) muncul dengan satu kolom `id` bertipe `INT` sebagai primary key.
+2. Klik dua kali tabel untuk membuka editor tabel. Editor memiliki tab **Properties**, **Schema** (kode tabel dalam berbagai format), dan **DBML** (baca saja).
+3. Tekan `Esc` untuk menutup editor tabel.
+
+Menu tabel berisi **Edit**, **Duplicate**, **Comment** (khusus Team), dan **Delete Table**. Klik kanan tabel juga menampilkan **Delete**.
 
 ## Mengatur Kolom
-Setiap kolom mendukung berbagai properti:
-- **Primary Key (PK)**: Identitas unik baris.
-- **Data Type**: Pilih tipe data yang sesuai dengan kebutuhan database Anda.
-- **Constraints**: Seperti `not null`, `unique`, atau `default value`.
+Setiap kolom mendukung properti berikut:
+- **Primary Key (PK)**: identitas unik baris.
+- **Data Type**: tipe data sesuai database Anda.
+- **Constraints**: `not null`, `unique`, dan nilai `default`.
 
 ### Tipe Data yang Didukung
-ERD Builder Pro mendukung berbagai tipe data standar MySQL dan PostgreSQL. Tabel di bawah ini menunjukkan kategori tipe data beserta dukungan sistem databasenya:
 
 | Kategori | Tipe Data | Database |
 | :--- | :--- | :--- |
@@ -33,30 +49,33 @@ ERD Builder Pro mendukung berbagai tipe data standar MySQL dan PostgreSQL. Tabel
 | **Boolean** | `BOOLEAN` | MySQL / PostgreSQL |
 | **Binary/Blob** | `BINARY`, `VARBINARY`, `BLOB`, `TINYBLOB`, `MEDIUMBLOB`, `LONGBLOB` | MySQL |
 | | `BYTEA` | PostgreSQL |
-| **Identitas & Spesial** | `BIT`, `ENUM`, `JSON`, `ULID` | MySQL / PostgreSQL |
-| | `UUID`, `JSONB` | PostgreSQL |
+| **Identitas & Spesial** | `BIT`, `ENUM`, `JSON` | MySQL / PostgreSQL |
+| | `UUID`, `ULID`, `JSONB` | PostgreSQL |
 | **Network & Search** | `INET`, `CIDR`, `MACADDR`, `MACADDR8`, `TSVECTOR`, `TSQUERY` | PostgreSQL |
 
 ## Membuat Relasi
-Untuk membuat relasi antar tabel (Foreign Key):
-1. Arahkan kursor ke handle (titik putih) di samping kolom.
-2. Klik dan tarik garis ke kolom di tabel tujuan.
-3. Anda dapat mengatur tipe relasi (*one-to-one*, *one-to-many*) melalui garis konektor tersebut.
+
+1. Arahkan kursor ke salah satu titik sambung (*handle*) di sisi kolom. Setiap kolom memiliki empat handle.
+2. Tarik garis ke kolom di tabel tujuan. Relasi baru berlabel `1:N`.
+3. Klik garis relasi, atau ikon ✎ di Explorer, untuk mengatur **Relationship Cardinality** (`1:1`, `1:N`, `N:M`) dan **Foreign Key Actions** (*On delete* dan *On update*).
+
+Aplikasi menolak relasi bila:
+- tipe kedua kolom berbeda (**Type Mismatch**);
+- relasi yang sama sudah ada (**Relation already exists**);
+- kolom foreign key sudah terhubung ke primary key lain (**FK already related**).
+
+## Explorer
+
+Panel **Explorer** berisi tab **Tables** dan **Relationships**, masing-masing dengan kotak pencarian. Klik item untuk memilihnya di canvas.
 
 ## Auto Layout
-Jika diagram Anda mulai terlihat berantakan atau tabel saling tumpang tindih, Anda dapat menggunakan fitur **Auto Layout**:
-1. Klik ikon **"Auto Layout"** (ikon grid/susunan) pada toolbar.
-2. Sistem akan secara otomatis menghitung posisi optimal setiap tabel berdasarkan relasi yang ada untuk meminimalisir garis yang saling silang (*edge crossing*).
+
+Klik **Auto Layout** untuk menata tabel dari kiri ke kanan: tabel yang dirujuk berada di kiri dan tabel yang merujuk di kanan. Kelompok tabel yang tidak saling terhubung ditumpuk terpisah. Hasilnya tersimpan dan bisa dibatalkan dengan **Undo**.
 
 ## Editing dengan DBML
 
-Selain menggunakan antarmuka visual drag-and-drop, Anda juga dapat mendefinisikan skema database menggunakan **DBML** (*Database Markup Language*) — bahasa markup teks yang ringkas.
+Klik **DBML** di toolbar untuk membuka editor teks di bagian bawah canvas. Perubahan berlaku dua arah: edit di canvas memperbarui DBML, dan DBML yang valid memperbarui canvas.
 
-1. Klik tombol **DBML Editor** (ikon `</>`) pada toolbar di pojok kanan atas canvas.
-2. Panel editor muncul di sisi kanan — ketik sintaks DBML dan diagram akan diperbarui secara otomatis.
-3. Perubahan bersifat **dua arah**: edit di canvas memperbarui teks DBML, dan sebaliknya.
-
-Contoh:
 ```dbml
 Table users {
   id integer [pk, increment]
@@ -67,11 +86,15 @@ Table users {
 Ref: posts.user_id > users.id
 ```
 
-> [!NOTE]
-> Lihat halaman [DBML Editor](/core-features/dbml-editor) untuk panduan lengkap sintaks DBML, autocomplete, dan fitur editor lainnya.
+Panduan lengkap ada di [DBML Editor](./dbml-editor.md).
 
-## Export Diagram (Eksperimental)
-> [!CAUTION]
-> Fitur ekspor diagram ke dalam format gambar (PNG/SVG) atau PDF saat ini masih dalam tahap **Eksperimental**. Anda mungkin menemui sedikit perbedaan visual pada file hasil ekspor dibanding tampilan di editor.
+## Kolaborasi dan Riwayat
 
-Untuk mengekspor diagram, klik ikon **Download** pada toolbar editor.
+- Di Team Workspace, anggota dapat memberi komentar pada tabel dan relasi. Lihat [Komentar & Diskusi](../collaboration/comments-discussions.md).
+- Setiap perubahan yang tersimpan dapat dilihat dan dipulihkan dari [Version History](../collaboration/version-history.md).
+
+## Export Diagram
+
+Buka menu **Actions** (⋯) di header, lalu **Export All**:
+- **Export Schemas** untuk SQL dan kode. Lihat [Export Schema & Kode](./sql-generator.md).
+- **Download SVG** untuk gambar diagram sesuai tema yang sedang dipakai.

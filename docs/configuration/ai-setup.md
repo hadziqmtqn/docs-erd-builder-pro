@@ -6,57 +6,65 @@ slug: /configuration/ai-setup
 # AI Configuration
 
 :::info
-Fitur AI masih dalam tahap **pengembangan**. Mohon dimaklumi jika hasil generate atau asisten AI terkadang belum memberikan jawaban yang sempurna.
+Fitur AI masih dalam tahap **pengembangan**. Hasil generate atau jawaban AI Assistant bisa belum sempurna.
 :::
 
-ERD Builder Pro dilengkapi dengan asisten AI yang dapat membantu Anda membuat diagram, menulis catatan, dan menyusun flowchart. Fitur ini memerlukan konfigurasi API Key dari penyedia layanan AI.
+AI Assistant membutuhkan provider AI dan API key. Siapa yang mengaturnya bergantung pada cara Anda memakai ERD Builder Pro:
 
-## Pengaturan via UI (Recommended)
+| Cara | Yang mengatur |
+| :--- | :--- |
+| **Self-host** | SuperAdmin, lewat **Settings → AI Configuration**. Semua pengguna instance memakai konfigurasi SuperAdmin. |
+| **Desktop dan CLI** | Anda sendiri, lewat **Settings → AI Configuration**. |
+| **Cloud** | Tim ERD Builder Pro, dari ERDBPro SaaS. Menu AI Configuration tidak ada di Cloud. AI tersedia bila paket Team Anda mencakup AI Assistant dan masih memiliki kredit. |
+| **Supabase (legacy)** | Setiap pengguna mengatur konfigurasinya sendiri. |
 
-Anda dapat mengatur API Key langsung melalui antarmuka aplikasi di menu **Settings > AI Configuration**. Antarmuka ini memungkinkan Anda untuk:
-- Memilih penyedia layanan AI.
-- Memasukkan API Key secara aman.
-- Memilih model default yang ingin digunakan.
-- Mengetes koneksi ke penyedia layanan.
+## Penyedia yang Didukung
 
-## Penyedia Layanan yang Didukung
+| Provider | Keterangan |
+| :--- | :--- |
+| **OpenAI Compatible** | Layanan yang mengikuti API OpenAI, misalnya OpenRouter, Groq, atau server lokal. Base URL bawaan: `https://ai.paas.id`. |
+| **OpenAI** | API key dari [OpenAI Platform](https://platform.openai.com/). |
+| **Google Gemini** | API key dari [Google AI Studio](https://aistudio.google.com/). |
+| **Anthropic (Claude)** | API key dari [Anthropic Console](https://console.anthropic.com/). |
 
-Saat ini, ERD Builder Pro mendukung tiga jenis integrasi:
+## Mengatur Provider
 
-### 1. OpenAI
-Gunakan API Key resmi dari [OpenAI Platform](https://platform.openai.com/).
-- **Model Populer:** `gpt-4o`, `gpt-4o-mini`.
-- **Fitur:** Performa tinggi dan instruksi yang sangat akurat.
+Buka **Settings → AI Configuration**, tab **Configuration**:
 
-### 2. Google AI Studio (Gemini AI)
-Gunakan API Key gratis atau berbayar dari [Google AI Studio](https://aistudio.google.com/).
-- **Model Populer:** `gemini-1.5-pro`, `gemini-1.5-flash`.
-- **Fitur:** *Context window* yang sangat besar, sangat baik untuk menganalisis skema SQL yang panjang.
+1. Bila belum ada provider, klik **Initialize AI Configuration**.
+2. Pilih provider, lalu isi **Base URL** (bila diperlukan) dan **API Key**.
+3. Pilih **Default Model**. Untuk OpenAI Compatible, daftar model diambil dari endpoint `/models` provider, dan model yang dipilih otomatis ditambahkan ke katalog.
+4. Centang **Enable this provider**.
+5. Klik **Save Configuration**, lalu **Test Connection**.
 
-### 3. OpenAI Compatible
-Gunakan ini jika Anda menggunakan layanan *proxy* atau *self-hosted* yang mengikuti standar API OpenAI (seperti **9router**, Groq, atau OpenRouter).
-- **Base URL:** Alamat endpoint provider (contoh: `http://localhost:20128/v1`).
-- **API Key:** Key dari provider tersebut.
+**Test Connection** menguji API key yang sudah tersimpan di server, jadi simpan konfigurasi lebih dulu. Bila ada beberapa provider aktif, AI Assistant memakai konfigurasi aktif yang terakhir diperbarui.
 
-## Variabel Lingkungan (.env)
+## Katalog Model (AI Models)
 
-Konfigurasi provider, model, dan API key dilakukan melalui **Settings > AI Configuration** dan disimpan di database. `AI_PROVIDER`, `AI_API_KEY`, `AI_BASE_URL`, dan `AI_MODEL` bukan variabel environment yang digunakan oleh server saat ini.
+Tab **AI Models** berisi daftar model per provider. Klik **Register Model** untuk menambah model dengan **Provider**, **Identifier** (ID model di API provider), dan **Display Name**. Model bawaan mencakup `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gemini-1.5-pro`, `gemini-1.5-flash`, `deepseek-v4-flash`, `claude-haiku-5-5`, dan `claude-sonnet-5-5`.
 
-Untuk web/Docker/self-host, atur kunci enkripsi server:
+## Variabel Lingkungan
+
+Provider, model, dan API key tidak dibaca dari `.env`. `AI_PROVIDER`, `AI_API_KEY`, `AI_BASE_URL`, dan `AI_MODEL` tidak dipakai server.
+
+Untuk web, Docker, dan Self-host, atur kunci enkripsi server:
 
 ```env
 ERD_ENCRYPTION_KEY="kunci-acak-minimal-32-karakter"
 ```
 
-Kunci ini dipakai untuk mengenkripsi API key AI sebelum disimpan dan mendekripsinya saat request `/api/ai/proxy`, pengujian koneksi, atau pengambilan daftar model. Simpan kunci yang sama selama database digunakan.
+Kunci ini mengenkripsi API key sebelum disimpan dan mendekripsinya saat AI dipanggil. Simpan kunci yang sama selama database dipakai. Desktop dan CLI membuat file kunci lokal secara otomatis.
 
 ## Keamanan Data
 
-- **Server-side storage:** API key yang disimpan melalui UI tidak dikembalikan ke frontend; UI hanya menerima placeholder `***`.
-- **Enkripsi:** API key dienkripsi di database menggunakan `ERD_ENCRYPTION_KEY`.
-- **Proxy:** API key hanya dikirim server ke provider yang dipilih. Jangan masukkan API key ke URL atau commit ke repository.
-- **Private endpoint:** Endpoint AI privat diblokir secara default untuk perlindungan SSRF. Aktifkan `AI_ALLOW_PRIVATE_BASE_URL=true` hanya untuk endpoint internal yang Anda kontrol.
-- **Guest:** Guest AI nonaktif secara default. `GUEST_AI_ENABLED=true` membuat Guest memakai API key server dan dapat menghabiskan kuota Anda.
+- **Disimpan di server:** API key tidak dikembalikan ke browser; antarmuka hanya menampilkan `***`.
+- **Terenkripsi:** API key dienkripsi AES-256-GCM dengan `ERD_ENCRYPTION_KEY`.
+- **Lewat proxy server:** API key hanya dikirim server ke provider yang dipilih.
+- **Endpoint privat diblokir:** Base URL di jaringan privat atau localhost ditolak untuk mencegah SSRF. Set `AI_ALLOW_PRIVATE_BASE_URL=true` hanya bila Anda sengaja memakai endpoint internal yang Anda kendalikan, misalnya Ollama.
+
+## Aturan dan Prompt
+
+Perilaku AI Assistant bisa diarahkan lewat **Settings → AI Rules** dan **Settings → System Prompts**. Lihat [Settings](./settings.md#ai-rules).
 
 ---
-*Catatan: Jika Anda mengalami kendala koneksi, pastikan kuota API Anda masih mencukupi dan API Key memiliki izin yang tepat.*
+*Jika koneksi gagal, pastikan kuota API masih tersedia, API key memiliki izin yang tepat, dan Base URL provider OpenAI Compatible diakhiri `/v1` bila provider memintanya.*
