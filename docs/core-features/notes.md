@@ -1,223 +1,173 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 slug: /core-features/notes
 ---
 # Notes & Documentation
 
-ERD Builder Pro menyertakan editor teks kaya (rich text editor) berbasis **Tiptap** untuk membantu Anda membuat dokumentasi proyek yang mendalam.
+Notes adalah editor teks kaya berbasis **Tiptap** untuk menulis dokumentasi proyek: aturan bisnis, penjelasan API, catatan rapat, atau estimasi biaya dengan tabel yang bisa menghitung.
 
-## Fitur Editor
+## Format Teks
 
-Editor berbasis **Tiptap** (ProseMirror) mendukung fitur penulisan yang luas:
+Pilih teks untuk memunculkan **bubble menu** berisi Bold, Italic, Underline, Strikethrough, Code, Link, perataan, daftar, warna teks (**Theme Colors**: Default, Red, Orange, Green, Blue, Indigo, Purple, Pink), **Comment on block** (Team), dan **Send to AI**.
 
-### Format Teks
-- **Dasar**: Bold (`⌘B`), Italic (`⌘I`), Underline (`⌘U`), Strikethrough (`⌘⇧X`), Inline Code (`⌘E`).
-- **Warna Teks**: 8 pilihan warna tema.
-- **Perataan**: Kiri, Tengah, Kanan (`⌘⇧L/C/R`).
-- **Tautan**: Sisipkan hyperlink via `⌘K` atau menu bubble.
+Tautan disisipkan lewat tombol Link di bubble menu, yang membuka dialog **Edit Link**.
 
-### Blok & Struktur
-- **Heading**: H1–H4 (`⌘⌥1-4`).
-- **Daftar**: Bullet, Numbered, Task List (centang checklist).
-- **Blockquote** (`⌘⇧.`).
-- **Code Block**: Cuplikan kode dengan syntax highlighting.
-- **Badge**: Teks badge berwarna — `⌘⌥B`.
-- **Toggle**: Blok collapsible yang bisa dibuka/ditutup.
-- **Divider**: Garis pemisah horizontal.
+## Blok & Struktur
 
-### Media & Ekstensi Khusus
-- **Gambar**: Unggah gambar ke Cloudflare R2. Gambar bisa di-resize setelah disisipkan. Deteksi paste dari Excel/Google Sheets.
-- **Lucide Icon**: Sisipkan ikon Lucide — `⌘⌥I` atau via Slash Menu. Dukungan pencarian nama ikon.
-- **Calendar**: Node tanggal interaktif — pilih tanggal via popover kalender. Sisipkan via Slash Menu (`/today`, `/tomorrow`, `/date range`, dll).
+Ketik `/` di awal baris atau setelah spasi untuk membuka **Slash Menu**:
+
+| Grup | Item |
+| :--- | :--- |
+| Basic blocks | Text, Heading 1–4, Badge, Divider |
+| Lists | Bulleted list, Ordered list, To-do list |
+| Media | Image, Lucide Icon |
+| Organization | Blockquote, Toggle Section, Code block, SQL Query (Desktop/CLI), Open preview › ERD Builder / Flowchart / Drawing |
+| Advanced | Table Actions › Insert Table, Add Column, Delete Column, Add Row, Delete Row, Delete Table; Insert Calendar |
+| History | Undo, Redo |
+
+### Open Preview {/* #open-preview */}
+
+**Open preview** membuka ERD, Flowchart, atau Drawing dari Project yang sama di panel samping Note, sehingga Anda bisa merujuk diagram sambil menulis. Gunakan **Open full editor** untuk membuka file tersebut di editornya sendiri, atau **Close preview** untuk menutup panel.
+
+### Calendar
+
+**Insert Calendar** menyisipkan tanggal hari ini lalu membuka pemilih tanggal. Node Calendar berisi **satu tanggal**. Matikan **All-day** untuk menambahkan jam. Arahkan kursor ke node lalu pilih **Edit date** untuk mengubahnya, atau ikon tempat sampah untuk menghapusnya.
 
 ### Document Outline
-Klik ikon sidebar di sebelah kiri editor untuk melihat **daftar heading** (H1–H5) dari dokumen. Klik heading untuk langsung loncat ke bagian tersebut.
 
-### Paste Handler Cerdas
-Editor secara otomatis mendeteksi konten yang ditempel:
-- **Markdown**: Jika konten mengandung sintaks markdown (heading, list, code fence, tabel), akan dikonversi ke HTML via `marked.parse`.
-- **Markdown Table**: Tabel markdown (`| col | col |`) dikonversi ke tabel editor.
-- **Excel / Google Sheets**: Konten dari spreadsheet (terdeteksi via marker HTML) akan disanitasi dan struktur sel (colspan/rowspan) dipertahankan.
-- **Fenced Markdown**: Blok `\`\`\`markdown ... \`\`\`` akan di-unwrap otomatis.
+Bila Note memiliki heading, muncul bilah kecil di tepi kiri editor. Arahkan kursor atau klik bilah itu untuk melihat daftar heading H1–H5, lalu klik salah satunya untuk melompat ke bagian tersebut.
+
+## Gambar
+
+Tempel gambar dari clipboard, seret file ke editor, atau pilih **Image** di Slash Menu.
+
+- Format: JPEG, PNG, WebP, dan SVG.
+- Gambar sampai 5 MB dikompresi otomatis di browser hingga maksimal 1 MB dan lebar 1280 px.
+- Satu dokumen dapat memuat hingga 15 gambar dengan total 2 MB.
+- Unggahan memerlukan storage (Cloudflare R2, atau Settings → Storage di Desktop/CLI). Lihat [Unggah Gambar](../cloud-storage/upload-feature.md).
+
+## Paste Cerdas
+
+- **Tabel dari Excel, Google Sheets, atau Office** dibersihkan dari styling lalu dirapikan menjadi tabel editor.
+- **Teks bergaya Markdown** (heading, daftar, code fence, tabel) dikonversi menjadi teks kaya.
+- Blok ` ```markdown ... ``` ` dibuka otomatis.
 
 ## Smart Tables & Auto-Calculation
 
-Fitur **Smart Table** memungkinkan Anda melakukan perhitungan matematis sederhana langsung di dalam sel tabel — seperti spreadsheet, tetapi terintegrasi langsung di dokumen.
+Tabel di Notes dapat menghitung seperti spreadsheet sederhana. Ketik rumus di sel tabel, lalu pindah dari sel tersebut; hasilnya muncul otomatis.
 
 ### Rumus yang Didukung
 
-| Rumus | Alias Lain | Arah | Deskripsi |
+| Rumus | Alias | Arah | Fungsi |
 | :--- | :--- | :--- | :--- |
-| `=sum` | `=sum()` | Vertikal | Menjumlahkan semua angka di kolom yang sama (dari baris data di atasnya) |
-| `=sumv` | `=sumv()`, `=sum-vertical`, `=sumvertical` | Vertikal | Alias untuk `=sum` — jumlahkan secara vertikal |
-| `=avg` | `=avg()`, `=average`, `=average()` | Vertikal | Menghitung rata-rata dari angka di kolom yang sama |
-| `=avgv` | `=avgv()`, `=avg-vertical`, `=avgvertical` | Vertikal | Alias untuk `=avg` — rata-rata secara vertikal |
-| `=mul` | `=mul()`, `=product`, `=product()` | Vertikal | Mengalikan semua angka di kolom yang sama |
-| `=mulv` | `=mulv()`, `=productv`, `=productv()` | Vertikal | Alias untuk `=mul` — perkalian secara vertikal |
-| `=sumh` | `=sumh()`, `=sum-horizontal`, `=sumhorizontal` | Horizontal | Menjumlahkan semua angka di baris yang sama (ke kiri) |
-| `=avgh` | `=avgh()`, `=avg-horizontal`, `=avghorizontal` | Horizontal | Menghitung rata-rata angka di baris yang sama (ke kiri) |
-| `=mulh` | `=mulh()`, `=producth`, `=producth()` | Horizontal | Mengalikan semua angka di baris yang sama (ke kiri) |
+| `=sum` | `=sumv` | Vertikal | Menjumlahkan angka di kolom yang sama |
+| `=avg` | `=average`, `=avgv` | Vertikal | Rata-rata angka di kolom yang sama |
+| `=mul` | `=product`, `=mulv`, `=productv` | Vertikal | Mengalikan angka di kolom yang sama |
+| `=sumh` | — | Horizontal | Menjumlahkan angka di baris yang sama (ke kiri) |
+| `=avgh` | — | Horizontal | Rata-rata angka di baris yang sama (ke kiri) |
+| `=mulh` | `=producth` | Horizontal | Mengalikan angka di baris yang sama (ke kiri) |
 
-**Cara menggunakan**: Ketik salah satu rumus di atas di dalam sel tabel (contoh: `=sum`, `=sumv`, `=mulh`), lalu tekan Enter. Hasil perhitungan akan muncul secara otomatis. Semua bentuk alias menghasilkan hasil yang sama.
-
-> [!TIP]
-> **Vertikal** (`=sum`, `=sumv`, `=avg`, `=avgv`, `=mul`, `=mulv`): Menghitung dari baris data di atas sel rumus, hingga batas baris Header atau Footer berikutnya.
-> **Horizontal** (`=sumh`, `=avgh`, `=mulh`): Menghitung dari kolom di kiri sel rumus dalam baris yang sama.
-
-### Angka & Format
-
-- **Pemisah ribuan**: Angka diformat otomatis dengan pemisah titik sesuai standar Indonesia (contoh: `1.500.000`).
-- **Desimal koma**: Mendukung input angka dengan koma sebagai desimal (contoh: `15,5`).
-- **Sel kosong diabaikan**: Sel yang kosong atau tidak berisi angka tidak akan memengaruhi hasil perhitungan.
-- **`formulaTitle`**: Saat Anda hover ke sel hasil rumus, tooltip akan menampilkan referensi sel seperti `SUM(A2:A10)`.
+Rumus tidak membedakan huruf besar-kecil dan boleh ditulis dengan `()`, misalnya `=SUM()`. Arahkan kursor ke sel hasil untuk melihat rentang sumbernya, misalnya `SUMV(B2:B5)`. Panduan lengkap tersedia di menu **Actions → Calculation Guide** (**Table Calculation Guide**).
 
 ### Tipe Baris Khusus
 
-Tipe baris menentukan **jangkauan** (*scope*) perhitungan rumus:
+Tipe baris menentukan jangkauan rumus vertikal:
 
 | Tipe Baris | Fungsi | Jangkauan Rumus Vertikal |
 | :--- | :--- | :--- |
 | **Data** (default) | Baris data biasa | Sumber data untuk rumus |
 | **Header** (Subtotal) | Pemisah sub-grup | Rumus di bawahnya hanya menghitung hingga Header berikutnya |
-| **Footer** (Grand Total) | Total akhir | Rumus di baris ini menghitung **SEMUA** data di tabel |
+| **Footer** (Grand Total) | Total akhir | Rumus di baris ini menghitung **semua** data di tabel |
 
-**Contoh penggunaan**:
+Ubah tipe baris lewat bubble menu tabel: **Table Actions → Rows → Header Row / Footer Row**, atau klik kanan sel tabel.
 
-```
-┌──────────────┬────────┐
-│ Header Row   │ Total  │   ← =sum (menjumlahkan 2 baris data di bawah)
-├──────────────┼────────┤
-│ Item A       │ 500    │
-│ Item B       │ 300    │
-├──────────────┼────────┤
-│ Subtotal     │ 800    │   ← Header Row → =sum (reset counter)
-├──────────────┼────────┤
-│ Item C       │ 200    │
-│ Item D       │ 100    │
-├──────────────┼────────┤
-│ Grand Total  │ 1100   │   ← Footer Row → =sum (total SEMUA: 500+300+200+100)
-└──────────────┴────────┘
-```
+### Angka & Format
 
-Untuk mengubah tipe baris:
-1. Klik di dalam sel tabel.
-2. Arahkan kursor ke **Table Bubble Menu** yang muncul.
-3. Buka submenu **Rows** → pilih **Header Row** atau **Footer Row**.
+- Angka diformat dengan pemisah ribuan titik, misalnya `1.500.000`.
+- Koma dapat dipakai sebagai desimal, misalnya `15,5`.
+- Sel kosong atau bukan angka diabaikan.
 
-## Manajemen Tabel Lanjutan
+## Manajemen Tabel
 
-### Table Bubble Menu & Sub-menus
+- **Insert Table**: `⌥⌘T` / `Ctrl+Alt+T`, atau Slash Menu **Table Actions → Insert Table**. Tabel baru berukuran 3×3 dengan baris header.
+- **Bubble menu tabel** muncul saat kursor berada di tabel: perataan, lalu **Table Actions** berisi **Rows** (Add Row Above/Below, Delete Row, Header Row, Footer Row), **Columns** (Add Column Before/After, Delete Column, Move Left/Right), **Insert Line Above** (paragraf kosong di atas tabel), dan **Delete Table**.
+- Klik kanan sel tabel untuk menu yang sama, ditambah memindahkan baris ke atas/bawah dan **Comment on block** (Team).
+- Tabel lebar dapat digeser horizontal.
 
-Untuk menjaga area kerja tetap bersih, menu aksi tabel dikelompokkan ke dalam sub-menu:
+## Keyboard Shortcuts
 
-- **Alignment**: Tombol cepat untuk mengatur perataan teks (Kiri, Tengah, Kanan) di baris utama menu.
-- **Table Actions** → submenu:
-    - **Rows**:
-        - Add Row Below — menambah baris di bawah posisi kursor.
-        - Delete Row — menghapus baris saat ini.
-        - Header Row — mengubah baris menjadi tipe Header (Subtotal).
-        - Footer Row — mengubah baris menjadi tipe Footer (Grand Total).
-    - **Columns**:
-        - Add Column After — menambah kolom di sebelah kanan.
-        - Delete Column — menghapus kolom saat ini.
-        - Move Left — memindahkan kolom ke kiri.
-        - Move Right — memindahkan kolom ke kanan.
-    - **Insert Line Above** — menyisipkan baris paragraf kosong di atas tabel (berguna jika tabel di posisi paling atas dokumen).
-    - **Delete Table** — menghapus seluruh tabel.
+Di Windows dan Linux, ganti `⌘` dengan `Ctrl`, `⌥` dengan `Alt`, dan `⇧` dengan `Shift`.
 
-### Responsive Tables (Horizontal Scroll)
-
-Tabel dengan banyak kolom atau konten lebar mendukung **Horizontal Scroll**. Geser tabel ke samping menggunakan *scrollbar* kustom di bagian bawah tabel.
-
-### Insert Table
-
-Cara menyisipkan tabel baru:
-- **Keyboard**: `⌘ ⌥ T` (Mac) / `Ctrl Alt T` (Win/Linux).
-- **Slash Menu**: Ketik `/table` pada baris kosong → pilih **Table**.
-- Tabel default berukuran 3×3 dengan baris Header aktif.
-
-## Keyboard Shortcuts & Slash Menu
-
-Editor Notes mendukung berbagai shortcut keyboard untuk mempercepat proses penulisan Anda:
-
-### Format Teks & Navigasi
-| Aksi | Shortcut (Mac) | Shortcut (Win/Linux) |
+### Format Teks
+| Aksi | Mac | Windows/Linux |
 | :--- | :--- | :--- |
 | **Bold** | `⌘ B` | `Ctrl B` |
 | **Italic** | `⌘ I` | `Ctrl I` |
 | **Underline** | `⌘ U` | `Ctrl U` |
-| **Strikethrough** | `⌘ ⇧ X` | `Ctrl Shift X` |
 | **Inline Code** | `⌘ E` | `Ctrl E` |
-| **Add Link** | `⌘ K` | `Ctrl K` |
-| **Align Left** | `⌘ ⇧ L` | `Ctrl Shift L` |
-| **Align Center** | `⌘ ⇧ C` | `Ctrl Shift C` |
-| **Align Right** | `⌘ ⇧ R` | `Ctrl Shift R` |
+| **Align Left / Center / Right** | `⇧ ⌘ L` / `⇧ ⌘ C` / `⇧ ⌘ R` | `Ctrl Shift L` / `C` / `R` |
+| **Justify** | `⇧ ⌘ J` | `Ctrl Shift J` |
 
-### Blok & Struktur
-| Aksi | Shortcut (Mac) | Shortcut (Win/Linux) |
+### Blok
+| Aksi | Mac | Windows/Linux |
 | :--- | :--- | :--- |
-| **Heading 1-4** | `⌘ ⌥ 1-4` | `Ctrl Alt 1-4` |
-| **Bulleted List** | `⌘ ⇧ 8` | `Ctrl Shift 8` |
-| **Numbered List** | `⌘ ⇧ 7` | `Ctrl Shift 7` |
-| **Task List** | `⌘ ⇧ 9` | `Ctrl Shift 9` |
-| **Blockquote** | `⌘ ⇧ .` | `Ctrl Shift .` |
+| **Heading 1–6** | `⌥ ⌘ 1`–`6` | `Ctrl Alt 1`–`6` |
+| **Paragraf** | `⌥ ⌘ 0` | `Ctrl Alt 0` |
+| **Bulleted List** | `⇧ ⌘ 8` | `Ctrl Shift 8` |
+| **Numbered List** | `⇧ ⌘ 7` | `Ctrl Shift 7` |
+| **Task List** | `⇧ ⌘ 9` | `Ctrl Shift 9` |
+| **Blockquote** | `⇧ ⌘ B` | `Ctrl Shift B` |
+| **Code Block** | `⌥ ⌘ C` | `Ctrl Alt C` |
+| **Badge** | `⌥ ⌘ B` | `Ctrl Alt B` |
+| **Insert Table** | `⌥ ⌘ T` | `Ctrl Alt T` |
 
-### Fitur Khusus
-| Aksi | Shortcut (Mac) | Shortcut (Win/Linux) |
+### Dokumen
+| Aksi | Mac | Windows/Linux |
 | :--- | :--- | :--- |
-| **Insert Table** | `⌘ ⌥ T` | `Ctrl Alt T` |
-| **Lucide Icon** | `⌘ ⌥ I` | `Ctrl Alt I` |
-| **Auto Sum/Avg**| `=sum` / `=sumv` / `=sumh` | `=sum` / `=sumv` / `=sumh` |
-| **Auto Multiply**| `=mul` / `=mulv` / `=mulh` | `=mul` / `=mulv` / `=mulh` |
-| **Auto Average** | `=avg` / `=avgv` / `=avgh` | `=avg` / `=avgv` / `=avgh` |
-| **Import Note** | `⌘ ⇧ I` | `Ctrl Shift I` |
-| **Export Note** | `⌘ ⇧ E` | `Ctrl Shift E` |
-| **Insert Calendar** | `/` (Slash Menu) | `/` (Slash Menu) |
+| **Simpan ke server sekarang** | `⌘ S` | `Ctrl S` |
+| **Import** | `⇧ ⌘ I` | `Ctrl Shift I` |
+| **Export** | `⇧ ⌘ E` | `Ctrl Shift E` |
+| **Undo / Redo** | `⌘ Z` / `⇧ ⌘ Z` | `Ctrl Z` / `Ctrl Y` |
 
-### Slash Menu (`/`)
-Ketik `/` pada baris baru untuk membuka menu cepat. Menu ini menyertakan berbagai perintah seperti penyisipan tabel, heading, dan kategori **Insert Calendar** dengan pilihan:
-- **Time/Now**: Menyisipkan waktu atau tanggal sekarang sebagai teks.
-- **Today/Tomorrow/Yesterday**: Menyisipkan kalendar interaktif dengan tanggal terkait.
-- **In a week/A week ago**: Menyisipkan kalendar dengan jeda satu minggu.
-- **Date Range**: Menyisipkan pemilih rentang tanggal interaktif.
+Strikethrough, Lucide Icon, Divider, dan Link belum memiliki shortcut yang berfungsi; gunakan bubble menu atau Slash Menu. `⌘K` / `Ctrl+K` membuka [Search](../workspace/search-and-filter.md), bukan dialog link.
 
-## Import & Export Dokumentasi
+## Import & Export
 
-### Import File Eksternal
+Menu **Actions** (⋯) di header Note berisi **Calculation Guide**, **Copy Markdown**, **Import**, **Export**, dan **Text Stats**.
 
-> [!WARNING]
-> Fitur **Import** file eksternal masih dalam tahap **Eksperimental**. Format dokumen mungkin tidak sepenuhnya presisi setelah diimpor.
+### Import
 
-Untuk mengimpor file ke dalam Notes:
-1. Gunakan shortcut `⌘⇧I` (Mac) / `Ctrl Shift I` (Win/Linux).
-2. Pilih file yang akan diimpor.
+:::warning Experimental
+Hasil import bisa tidak sepenuhnya sama dengan dokumen asli.
+:::
 
-**Format yang didukung:**
-- **Markdown** (`.md`) — konversi via `marked.parse` + sanitasi HTML.
-- **DOCX** (`.docx`) — konversi via Mammoth.js.
-- **HTML** — sanitasi via DOMPurify sebelum dimasukkan ke editor.
+1. Tekan `⇧⌘I` / `Ctrl+Shift+I`, atau pilih **Actions → Import**.
+2. Pilih file **.md**, **.docx**, atau **.txt** (maksimal 3 MB). File `.txt` diproses sebagai Markdown.
+3. Isi file ditambahkan ke akhir Note yang sedang terbuka. Bila tidak ada Note terbuka, Note baru dibuat dengan nama file tersebut.
 
-**Paste langsung**: Anda juga bisa menyalin konten dari dokumen eksternal dan menempelkan langsung ke editor — markdown dan tabel spreadsheet akan otomatis dikonversi.
+Gambar di file Word yang gagal diunggah dilewati.
 
-### Export ke PDF
-1. Gunakan shortcut `⌘⇧E` (Mac) / `Ctrl Shift E` (Win/Linux).
-2. Dokumen akan dicetak ke PDF via jendela cetak browser.
-3. Opsi **Table of Contents** tersedia untuk dokumen panjang.
+### Export
 
-## Sinkronisasi & Penyimpanan
+Tekan `⇧⌘E` / `Ctrl+Shift+E`, atau pilih **Actions → Export**, lalu pilih format:
 
-Notes disimpan menggunakan sistem 2 tahap:
-1. **Draft Lokal** (IndexedDB): Disimpan otomatis ~400ms setelah berhenti mengetik.
-2. **Cloud Sync** (Server): Disinkronkan ~1000ms setelah berhenti mengetik.
+| Format | Keterangan |
+| :--- | :--- |
+| **MD** | Markdown |
+| **PDF** | PDF ringkas |
+| **Print** | Cetak lewat dialog browser dengan kualitas tinggi. Tidak tersedia di Desktop. |
+| **Word** | Dokumen Microsoft Word |
 
-> [!NOTE]
-> Mode **Guest** hanya menyimpan ke IndexedDB tanpa sinkronisasi cloud.
+Untuk PDF, Print, dan Word tersedia opsi **Include Document Title**, **Include Metadata**, dan **Preserve Formatting**. Ukuran halaman A4.
 
-## Kegunaan
+## Penyimpanan
 
-Gunakan fitur Notes ini untuk mencatat:
-- Estimasi biaya proyek menggunakan **Smart Table** dengan rumus `=sum`.
-- Aturan bisnis (*Business Rules*).
-- Penjelasan alur API.
-- Dokumentasi teknis dengan gambar, tabel, dan kode.
-- Jadwal proyek dengan **Calendar** node dan **Task List**.
+Notes disimpan dua tahap:
+1. **Draft lokal** di browser (IndexedDB), sekitar 0,4 detik setelah Anda berhenti mengetik.
+2. **Sinkronisasi ke server**, sekitar 1 detik setelah Anda berhenti mengetik.
+
+Tekan `⌘S` / `Ctrl+S` untuk langsung menyinkronkan perubahan yang tertunda. Mode **Guest** hanya menyimpan di browser.
+
+## Kolaborasi
+
+Di Team Workspace, arahkan kursor ke sebuah blok lalu klik **Comment** untuk memberi komentar pada blok tersebut. Lihat [Komentar & Diskusi](../collaboration/comments-discussions.md). Riwayat perubahan tersedia di [Version History](../collaboration/version-history.md).

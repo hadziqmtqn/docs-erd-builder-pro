@@ -16,7 +16,7 @@
     "description": "The label for category 'Fitur Utama' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Fitur Utama.link.generated-index.description": {
-    "message": "Explore the core capabilities of the app including ERD Builder, SQL Generator, Flowchart, and documentation system.",
+    "message": "Core capabilities: ERD Builder, DBML, Import SQL, Export, Notes, Flowchart, Drawings, AI Assistant, DB Client, and Git Repository.",
     "description": "The generated-index page description for category 'Fitur Utama' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Konfigurasi": {
@@ -24,32 +24,40 @@
     "description": "The label for category 'Konfigurasi' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Konfigurasi.link.generated-index.description": {
-    "message": "Guide to setting up environment variables, Supabase, and other platform integrations.",
+    "message": "Guides for environment variables, database, AI, MCP, and Settings.",
     "description": "The generated-index page description for category 'Konfigurasi' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Manajemen Proyek": {
-    "message": "Project Management",
-    "description": "The label for category 'Manajemen Proyek' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.Workspace & Proyek": {
+    "message": "Workspaces & Projects",
+    "description": "The label for category 'Workspace & Proyek' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Manajemen Proyek.link.generated-index.description": {
-    "message": "Learn how to manage projects, workspace structure, and the data recovery (Trash) system.",
-    "description": "The generated-index page description for category 'Manajemen Proyek' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.Workspace & Proyek.link.generated-index.description": {
+    "message": "Personal and Team Workspaces, Project roles, search, and Trash.",
+    "description": "The generated-index page description for category 'Workspace & Proyek' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Integrasi Cloud Storage": {
-    "message": "Cloud Storage Integration",
-    "description": "The label for category 'Integrasi Cloud Storage' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.Kolaborasi & Berbagi": {
+    "message": "Collaboration & Sharing",
+    "description": "The label for category 'Kolaborasi & Berbagi' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Integrasi Cloud Storage.link.generated-index.description": {
-    "message": "Guide to connecting Cloudflare R2 for image asset storage and backup files.",
-    "description": "The generated-index page description for category 'Integrasi Cloud Storage' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.Kolaborasi & Berbagi.link.generated-index.description": {
+    "message": "Comments, discussions, notifications, live sync, Version History, and public links.",
+    "description": "The generated-index page description for category 'Kolaborasi & Berbagi' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Keamanan & Backup": {
-    "message": "Security & Backup",
-    "description": "The label for category 'Keamanan & Backup' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.Storage & Kuota": {
+    "message": "Storage & Quotas",
+    "description": "The label for category 'Storage & Kuota' in sidebar 'tutorialSidebar'"
   },
-  "sidebar.tutorialSidebar.category.Keamanan & Backup.link.generated-index.description": {
-    "message": "Protect your data with automatic and manual backup systems via GitHub Actions.",
-    "description": "The generated-index page description for category 'Keamanan & Backup' in sidebar 'tutorialSidebar'"
+  "sidebar.tutorialSidebar.category.Storage & Kuota.link.generated-index.description": {
+    "message": "Cloudflare R2, image uploads, Library, and Cloud quotas.",
+    "description": "The generated-index page description for category 'Storage & Kuota' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Backup & Restore": {
+    "message": "Backup & Restore",
+    "description": "The label for category 'Backup & Restore' in sidebar 'tutorialSidebar'"
+  },
+  "sidebar.tutorialSidebar.category.Backup & Restore.link.generated-index.description": {
+    "message": "Back up, schedule, and restore the database from inside the app.",
+    "description": "The generated-index page description for category 'Backup & Restore' in sidebar 'tutorialSidebar'"
   },
   "sidebar.tutorialSidebar.category.Troubleshooting & FAQ": {
     "message": "Troubleshooting & FAQ",

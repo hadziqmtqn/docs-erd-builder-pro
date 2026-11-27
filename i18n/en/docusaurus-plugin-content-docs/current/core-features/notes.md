@@ -1,222 +1,173 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 slug: /core-features/notes
 ---
 # Notes & Documentation
 
-ERD Builder Pro includes a **Tiptap**-based rich text editor to help you create in-depth project documentation.
+Notes is a **Tiptap**-based rich text editor for writing project documentation: business rules, API explanations, meeting notes, or cost estimates with tables that can calculate.
 
-## Editor Features
+## Text Formatting
 
-The **Tiptap**-based (ProseMirror) editor supports extensive writing features:
+Select text to show the **bubble menu** with Bold, Italic, Underline, Strikethrough, Code, Link, alignment, lists, text color (**Theme Colors**: Default, Red, Orange, Green, Blue, Indigo, Purple, Pink), **Comment on block** (Team), and **Send to AI**.
 
-### Text Formatting
-- **Basic**: Bold (`⌘B`), Italic (`⌘I`), Underline (`⌘U`), Strikethrough (`⌘⇧X`), Inline Code (`⌘E`).
-- **Text Color**: 8 theme color options.
-- **Alignment**: Left, Center, Right (`⌘⇧L/C/R`).
-- **Links**: Insert hyperlinks via `⌘K` or the bubble menu.
+Links are inserted with the Link button in the bubble menu, which opens the **Edit Link** dialog.
 
-### Blocks & Structure
-- **Headings**: H1–H4 (`⌘⌥1-4`).
-- **Lists**: Bullet, Numbered, Task List (interactive checkboxes).
-- **Blockquote** (`⌘⇧.`).
-- **Code Block**: Code snippets with syntax highlighting.
-- **Badge**: Colored inline badge text — `⌘⌥B`.
-- **Toggle**: Collapsible blocks that can be opened/closed.
-- **Divider**: Horizontal separator line.
+## Blocks & Structure
 
-### Media & Special Extensions
-- **Images**: Upload images to Cloudflare R2. Images can be resized after insertion. Paste detection from Excel/Google Sheets.
-- **Lucide Icons**: Insert Lucide icons — `⌘⌥I` or via Slash Menu. Icon name search supported.
-- **Calendar**: Interactive date nodes — pick dates via a calendar popover. Insert via Slash Menu (`/today`, `/tomorrow`, `/date range`, etc.).
+Type `/` at the start of a line or after a space to open the **Slash Menu**:
+
+| Group | Items |
+| :--- | :--- |
+| Basic blocks | Text, Heading 1–4, Badge, Divider |
+| Lists | Bulleted list, Ordered list, To-do list |
+| Media | Image, Lucide Icon |
+| Organization | Blockquote, Toggle Section, Code block, SQL Query (Desktop/CLI), Open preview › ERD Builder / Flowchart / Drawing |
+| Advanced | Table Actions › Insert Table, Add Column, Delete Column, Add Row, Delete Row, Delete Table; Insert Calendar |
+| History | Undo, Redo |
+
+### Open Preview {/* #open-preview */}
+
+**Open preview** opens an ERD, Flowchart, or Drawing from the same Project in a side panel of the Note, so you can refer to the diagram while you write. Use **Open full editor** to open that file in its own editor, or **Close preview** to close the panel.
+
+### Calendar
+
+**Insert Calendar** inserts today's date and opens a date picker. A Calendar node holds **one date**. Turn off **All-day** to add a time. Hover over the node and choose **Edit date** to change it, or the trash icon to delete it.
 
 ### Document Outline
-Click the sidebar icon on the left of the editor to see a **heading list** (H1–H5) of the document. Click a heading to jump directly to that section.
 
-### Smart Paste Handler
-The editor automatically detects pasted content:
-- **Markdown**: If the content contains markdown syntax (headings, lists, code fences, tables), it is converted to HTML via `marked.parse`.
-- **Markdown Tables**: Markdown tables (`| col | col |`) are converted to editor tables.
-- **Excel / Google Sheets**: Spreadsheet content (detected via HTML markers) is sanitized while preserving cell structure (colspan/rowspan).
-- **Fenced Markdown**: `\`\`\`markdown ... \`\`\`` blocks are automatically unwrapped.
+When a Note has headings, a small bar appears on the left edge of the editor. Hover over or click the bar to see the list of H1–H5 headings, then click one to jump to that section.
+
+## Images
+
+Paste an image from the clipboard, drag a file into the editor, or choose **Image** in the Slash Menu.
+
+- Formats: JPEG, PNG, WebP, and SVG.
+- Images up to 5 MB are compressed automatically in the browser to at most 1 MB and 1280 px wide.
+- A document can hold up to 15 images and 2 MB in total.
+- Uploads require storage (Cloudflare R2, or Settings → Storage in Desktop/CLI). See [Upload Images](../cloud-storage/upload-feature.md).
+
+## Smart Paste
+
+- **Tables from Excel, Google Sheets, or Office** have their styling removed and are tidied into editor tables.
+- **Markdown-style text** (headings, lists, code fences, tables) is converted to rich text.
+- ` ```markdown ... ``` ` blocks are unwrapped automatically.
 
 ## Smart Tables & Auto-Calculation
 
-The **Smart Table** feature allows you to perform mathematical calculations directly inside table cells — like a spreadsheet, but integrated into your document.
+Tables in Notes can calculate like a simple spreadsheet. Type a formula in a table cell, then move out of that cell; the result appears automatically.
 
 ### Supported Formulas
 
-| Formula | Other Aliases | Direction | Description |
+| Formula | Aliases | Direction | Function |
 | :--- | :--- | :--- | :--- |
-| `=sum` | `=sum()` | Vertical | Sums all numbers in the same column (from data rows above) |
-| `=sumv` | `=sumv()`, `=sum-vertical`, `=sumvertical` | Vertical | Alias for `=sum` — sum vertically |
-| `=avg` | `=avg()`, `=average`, `=average()` | Vertical | Calculates the average of numbers in the same column |
-| `=avgv` | `=avgv()`, `=avg-vertical`, `=avgvertical` | Vertical | Alias for `=avg` — average vertically |
-| `=mul` | `=mul()`, `=product`, `=product()` | Vertical | Multiplies all numbers in the same column |
-| `=mulv` | `=mulv()`, `=productv`, `=productv()` | Vertical | Alias for `=mul` — multiply vertically |
-| `=sumh` | `=sumh()`, `=sum-horizontal`, `=sumhorizontal` | Horizontal | Sums all numbers in the same row (to the left) |
-| `=avgh` | `=avgh()`, `=avg-horizontal`, `=avghorizontal` | Horizontal | Calculates the average of numbers in the same row (to the left) |
-| `=mulh` | `=mulh()`, `=producth`, `=producth()` | Horizontal | Multiplies all numbers in the same row (to the left) |
+| `=sum` | `=sumv` | Vertical | Sums the numbers in the same column |
+| `=avg` | `=average`, `=avgv` | Vertical | Averages the numbers in the same column |
+| `=mul` | `=product`, `=mulv`, `=productv` | Vertical | Multiplies the numbers in the same column |
+| `=sumh` | — | Horizontal | Sums the numbers in the same row (to the left) |
+| `=avgh` | — | Horizontal | Averages the numbers in the same row (to the left) |
+| `=mulh` | `=producth` | Horizontal | Multiplies the numbers in the same row (to the left) |
 
-**How to use**: Type any formula above in a table cell (e.g., `=sum`, `=sumv`, `=mulh`), then press Enter. The result will appear automatically. All alias forms produce the same result.
-
-> [!TIP]
-> **Vertical** (`=sum`, `=sumv`, `=avg`, `=avgv`, `=mul`, `=mulv`): Calculates from data rows above the formula cell, up to the next Header or Footer row.
-> **Horizontal** (`=sumh`, `=avgh`, `=mulh`): Calculates from columns to the left in the same row.
-
-### Numbers & Formatting
-
-- **Thousands separator**: Numbers are automatically formatted with a period as the thousands separator following Indonesian standards (e.g., `1.500.000`).
-- **Decimal comma**: Supports number input with a comma as the decimal separator (e.g., `15,5`).
-- **Empty cells ignored**: Empty cells or non-numeric cells are excluded from calculations to keep results accurate.
-- **`formulaTitle`**: Hovering over a formula cell shows a tooltip with the cell reference like `SUM(A2:A10)`.
+Formulas are case-insensitive and can be written with `()`, for example `=SUM()`. Hover over a result cell to see its source range, for example `SUMV(B2:B5)`. The full guide is in the **Actions → Calculation Guide** menu (**Table Calculation Guide**).
 
 ### Special Row Types
 
-Row types determine the **scope** of formula calculations:
+The row type determines the scope of vertical formulas:
 
 | Row Type | Function | Vertical Formula Scope |
 | :--- | :--- | :--- |
 | **Data** (default) | Regular data row | Source data for formulas |
-| **Header** (Subtotal) | Sub-group separator | Formulas below only calculate up to the next Header |
-| **Footer** (Grand Total) | Final total | Formulas in this row calculate **ALL** data in the table |
+| **Header** (Subtotal) | Sub-group separator | Formulas below it only calculate up to the next Header |
+| **Footer** (Grand Total) | Final total | Formulas in this row calculate **all** data in the table |
 
-**Usage example**:
+Change the row type from the table bubble menu: **Table Actions → Rows → Header Row / Footer Row**, or right-click a table cell.
 
-```
-┌──────────────┬────────┐
-│ Header Row   │ Total  │   ← =sum (sums 2 data rows below)
-├──────────────┼────────┤
-│ Item A       │ 500    │
-│ Item B       │ 300    │
-├──────────────┼────────┤
-│ Subtotal     │ 800    │   ← Header Row → =sum (reset counter)
-├──────────────┼────────┤
-│ Item C       │ 200    │
-│ Item D       │ 100    │
-├──────────────┼────────┤
-│ Grand Total  │ 1100   │   ← Footer Row → =sum (total ALL: 500+300+200+100)
-└──────────────┴────────┘
-```
+### Numbers & Formatting
 
-To change a row type:
-1. Click inside a table cell.
-2. Hover over the **Table Bubble Menu** that appears.
-3. Open the **Rows** submenu → select **Header Row** or **Footer Row**.
+- Numbers are formatted with a period as the thousands separator, for example `1.500.000`.
+- A comma can be used as the decimal separator, for example `15,5`.
+- Empty or non-numeric cells are ignored.
 
-## Advanced Table Management
+## Table Management
 
-### Table Bubble Menu & Sub-menus
+- **Insert Table**: `⌥⌘T` / `Ctrl+Alt+T`, or **Table Actions → Insert Table** in the Slash Menu. A new table is 3×3 with a header row.
+- The **table bubble menu** appears when the cursor is in a table: alignment, then **Table Actions** with **Rows** (Add Row Above/Below, Delete Row, Header Row, Footer Row), **Columns** (Add Column Before/After, Delete Column, Move Left/Right), **Insert Line Above** (an empty paragraph above the table), and **Delete Table**.
+- Right-click a table cell for the same menu, plus moving rows up/down and **Comment on block** (Team).
+- Wide tables can be scrolled horizontally.
 
-To keep the workspace clean, table action menus are grouped into sub-menus:
+## Keyboard Shortcuts
 
-- **Alignment**: Quick buttons for text alignment (Left, Center, Right) in the main menu bar.
-- **Table Actions** → submenu:
-    - **Rows**:
-        - Add Row Below — inserts a row below the cursor position.
-        - Delete Row — removes the current row.
-        - Header Row — changes the row to Header type (Subtotal).
-        - Footer Row — changes the row to Footer type (Grand Total).
-    - **Columns**:
-        - Add Column After — adds a column to the right.
-        - Delete Column — removes the current column.
-        - Move Left — moves the column to the left.
-        - Move Right — moves the column to the right.
-    - **Insert Line Above** — inserts an empty paragraph row above the table (useful when the table is at the very top of the document).
-    - **Delete Table** — removes the entire table.
+On Windows and Linux, replace `⌘` with `Ctrl`, `⌥` with `Alt`, and `⇧` with `Shift`.
 
-### Responsive Tables (Horizontal Scroll)
-
-Tables with many columns or wide content support **Horizontal Scroll**. Scroll sideways using the custom scrollbar at the bottom of the table.
-
-### Insert Table
-
-How to insert a new table:
-- **Keyboard**: `⌘⌥T` (Mac) / `Ctrl Alt T` (Win/Linux).
-- **Slash Menu**: Type `/table` on an empty line → select **Table**.
-- Default table size is 3×3 with Header row enabled.
-
-## Keyboard Shortcuts & Slash Menu
-
-The Notes Editor supports various keyboard shortcuts to speed up your writing process:
-
-### Text Formatting & Navigation
-| Action | Shortcut (Mac) | Shortcut (Win/Linux) |
+### Text Formatting
+| Action | Mac | Windows/Linux |
 | :--- | :--- | :--- |
 | **Bold** | `⌘ B` | `Ctrl B` |
 | **Italic** | `⌘ I` | `Ctrl I` |
 | **Underline** | `⌘ U` | `Ctrl U` |
-| **Strikethrough** | `⌘ ⇧ X` | `Ctrl Shift X` |
 | **Inline Code** | `⌘ E` | `Ctrl E` |
-| **Add Link** | `⌘ K` | `Ctrl K` |
-| **Align Left** | `⌘ ⇧ L` | `Ctrl Shift L` |
-| **Align Center** | `⌘ ⇧ C` | `Ctrl Shift C` |
-| **Align Right** | `⌘ ⇧ R` | `Ctrl Shift R` |
+| **Align Left / Center / Right** | `⇧ ⌘ L` / `⇧ ⌘ C` / `⇧ ⌘ R` | `Ctrl Shift L` / `C` / `R` |
+| **Justify** | `⇧ ⌘ J` | `Ctrl Shift J` |
 
-### Blocks & Structure
-| Action | Shortcut (Mac) | Shortcut (Win/Linux) |
+### Blocks
+| Action | Mac | Windows/Linux |
 | :--- | :--- | :--- |
-| **Heading 1-4** | `⌘ ⌥ 1-4` | `Ctrl Alt 1-4` |
-| **Bulleted List** | `⌘ ⇧ 8` | `Ctrl Shift 8` |
-| **Numbered List** | `⌘ ⇧ 7` | `Ctrl Shift 7` |
-| **Task List** | `⌘ ⇧ 9` | `Ctrl Shift 9` |
-| **Blockquote** | `⌘ ⇧ .` | `Ctrl Shift .` |
+| **Heading 1–6** | `⌥ ⌘ 1`–`6` | `Ctrl Alt 1`–`6` |
+| **Paragraph** | `⌥ ⌘ 0` | `Ctrl Alt 0` |
+| **Bulleted List** | `⇧ ⌘ 8` | `Ctrl Shift 8` |
+| **Numbered List** | `⇧ ⌘ 7` | `Ctrl Shift 7` |
+| **Task List** | `⇧ ⌘ 9` | `Ctrl Shift 9` |
+| **Blockquote** | `⇧ ⌘ B` | `Ctrl Shift B` |
+| **Code Block** | `⌥ ⌘ C` | `Ctrl Alt C` |
+| **Badge** | `⌥ ⌘ B` | `Ctrl Alt B` |
+| **Insert Table** | `⌥ ⌘ T` | `Ctrl Alt T` |
 
-### Special Features
-| Action | Shortcut (Mac) | Shortcut (Win/Linux) |
+### Document
+| Action | Mac | Windows/Linux |
 | :--- | :--- | :--- |
-| **Insert Table** | `⌘ ⌥ T` | `Ctrl Alt T` |
-| **Lucide Icon** | `⌘ ⌥ I` | `Ctrl Alt I` |
-| **Auto Sum/Avg** | `=sum` / `=sumv` / `=sumh` | `=sum` / `=sumv` / `=sumh` |
-| **Auto Multiply** | `=mul` / `=mulv` / `=mulh` | `=mul` / `=mulv` / `=mulh` |
-| **Auto Average** | `=avg` / `=avgv` / `=avgh` | `=avg` / `=avgv` / `=avgh` |
-| **Import Note** | `⌘ ⇧ I` | `Ctrl Shift I` |
-| **Export Note** | `⌘ ⇧ E` | `Ctrl Shift E` |
-| **Insert Calendar** | `/` (Slash Menu) | `/` (Slash Menu) |
+| **Save to server now** | `⌘ S` | `Ctrl S` |
+| **Import** | `⇧ ⌘ I` | `Ctrl Shift I` |
+| **Export** | `⇧ ⌘ E` | `Ctrl Shift E` |
+| **Undo / Redo** | `⌘ Z` / `⇧ ⌘ Z` | `Ctrl Z` / `Ctrl Y` |
 
-### Slash Menu (`/`)
-Type `/` on a new line to open the quick menu. This menu includes various commands like inserting tables, headings, and the **Insert Calendar** category with options:
-- **Time/Now**: Inserts the current time or date as text.
-- **Today/Tomorrow/Yesterday**: Inserts an interactive calendar with the relevant date.
-- **In a week/A week ago**: Inserts a calendar with a one-week offset.
-- **Date Range**: Inserts an interactive date range picker.
+Strikethrough, Lucide Icon, Divider, and Link have no working shortcut yet; use the bubble menu or the Slash Menu. `⌘K` / `Ctrl+K` opens [Search](../workspace/search-and-filter.md), not the link dialog.
 
-## Import & Export Documentation
+## Import & Export
 
-### Import External Files
+The **Actions** menu (⋯) in the Note header contains **Calculation Guide**, **Copy Markdown**, **Import**, **Export**, and **Text Stats**.
 
-> [!WARNING]
-> The **Import** feature for external files is still in the **Experimental** stage. Document formatting may not be fully precise after import.
+### Import
 
-To import a file into Notes:
-1. Use the shortcut `⌘⇧I` (Mac) / `Ctrl Shift I` (Win/Linux).
-2. Select the file to import.
+:::warning Experimental
+The imported result may not fully match the original document.
+:::
 
-**Supported formats:**
-- **Markdown** (`.md`) — converted via `marked.parse` + HTML sanitization.
-- **DOCX** (`.docx`) — converted via Mammoth.js.
-- **HTML** — sanitized via DOMPurify before being inserted into the editor.
+1. Press `⇧⌘I` / `Ctrl+Shift+I`, or choose **Actions → Import**.
+2. Choose an **.md**, **.docx**, or **.txt** file (up to 3 MB). `.txt` files are processed as Markdown.
+3. The file content is added to the end of the open Note. If no Note is open, a new Note is created with the file's name.
 
-**Direct paste**: You can also copy content from an external document and paste directly into the editor — markdown and spreadsheet tables will be automatically converted.
+Images in a Word file that fail to upload are skipped.
 
-### Export to PDF
-1. Use the shortcut `⌘⇧E` (Mac) / `Ctrl Shift E` (Win/Linux).
-2. The document will be printed to PDF via the browser's print dialog.
-3. A **Table of Contents** option is available for long documents.
+### Export
 
-## Sync & Storage
+Press `⇧⌘E` / `Ctrl+Shift+E`, or choose **Actions → Export**, then choose a format:
 
-Notes are saved using a 2-stage system:
-1. **Local Draft** (IndexedDB): Saved automatically ~400ms after you stop typing.
-2. **Cloud Sync** (Server): Synced ~1000ms after you stop typing.
+| Format | Description |
+| :--- | :--- |
+| **MD** | Markdown |
+| **PDF** | Compact PDF |
+| **Print** | High-quality printing through the browser dialog. Not available in Desktop. |
+| **Word** | Microsoft Word document |
 
-> [!NOTE]
-> **Guest mode** saves to IndexedDB only — no cloud sync.
+PDF, Print, and Word have the **Include Document Title**, **Include Metadata**, and **Preserve Formatting** options. The page size is A4.
 
-## Use Cases
-Use this Notes feature to record:
-- Project cost estimates using **Smart Tables** with `=sum` formulas.
-- Business rules.
-- API flow explanations.
-- Technical documentation with images, tables, and code.
-- Project schedules with **Calendar** nodes and **Task Lists**.
+## Saving
+
+Notes are saved in two stages:
+1. **Local draft** in the browser (IndexedDB), about 0.4 seconds after you stop typing.
+2. **Server sync**, about 1 second after you stop typing.
+
+Press `⌘S` / `Ctrl+S` to sync pending changes immediately. **Guest** mode saves only in the browser.
+
+## Collaboration
+
+In a Team Workspace, hover over a block and click **Comment** to comment on that block. See [Comments & Discussions](../collaboration/comments-discussions.md). Change history is available in [Version History](../collaboration/version-history.md).

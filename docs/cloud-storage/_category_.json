@@ -1,9 +1,9 @@
 {
-  "label": "Integrasi Cloud Storage",
-  "position": 6,
+  "label": "Storage & Kuota",
+  "position": 7,
   "link": {
     "type": "generated-index",
     "slug": "/cloud-storage",
-    "description": "Panduan menghubungkan Cloudflare R2 untuk penyimpanan aset gambar dan file backup."
+    "description": "Cloudflare R2, unggah gambar, Library, dan kuota Cloud."
   }
 }

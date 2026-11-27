@@ -1,32 +1,58 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 slug: /workspace/project-organization
 ---
 # Organisasi Proyek
 
-ERD Builder Pro menggunakan sistem organisasi berbasis proyek untuk memastikan dokumentasi Anda tetap terstruktur dan mudah ditemukan.
+Dokumentasi di ERD Builder Pro dikelompokkan dalam **Project** agar tetap terstruktur dan mudah ditemukan.
 
-## Hierarki Workspace
-Dokumentasi Anda diatur dalam tiga level utama:
-1.  **Workspace**: Ruang kerja global Anda (terhubung ke satu database Supabase).
-2.  **Project**: Wadah logis untuk satu aplikasi atau satu klien tertentu.
-3.  **Files**: Dokumen teknis yang ada di dalam proyek tersebut.
+## Hierarki
 
-## Tipe Dokumen dalam Proyek
-Setiap proyek bersifat sangat fleksibel. Anda dapat menggabungkan berbagai tipe dokumen berikut dalam satu proyek yang sama:
+1. **Workspace**: Personal Workspace atau Team Workspace yang sedang aktif. Lihat [Personal & Team Workspace](./personal-team-workspace.md).
+2. **Project**: wadah untuk satu aplikasi, modul, atau klien.
+3. **File**: dokumen di dalam Project.
 
-- **ERD Diagrams**: Fokus pada perancangan skema database PostgreSQL/MySQL.
-- **Flowcharts**: Digunakan untuk memetakan alur logika atau proses bisnis aplikasi.
-- **Notes & Documentation**: Tempat mencatat aturan bisnis, dokumentasi API, atau panduan teknis.
-- **Drawings (Excalidraw)**: Kanvas bebas untuk mockup UI, brainstorming, atau sketsa arsitektur.
+## Jenis File
 
-> [!TIP]
-> Satu proyek tidak terbatas pada satu file saja. Anda bisa memiliki, misalnya, 3 ERD Diagram (untuk modul berbeda), 5 file Notes, dan beberapa sketsa Drawings dalam satu proyek "Aplikasi E-Commerce".
+Satu Project dapat berisi berbagai jenis file:
 
-## Manajemen File & Proyek
-- **Pengelompokan**: Gunakan nama proyek yang deskriptif (contoh: `Backend-CRM-V2`) untuk memisahkan fokus pekerjaan.
-- **Pindah File**: Jika salah satu file dirasa lebih cocok berada di proyek lain, Anda dapat memindahkannya melalui menu pengaturan pada masing-masing file tanpa kehilangan data.
-- **Pencarian**: Gunakan fitur filter/pencarian di sidebar untuk menemukan file dengan cepat berdasarkan nama atau tipe filenya.
+- **ERD**: rancangan skema database.
+- **Notes**: dokumentasi teks, aturan bisnis, atau catatan API.
+- **Flowcharts**: alur logika dan proses bisnis.
+- **Drawings**: kanvas bebas berbasis Excalidraw.
+- **DB Client** (Desktop/CLI): koneksi ke database yang sudah berjalan.
 
-> [!CAUTION]
-> **Hati-hati Saat Menghapus Proyek**: Menghapus sebuah proyek akan menghapus **seluruh** dokumen yang ada di dalamnya secara massal. Meskipun file tersebut masuk ke Trash, proses pemulihan file dalam jumlah banyak bisa memakan waktu. Selalu cek kembali isi proyek sebelum menghapusnya.
+Satu Project boleh memiliki banyak file dari setiap jenis, misalnya 3 ERD untuk modul berbeda dan 5 Notes.
+
+## Membuat Project
+
+- Di sidebar **Projects**, klik **+** (**New Project**), isi **Project name**, lalu klik **Create**.
+- Atau saat membuat file baru: klik **+** di samping pilihan Project, isi nama, lalu **Add project**.
+
+Project dibuat di workspace yang sedang aktif. Di Team Workspace, setiap anggota dapat membuat Project. Nama **Uncategorized** dicadangkan sistem.
+
+Setiap file baru harus berada di sebuah Project. File lama tanpa Project ditampilkan di bagian **Unassigned**.
+
+## Memindahkan File
+
+1. Buka file, lalu pilih **Actions → Edit** (atau **Edit** pada baris file di halaman Project).
+2. Pilih **Project** tujuan, lalu klik **Save Changes**.
+
+Hanya pembuat file yang dapat memindahkannya, dan tujuan harus berada di workspace yang sama.
+
+## Menghapus Project
+
+1. Di sidebar, klik **⋯** pada baris Project, lalu **Delete**.
+2. Konfirmasi di dialog. Project beserta semua file di dalamnya dipindahkan ke **Trash**.
+
+- Hanya pembuat Project yang dapat mengganti nama atau menghapusnya. Anggota lain melihat *Only the creator can rename or delete*.
+- Project yang berisi file buatan anggota lain tidak dapat dihapus oleh pembuat Project.
+- Memulihkan Project dari Trash juga memulihkan file-filenya. Lihat [Trash & Data Recovery](./trash-system.md).
+
+:::caution
+Menghapus Project memindahkan **semua** file di dalamnya ke Trash. Di Cloud, isi Trash dihapus permanen setelah 30 hari.
+:::
+
+## Tips
+- Gunakan nama Project yang deskriptif, misalnya `Backend-CRM-V2`.
+- Gunakan [Search](./search-and-filter.md) (`⌘K` / `Ctrl+K`) untuk menemukan file dengan cepat.

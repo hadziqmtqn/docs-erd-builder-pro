@@ -1,36 +1,53 @@
 ---
-sidebar_position: 2
+sidebar_position: 5
 slug: /workspace/trash-system
 ---
 # Trash & Data Recovery
 
-Keamanan data Anda adalah prioritas kami. ERD Builder Pro menggunakan sistem **Soft Delete**, yang berarti file yang Anda hapus tidak akan langsung hilang selamanya, melainkan dipindahkan ke area penampungan sementara.
+ERD Builder Pro memakai **soft delete**: file atau Project yang dihapus dipindahkan ke **Trash** lebih dulu, sehingga masih bisa dipulihkan.
 
-## Mengenal Soft Delete
-Saat Anda mengklik ikon hapus pada file apa pun (ERD, Flowchart, Note, atau Drawing):
-- File tersebut akan ditandai sebagai `deleted`.
-- File akan disembunyikan dari sidebar proyek aktif agar tidak mengganggu fokus Anda.
-- Semua data dan relasi di dalam file tersebut tetap utuh dan aman di folder **Trash**.
+## Membuka Trash
 
-> [!WARNING]
-> **Penghapusan Proyek/Workspace**: Jika Anda menghapus sebuah **Proyek** atau **Workspace**, maka seluruh file (ERD, Flowchart, Note, dan Drawing) yang ada di dalamnya akan ikut terhapus secara otomatis. Pastikan Anda telah memindahkan file-file penting ke proyek lain sebelum melakukan penghapusan level proyek.
+Klik menu profil di kiri bawah sidebar, lalu pilih **Trash**. Halaman **Trash Bin** memiliki tab **Projects**, **ERD**, **DB Client** (Desktop/CLI), **Notes**, **Drawings**, dan **Flowcharts**.
 
-## Memulihkan File (Restore)
-Jika Anda salah menghapus file atau membutuhkan kembali dokumen lama:
-1. Klik menu **Trash** di bagian bawah sidebar utama.
-2. Cari file yang ingin dipulihkan.
-3. Klik tombol **Restore**.
-4. **Hasil**: File akan otomatis kembali ke proyek asalnya dengan seluruh isi data yang sama persis seperti sebelum dihapus.
+Trash menampilkan isi workspace yang sedang aktif, termasuk item yang dihapus anggota lain di Team Workspace. Menu Trash dinonaktifkan saat koneksi ke server terputus.
 
-## Penghapusan Permanen
-Penghapusan permanen adalah tindakan yang **tidak dapat dibatalkan**. Gunakan fitur ini hanya jika Anda sudah yakin tidak membutuhkan data tersebut lagi.
+## Memulihkan (Restore)
 
-1. Buka menu **Trash**.
-2. Klik tombol **Delete Permanently** pada file yang dipilih.
+1. Buka tab jenis file.
+2. Klik **Restore** pada item yang ingin dipulihkan.
 
-### Apa yang Terjadi Saat Hapus Permanen?
-- **Database**: Record file dan seluruh kontennya (tabel ERD, isi catatan, dll) akan dihapus total dari database Supabase.
-- **Storage (R2)**: Jika file tersebut adalah **Notes** yang berisi gambar, sistem juga akan mencoba menghapus aset gambar tersebut dari bucket **Cloudflare R2** Anda untuk membersihkan ruang penyimpanan.
+File kembali ke Project asalnya dengan isi yang sama seperti sebelum dihapus.
 
-> [!CAUTION]
-> Kami sangat menyarankan untuk memeriksa kembali isi folder Trash secara berkala sebelum melakukan pembersihan permanen.
+- Hanya pembuat item yang dapat memulihkan atau menghapusnya. Item milik orang lain menampilkan **Creator only**.
+- File tidak bisa dipulihkan selama Project-nya masih di Trash. Pulihkan Project lebih dulu.
+- Memulihkan Project juga memulihkan file di dalamnya. Pemulihan Project hanya bisa dilakukan pembuatnya, dan hanya bila semua file di dalamnya juga dibuat olehnya.
+
+## Menghapus Permanen
+
+1. Klik **Delete** pada item.
+2. Konfirmasi dengan **Permanently Delete**.
+
+Penghapusan permanen **tidak dapat dibatalkan**. Record file, seluruh isinya, dan [Version History](../collaboration/version-history.md)-nya ikut terhapus.
+
+### Empty Trash (Cloud)
+
+Di Cloud, tombol **Empty Trash** menghapus permanen semua item yang **Anda buat** di workspace aktif. Item buatan anggota lain tetap ada.
+
+## Penghapusan Otomatis
+
+| Cara | Perilaku |
+| :--- | :--- |
+| **Cloud** | Item di Trash dihapus permanen setelah **30 hari**. Halaman Trash menampilkan peringatan dan tanggal penghapusan setiap item (*Deleted permanently on …*). |
+| **Self-host** | Tidak ada penghapusan otomatis, kecuali administrator mengatur `TRASH_RETENTION_DAYS`. Lihat [Environment Variables](../configuration/env-variables.md#retensi-data-opsional). |
+| **Desktop dan CLI** | Tidak ada penghapusan otomatis. |
+
+## Gambar di Storage
+
+Gambar yang dipakai Notes atau Drawings tidak langsung hilang dari storage:
+- **Cloud dan Self-host**: gambar yang tidak lagi dipakai ditandai oleh pembersihan harian, lalu dihapus dari bucket setelah 30 hari. Lihat [Library](../cloud-storage/library.md).
+- **Desktop dan CLI**: gambar dihapus dari storage saat file dihapus permanen.
+
+:::caution
+Periksa isi Trash secara berkala sebelum menghapus permanen. Di Cloud, pulihkan file sebelum 30 hari bila masih diperlukan.
+:::

@@ -360,5 +360,61 @@
   "theme.tags.tagsPageTitle": {
     "message": "Tags",
     "description": "The title of the tag list page"
+  },
+  "changelog.loading": {
+    "message": "Loading the changelog…",
+    "description": "Shown while a changelog page loads from GitHub"
+  },
+  "changelog.pageStatus": {
+    "message": "Page {page} of {total}",
+    "description": "Position of the current changelog page"
+  },
+  "changelog.empty": {
+    "message": "There are no releases on GitHub yet.",
+    "description": "Shown when the repository has no releases"
+  },
+  "changelog.pageMissing": {
+    "message": "Page {page} does not exist. The changelog ends at page {total}.",
+    "description": "Shown when the page number in the URL is past the last changelog page"
+  },
+  "changelog.release.viewOnGitHub": {
+    "message": "View on GitHub →",
+    "description": "Link from a changelog entry to its GitHub release"
+  },
+  "changelog.error.failed": {
+    "message": "The changelog could not be loaded from GitHub. Check your internet connection and try again.",
+    "description": "Shown when the GitHub releases request fails"
+  },
+  "changelog.error.rateLimitedUntil": {
+    "message": "GitHub is limiting requests from your network. Try again after {time}, or read the release notes on GitHub.",
+    "description": "Shown when GitHub refuses the request (HTTP 403 or 429) and sends the time its limit resets"
+  },
+  "changelog.error.rateLimited": {
+    "message": "GitHub is limiting requests from your network. Try again in a few minutes, or read the release notes on GitHub.",
+    "description": "Shown when GitHub refuses the request (HTTP 403 or 429) without a reset time"
+  },
+  "changelog.error.retry": {
+    "message": "Try again",
+    "description": "Button that requests the changelog page again"
+  },
+  "changelog.error.openReleases": {
+    "message": "Open GitHub Releases",
+    "description": "Link to the GitHub Releases page when the changelog cannot load"
+  },
+  "changelog.pagination.label": {
+    "message": "Changelog pages",
+    "description": "ARIA label of the changelog pagination"
+  },
+  "changelog.pagination.previous": {
+    "message": "Previous",
+    "description": "Link to the previous changelog page"
+  },
+  "changelog.pagination.next": {
+    "message": "Next",
+    "description": "Link to the next changelog page"
+  },
+  "changelog.pagination.page": {
+    "message": "Page {page}",
+    "description": "ARIA label of a numbered changelog page link"
   }
 }

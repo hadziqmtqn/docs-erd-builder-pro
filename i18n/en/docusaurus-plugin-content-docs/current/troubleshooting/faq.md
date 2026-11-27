@@ -4,53 +4,49 @@ slug: /troubleshooting/faq
 ---
 # Frequently Asked Questions (FAQ)
 
-Below are answers to the most frequently asked questions regarding the use and configuration of ERD Builder Pro.
+Answers to frequently asked questions about using and configuring ERD Builder Pro.
 
-### Why should I use Port 6543 for Backup?
-GitHub Actions runs in an environment that only supports **IPv4**. Since the latest Supabase database often uses **IPv6**, direct connections through the default port `5432` will fail. Port `6543` is the **Transaction Pooler** which provides a stable IPv4 path for the backup process.
+### What is the difference between Cloud, Self-host, Desktop, and CLI?
+Cloud is managed by the ERD Builder Pro team and uses an ERDBPro SaaS account. Self-host is installed on your server with PostgreSQL. Desktop and CLI run on your computer with SQLite for a single user. See [Usage Options](../getting-started/intro.md#pilihan-penggunaan).
 
-### How does this application work when Offline?
-ERD Builder Pro is designed with an **Offline-First** approach. 
-- All changes you make are saved first to **IndexedDB** in your browser.
-- When an internet connection is available, the system will automatically attempt to sync that local data to the Supabase (Cloud) database.
+### Can Desktop use PostgreSQL?
+Not as the application database; Desktop and CLI always use SQLite. However, you can open other PostgreSQL, MySQL, or SQLite databases through the [DB Client](../core-features/db-client.md).
 
-### Is it safe to use a Public Bucket in Cloudflare R2?
-Although the bucket is set to *Public*, your data remains safe because:
-1. **Random File Names**: Each image is given a unique UUID name that is impossible to guess.
-2. **CORS Policy**: You can restrict images to only load from your application's official domain.
-3. **No Indexing**: As long as the image links are not shared on public sites, search engines like Google will not be able to find them.
+### How does the app work when the connection is lost?
+Notes saves drafts in the browser (IndexedDB) before sending them to the server, so your latest typing is not lost right away. While the connection is lost, some menus such as Search, Trash, Version History, and Share are disabled.
 
-### What does the "Experimental" label on some features mean?
-Features labeled Experimental (such as Import Notes or Export PDF) are features that are functional but still in active development. You may encounter minor visual issues or small bugs. We recommend always backing up your database before trying these features extensively.
+### Are the images I upload publicly accessible?
+Not directly. Images are stored in a private bucket and displayed through signed URLs that are valid for 15 minutes and regenerated each time the document is opened. For this reason, `R2_PUBLIC_URL` must be left empty. See [R2 Configuration](../cloud-storage/r2-config.md).
 
-### Can I change the theme color (Dark/Light Mode)?
-ERD Builder Pro is currently optimized for **Dark Mode** to provide a focused and elegant design experience. Support for Light Mode is on our development roadmap.
+### What does the "Experimental" label mean?
+Features labeled Experimental, such as Notes Import and Export, already work but are still in development. Results may not be perfect yet. Make a backup before using them heavily.
 
-### Where can I see the application change log?
-You can view the list of new features, bug fixes, and version updates directly through the **[Changelog](/changelog)** menu, which is directly linked to our GitHub releases.
+### Can I use a light theme (Light Mode)?
+Yes. Open **Settings → Appearance**, then choose **Light**, **Dark**, or **System**.
 
-### What if I forget my Supabase password?
-Since authentication uses Supabase, you can reset your password or manage user accounts through the dashboard **Supabase > Authentication > Users**.
+### Why does the Team menu not appear?
+Teams exist only in Cloud and in Self-host with pure PostgreSQL. On Self-host, Teams require a Self-host Commercial license. Desktop and CLI do not have Teams.
 
-### What if I forget my password in self-hosted mode (Local PostgreSQL / Docker)?
-For self-hosted mode using local authentication (not Supabase), use the following CLI script from the project directory:
+### Where can I see the app's change history?
+See the **[Changelog](../changelog.mdx)** page, which pulls release notes from GitHub, or **Settings → What's New** in the app.
+
+### What if I forget my password on Self-host?
+Run the following script from the project folder (or with `docker exec` in the container):
 
 ```bash
-npm run reset-password -- --email your-admin-email@example.com --password newpassword123
+npm run reset-password -- --email your-email@example.com --password newpassword123
 ```
 
-This script will:
-- Find the user by email
-- Hash the new password using the `scrypt` algorithm (same as normal login)
-- Update the password in the database
+The script finds the user by email, hashes the new password with `scrypt` (the same as normal login), then updates the database. No restart is needed.
 
-No application restart required. The user can log in immediately with the new password.
+### What if I forget my password on an older Supabase deployment?
+Reset the password or manage accounts in the **Supabase → Authentication → Users** dashboard.
 
-### Why is `admin@local.dev` / `admin123` invalid in self-host mode?
-That combination is only the Desktop/CLI bootstrap credential. Local PostgreSQL self-host mode rejects it so a shared deployment does not run with a default password. After an empty database starts, use **Create administrator account** to create a super admin with a new email and password.
+### Why is the `admin@local.dev` / `admin123` login invalid on Self-host?
+That combination is only an internal Desktop/CLI credential. Self-host rejects it so that a shared deployment does not run with a default password. On an empty database, use the **Create administrator account** page to create the SuperAdmin.
 
-### Why does the super-admin registration page appear again?
-It appears when the database has no configured super admin or still contains the bootstrap account. Register with a new email/password and ensure the application uses the same `DATABASE_URL` as the database you seeded. `/api/auth-config` reads setup status directly from the database.
+### Why does the administrator registration page appear again?
+That page appears when the database has no SuperAdmin yet. Make sure the app uses the same `DATABASE_URL` as the database you prepared.
 
 ### What happens if `ERD_ENCRYPTION_KEY` is lost or changed?
-Stored DB Connect passwords and AI API keys cannot be decrypted. Restore the same key from your secret manager or environment backup. Do not generate a new key for an existing database unless you are ready to save all encrypted credentials again.
+Stored AI API keys (and DB Client credentials on Desktop/CLI) cannot be decrypted. Restore the same key from your secret manager or environment backup. Do not create a new key for an existing database unless you are ready to save all credentials again.

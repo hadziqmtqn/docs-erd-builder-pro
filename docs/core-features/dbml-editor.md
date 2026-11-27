@@ -1,15 +1,15 @@
 ---
-sidebar_position: 6
+sidebar_position: 2
 slug: /core-features/dbml-editor
 ---
 
 # DBML Editor
 
-ERD Builder Pro menyertakan editor **DBML** (*Database Markup Language*) bawaan yang memungkinkan Anda mendefinisikan skema database menggunakan sintaks teks yang ringkas — dan secara otomatis mensinkronkannya dengan diagram visual secara *real-time*.
+ERD Builder Pro menyertakan editor **DBML** (*Database Markup Language*) untuk mendefinisikan skema dengan teks. Editor ini tersinkron dua arah dengan canvas ERD.
 
 ## Apa itu DBML?
 
-[DBML](https://dbml.org) (*Database Markup Language*) adalah bahasa markup terbuka yang dirancang untuk mendefinisikan struktur database secara deklaratif. Berbeda dengan SQL yang berfokus pada eksekusi perintah, DBML dirancang untuk **dibaca dan ditulis oleh manusia**.
+[DBML](https://dbml.dbdiagram.io/) adalah bahasa markup terbuka untuk mendefinisikan struktur database secara deklaratif. Berbeda dengan SQL yang berfokus pada eksekusi perintah, DBML dirancang agar mudah **dibaca dan ditulis manusia**.
 
 ### Contoh Sintaks DBML
 
@@ -38,21 +38,29 @@ Enum status {
 Ref: posts.user_id > users.id
 ```
 
-## Cara Mengakses Editor DBML
+## Membuka Editor DBML
 
-1. Buka halaman **ERD Builder**.
-2. Klik tombol **DBML Editor** pada toolbar (ikon `</>`) di pojok kanan atas canvas.
-3. Panel editor akan muncul di sisi kanan layar.
-4. Ketik atau edit sintaks DBML — diagram akan diperbarui secara otomatis.
+1. Buka diagram ERD.
+2. Klik tombol **DBML** (ikon database) di toolbar canvas, tepat setelah **Import SQL**.
+3. Editor muncul sebagai *drawer* di bagian bawah canvas dengan judul **DBML Editor**.
 
-> [!NOTE]
-> Diagram ERD dan editor DBML bersifat **dua arah** (*two-way sync*). Perubahan pada canvas akan memperbarui teks DBML, dan sebaliknya.
+- Tinggi drawer bawaan 48% layar. Tarik tepi atasnya untuk mengubah tinggi antara 20% dan 85%, atau gunakan `↑`/`↓` pada pegangan drawer.
+- Membuka editor DBML menutup Explorer dan editor tabel, begitu pula sebaliknya.
+- Draft yang belum diterapkan tetap ada saat drawer ditutup lalu dibuka lagi.
+- Tombol DBML tidak tampil untuk pengguna dengan akses baca saja dan di ERD milik DB Client.
+
+## Sinkronisasi Dua Arah
+
+- **DBML → canvas**: diterapkan 1,5 detik setelah Anda berhenti mengetik, hanya bila kurung kurawal seimbang, teks memuat `Table`, dan DBML valid. DBML yang tidak valid tidak pernah diterapkan.
+- **Canvas → DBML**: teks dibuat ulang 0,8 detik setelah ada perubahan struktur. Menggeser posisi tabel tidak mengubah teks.
+
+:::caution DBML menggantikan skema
+Saat DBML diterapkan, tabel yang tidak ada di DBML **dihapus dari canvas**. Tabel yang namanya cocok (tanpa membedakan huruf besar-kecil) tetap mempertahankan posisi, warna, dan status collapse-nya. Setiap penerapan dapat dibatalkan dengan **Undo**.
+:::
 
 ## Sintaks yang Didukung
 
 ### Table & Kolom
-
-Definisikan tabel dengan blok `Table` dan daftar kolom di dalamnya:
 
 ```dbml
 Table products {
@@ -64,7 +72,7 @@ Table products {
 }
 ```
 
-**Pengaturan kolom** (*column settings*) yang didukung dalam tanda kurung siku `[]`:
+Pengaturan kolom di dalam `[]`:
 
 | Pengaturan | Deskripsi | Contoh |
 | :--- | :--- | :--- |
@@ -74,10 +82,9 @@ Table products {
 | `increment` | Auto-increment | `[increment]` |
 | `default` | Nilai default | `[default: 'active']` |
 | `note` | Keterangan kolom | `[note: 'User display name']` |
+| `ref` | Relasi inline | `[ref: > users.id]` |
 
 ### Relasi (Ref)
-
-Definisikan relasi antar tabel menggunakan blok `Ref`:
 
 ```dbml
 Ref: orders.customer_id > customers.id
@@ -85,17 +92,13 @@ Ref: order_items.order_id > orders.id
 Ref: profiles.user_id - users.id  // one-to-one
 ```
 
-**Operator relasi:**
-
 | Operator | Arti |
 | :--- | :--- |
-| `>` | One-to-many (FK → PK) |
-| `<` | Many-to-one (PK → FK) |
+| `>` | Many-to-one (FK → PK) |
+| `<` | One-to-many (PK → FK) |
 | `-` | One-to-one |
 
 ### Enum
-
-Definisikan tipe enumerasi sebagai blok terpisah:
 
 ```dbml
 Enum priority {
@@ -104,57 +107,29 @@ Enum priority {
   high
   critical
 }
-```
 
-Kemudian gunakan nama enum sebagai tipe kolom:
-
-```dbml
 Table tasks {
   id integer [pk]
-  priority priority  // menggunakan tipe enum 'priority'
+  priority priority
 }
 ```
 
-### Inline Enum (AI-Generated)
+DBML yang dihasilkan AI kadang memakai enum inline seperti `role enum('admin', 'editor', 'viewer')`. Editor mengubahnya menjadi blok `Enum` terpisah saat diproses.
 
-DBML yang dihasilkan oleh AI mungkin menggunakan sintaks enum inline:
-
-```dbml
-Table users {
-  role enum('admin', 'editor', 'viewer')
-}
-```
-
-Editor akan secara otomatis mengekstrak enum ini ke dalam blok `Enum` terpisah saat diproses.
-
-### TableGroup
-
-Kelompokkan tabel terkait secara visual:
+### TableGroup, Note, dan Indexes
 
 ```dbml
 TableGroup user_management {
   users
   profiles
-  settings
-}
-```
-
-### Note & Indexes
-
-```dbml
-// Note pada tabel
-Table orders {
-  id integer [pk]
-  total decimal [note: 'Total amount including tax']
 }
 
-// Indexes
 Table products {
   id integer [pk]
   name varchar
+  Note: 'Katalog produk'
   indexes {
-    (name) [index]
-    (price) [index]
+    (name) [unique]
   }
 }
 ```
@@ -163,88 +138,60 @@ Table products {
 
 ### Autocomplete
 
-Editor DBML menyediakan **autocomplete** otomatis saat mengetik:
+Daftar saran berisi maksimal 8 item. Gunakan `↑`/`↓` untuk memilih, `Enter` atau `Tab` untuk menerima, dan `Esc` untuk menutup.
 
-| Konteks | Saran yang Muncul |
+| Konteks | Saran |
 | :--- | :--- |
 | Awal baris | `Table`, `Ref`, `Enum`, `TableGroup`, `Note`, `Indexes` |
-| Dalam blok `Table` | Tipe data kolom (`varchar`, `integer`, `timestamp`, dll.) |
-| Dalam tanda kurung `[...]` | Pengaturan kolom (`pk`, `not null`, `unique`, dll.) |
-| Setelah `Table.` | Nama kolom tabel tersebut |
-| Di blok `Ref` | Nama tabel dan kolom |
+| Tipe kolom | Tipe data seperti `varchar`, `integer`, `timestamp` |
+| Di dalam `[...]` | `pk`, `unique`, `not null`, `note`, `default`, `increment`, `ref`, `headerColor` |
+| Referensi | Nama tabel dan kolom |
 
-### Linting & Validasi
+### Validasi
 
-Editor secara otomatis memvalidasi sintaks DBML Anda:
+Editor memeriksa tipe data, relasi, enum, dan error sintaks sekitar 0,5 detik setelah Anda berhenti mengetik, lalu menandai baris yang bermasalah.
 
-- **Tipe data tidak valid**: Garis bawah merah jika menggunakan tipe data yang tidak dikenal.
-- **Referensi relasi**: Memeriksa apakah tabel dan kolom dalam blok `Ref` benar-benar ada.
-- **Keseimbangan kurung**: Error ditampilkan jika blok `Table` tidak ditutup dengan benar.
+### Navigasi
 
-### Navigasi Kursor
+- `⌘F` / `Ctrl+F` membuka pencarian di dalam editor.
+- Blok dapat dilipat (*fold*) lewat gutter.
+- Menaruh kursor di baris `Table nama_tabel {` memilih tabel tersebut di canvas.
 
-Posisikan kursor pada baris `Table nama_tabel {` — canvas akan otomatis memilih dan menampilkan tabel tersebut.
+### Referensi Sintaks
 
-### Dialog Bantuan
+Klik tombol bantuan di header drawer untuk membuka **DBML Reference**: contoh sintaks dan beberapa tips.
 
-Klik tombol bantuan (`?`) di panel editor untuk melihat referensi sintaks DBML lengkap.
+## Mengimpor dari SQL
 
-## Cara Menggunakan DBML
+Editor DBML hanya membaca DBML. SQL yang ditempel ke editor tidak dikonversi dan akan ditandai sebagai error. Untuk membuat tabel dari `CREATE TABLE`, gunakan [Import SQL](./import-sql.md).
 
-### Membuat Diagram dari DBML
+## Menyalin DBML
 
-1. Buka editor DBML.
-2. Ketik definisi tabel, relasi, dan enum.
-3. Diagram akan diperbarui secara otomatis (dengan jeda ~1.5 detik).
-4. Posisi tabel akan dipertahankan jika sudah ada di canvas.
+Drawer DBML tidak memiliki tombol copy; pilih teks lalu salin seperti biasa. Untuk satu tabel, tab **DBML** di editor tabel menyediakan tombol **Copy**.
 
-### Mengimpor dari SQL
+## Integrasi AI
 
-Anda juga bisa menempelkan SQL `CREATE TABLE` ke editor DBML — sistem akan mengonversinya secara otomatis. Gunakan panel **SQL** atau **DBML** sesuai format sumber data Anda.
-
-### Menyalin ke Clipboard
-
-Klik ikon **copy** di panel DBML untuk menyalin seluruh teks DBML ke clipboard — siap ditempel ke file `.dbml` atau dibagikan ke tim.
-
-### Integrasi AI
-
-AI Assistant dapat menghasilkan skema DBML berdasarkan deskripsi Anda. Ketika AI membalas dengan blok DBML, klik tombol **Database** untuk langsung menerapkan skema ke diagram.
-
-```
-AI: "Buatkan skema database untuk sistem e-commerce..."
-→ AI menghasilkan blok DBML
-→ Klik tombol "Database" pada balasan AI
-→ Diagram ERD diperbarui
-```
+AI Assistant dapat menghasilkan skema DBML dari deskripsi Anda. Di view ERD, gunakan tombol **Append** pada balasan AI untuk meninjau perubahan sebelum digabungkan. Di view lain, gunakan **Create or update ERD from this DBML schema**. Lihat [AI Integration](./ai-integration.md).
 
 ## Persistensi Data
 
 - Teks DBML disimpan di database bersama diagram (`dbml_source`).
-- Setiap perubahan pada editor disimpan secara otomatis (*debounced* 800ms).
-- Saat Anda kembali ke diagram yang sama, teks DBML terakhir akan dipulihkan.
+- Saat diagram dibuka lagi, teks DBML terakhir dipulihkan. Bila belum ada, DBML dibuat dari canvas.
 
-## Element yang Dipertahankan (Roundtrip)
+## Yang Dibuat Ulang dari Canvas
 
-Beberapa elemen DBML yang tidak dihasilkan oleh editor tetap **dipertahankan** saat sinkronisasi dua arah:
+Saat canvas berubah, editor membuat ulang teks DBML:
 
-| Element | Dipertahankan | Dihasilkan |
-| :--- | :---: | :---: |
-| `Table` + Kolom | ✅ | ✅ |
-| `Ref` | ✅ | ✅ |
-| `Enum` (blok terpisah) | ✅ | ✅ |
-| `TableGroup` | ✅ | ❌ |
-| `Note` | ✅ | ❌ |
-| `Indexes` | ✅ | ❌ |
-| `headerColor` | ✅ | ❌ |
-| `default` values | ✅ | ❌ |
-
-> [!NOTE]
-> "Dipertahankan" berarti elemen tersebut akan tetap ada di teks DBML meskipun tidak dihasilkan ulang dari canvas. Ini memungkinkan Anda menambahkan `Note`, `TableGroup`, atau `Indexes` secara manual dan tidak akan hilang saat canvas diperbarui.
+| Elemen | Dibuat ulang dari canvas |
+| :--- | :---: |
+| `Table`, kolom, `pk`, `not null`, `unique`, `default`, `note` kolom | ✅ |
+| `Note` tabel dan `indexes` | ✅ |
+| `Ref` | ✅ |
+| `Enum` yang dipakai kolom | ✅ |
+| Blok `Enum` lain, `TableGroup`, dan `Note` di luar tabel | Dipertahankan dari teks sebelumnya |
 
 ## Keterbatasan
 
-- **Tipe data**: Hanya tipe data PostgreSQL yang didukung. Tipe khusus MySQL tertentu mungkin tidak dikenali.
-- **`Project` block**: Blok `Project` DBML tidak didukung.
-- **Default & Unique**: Nilai `default` dan `unique` dipertahankan saat impor, tetapi tidak dihasilkan ulang saat canvas diperbarui.
-- **Jeda sinkronisasi**: Perubahan dari editor ke canvas membutuhkan waktu ~1.5 detik (debounce) sebelum diterapkan.
-- **SQL sebagai perantara**: DBML diproses melalui SQL sebagai format perantara. Semua konversi mengikuti dialect PostgreSQL.
+- **Blok `Project`** DBML tidak didukung.
+- **SQL sebagai perantara**: DBML diproses melalui SQL dialek PostgreSQL, jadi tipe khusus MySQL tertentu bisa tidak dikenali.
+- **Jeda sinkronisasi**: perubahan dari editor ke canvas menunggu sekitar 1,5 detik.

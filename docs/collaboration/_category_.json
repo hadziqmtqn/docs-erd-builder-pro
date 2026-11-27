@@ -1,0 +1,9 @@
+{
+  "label": "Kolaborasi & Berbagi",
+  "position": 6,
+  "link": {
+    "type": "generated-index",
+    "slug": "/collaboration",
+    "description": "Komentar, diskusi, notifikasi, live sync, Version History, dan link publik."
+  }
+}

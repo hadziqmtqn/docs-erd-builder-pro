@@ -1,9 +1,9 @@
 {
-  "label": "Keamanan & Backup",
-  "position": 7,
+  "label": "Backup & Restore",
+  "position": 8,
   "link": {
     "type": "generated-index",
     "slug": "/security-backup",
-    "description": "Lindungi data Anda dengan sistem backup otomatis dan manual melalui GitHub Actions."
+    "description": "Backup, Auto Backup, dan Restore database dari dalam aplikasi."
   }
 }

@@ -1,0 +1,105 @@
+.changelog {
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 1rem);
+}
+
+.status {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.release {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+}
+
+.releaseHeader {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.releaseTitle {
+  margin: 0;
+}
+
+.releaseDate {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.8rem;
+}
+
+.releaseBody {
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.releaseLink {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: var(--ifm-font-weight-bold);
+  margin-top: 1rem;
+}
+
+.notice p {
+  margin-bottom: 0.75rem;
+}
+
+.noticeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.nav {
+  align-items: center;
+  container-type: inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin: 2rem 0 1rem;
+}
+
+.pages {
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0;
+}
+
+.pages :global(.pagination__link) {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0 0.5rem;
+}
+
+.gap span {
+  align-items: center;
+  color: var(--ifm-color-emphasis-600);
+  display: inline-flex;
+  justify-content: center;
+  min-height: 2.5rem;
+  min-width: 1.5rem;
+}
+
+/* The content column, not the viewport, decides when the bar stops fitting on one
+   line: Previous and Next then share the first row and the page numbers take the second. */
+@container (max-width: 640px) {
+  .previous {
+    order: 1;
+  }
+
+  .next {
+    order: 2;
+  }
+
+  .pages {
+    flex-basis: 100%;
+    order: 3;
+  }
+}

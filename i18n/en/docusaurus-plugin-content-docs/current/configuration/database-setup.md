@@ -4,272 +4,172 @@ slug: /configuration/database-setup
 ---
 # Database Setup
 
-ERD Builder Pro supports **three database modes**. Choose the one that fits your needs.
+ERD Builder Pro supports three database modes. For a new Self-host installation, use **pure PostgreSQL**.
 
-| Aspect | Supabase PostgreSQL | Local PostgreSQL | Desktop (SQLite) |
+| Aspect | Pure PostgreSQL | Supabase (legacy) | SQLite |
 |:---|:---|:---|:---|
-| **Best for** | Production / Cloud | Development / Self-hosted | Desktop App / Tauri |
-| **Authentication** | Supabase Auth (JWT) | Local (email + password) | Local (email + password) |
-| **ID Type** | `BigInt` | `Int` | `Int` |
-| **Extra env vars** | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ERD_ENCRYPTION_KEY` | `ERD_ENCRYPTION_KEY` | — |
-| **Schema setup** | SQL Editor in Supabase Dashboard | `npm run db:push:pg:local` | `npm run db:push:sqlite` |
-| **Seed data** | — (via SQL Editor) | `npm run db:seed:pg:local` | `npm run db:seed:sqlite` |
-| **Generate client** | `npm run db:generate:pg` | `npm run db:generate:pg:local` | `npm run db:generate:sqlite` |
-| **Run** | `npm run dev` | `npm run dev:pg:local` | `npm run dev:desktop` |
+| **Used by** | Self-host and Cloud | Older deployments that already use Supabase | Desktop and CLI |
+| **Authentication** | Local accounts (email + password); Cloud uses SSO | Supabase Auth | Automatic single-user login |
+| **Team Workspace** | Yes (Self-host with a Commercial license) | No | No |
+| **Notifications** | Yes | No | No |
+| **Extra env variables** | `ERD_ENCRYPTION_KEY` | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ERD_ENCRYPTION_KEY` | None |
+| **Create tables** | `npm run db:push:pg:local` | `sql/supabase/schema.sql` in the SQL Editor | Automatic |
+| **Generate client** | `npm run db:generate:pg:local` | `npm run db:generate:supabase` | `npm run db:generate:sqlite` |
+| **Run from source** | `npm run dev:pg:local` | `npm run dev` | `npm run dev:desktop` |
 
 ---
 
 ## Prisma 7 + Driver Adapter Architecture
 
-All modes use **Prisma 7** with the *driver-adapter pattern*. Prisma 7 no longer supports `datasource.url` or the legacy query engine — every connection **must** be created with a matching adapter:
+All modes use **Prisma 7** with the *driver-adapter pattern*. Each connection is created with the matching adapter:
 
 | Mode | Adapter | Package |
 |:---|:---|:---|
 | PostgreSQL | `PrismaPg` | `@prisma/adapter-pg` |
 | SQLite | `PrismaBetterSqlite3` | `@prisma/adapter-better-sqlite3` |
 
-Adapter selection happens automatically at runtime based on `DATABASE_URL`:
+The server selects the mode at *runtime*:
 
-- If `DATABASE_URL` starts with `file:` or ends with `.db` → **SQLite** mode
-- If `DATABASE_URL` starts with `postgresql://` **without** `SUPABASE_URL` → **Local PostgreSQL** mode
-- If `DATABASE_URL` starts with `postgresql://` **with** `SUPABASE_URL` → **Supabase** mode
+- `DATABASE_URL` is empty, starts with `file:`, or ends with `.db` → **SQLite**.
+- `DATABASE_URL` starts with `postgresql://` without `SUPABASE_URL` or `VITE_SUPABASE_URL` → **Pure PostgreSQL**.
+- Any other database URL, or `SUPABASE_URL`/`VITE_SUPABASE_URL` is set → **Supabase**.
 
-Three Prisma schema files are used depending on the mode:
+There are three Prisma schema files:
 
-| Prisma File | Mode | ID Type | Auth |
-|:---|:---|:---|:---|
-| `schema.prisma` | Supabase | `BigInt` | Supabase Auth |
-| `schema.pg.prisma` | Local PostgreSQL | `Int` | Local |
-| `schema.sqlite.prisma` | Desktop SQLite | `Int` | Local |
+| Prisma file | Mode | Table count |
+|:---|:---|:---|
+| `prisma/schema.pg.prisma` | Pure PostgreSQL | 44 |
+| `prisma/schema.prisma` | Supabase | 30 application tables + Supabase `auth` tables |
+| `prisma/schema.sqlite.prisma` | SQLite | 47 |
+
+The `DB_VARIANT` variable (`pg`, `supabase`, or `sqlite`) only selects the schema file and migrations folder for Prisma CLI commands. The server still selects the mode from `DATABASE_URL`. The full table structure is in [Database Schema](../database-schema.mdx).
 
 ---
 
-## Option A: Supabase PostgreSQL (Production)
+## Option A: Pure PostgreSQL (Recommended)
 
-### 1. Create a New Project
-1. Go to [Supabase Dashboard](https://database.new).
-2. Create a new project, select the nearest **Region**, and save your **Database Password** securely.
-
-### 2. Initialize Database (Schema)
-Create the required tables manually using the SQL Editor:
-1. Open the `supabase_schema.sql` file in the ERD Builder Pro root directory.
-2. Copy the entire file content.
-3. In the Supabase dashboard, open the **SQL Editor** menu.
-4. Click **New Query**, paste the copied code, then click **Run**.
-5. Verify that all tables (e.g. `projects`, `diagrams`, etc.) were created successfully.
-
-### 3. Generate Prisma Client
+### 1. Prepare the Database
 ```bash
-npm run db:generate:pg
+createdb erd_builder_pro
 ```
-This generates the Prisma Client using the `schema.prisma` file (Supabase variant).
 
-### 4. Configure Authentication (Private)
-To keep your application private:
-1. Go to **Authentication > Settings**.
-2. Under **Sign Up**, uncheck **Allow new users to sign up**.
-3. Save the changes. *Now strangers cannot register themselves.*
+### 2. Configure `.env`
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/erd_builder_pro"
+ERD_ENCRYPTION_KEY="output-of-openssl-rand-hex-32"
+```
+Leave all `SUPABASE_*` and `VITE_SUPABASE_*` variables empty.
 
-### 5. Register Your Account
-After disabling public registration, create your account manually:
-1. Go to **Authentication > Users**.
-2. Click **Add User** and select **Create new user**.
-3. Enter the **Email** and **Password** you want to use.
-4. (Optional) Disable "Auto-confirm user" for email verification, or leave it enabled for instant login.
-5. Click **Create User**. Use this account to log into your ERD Builder Pro app.
+### 3. Create Tables and Run
+```bash
+npm run dev:pg:local
+```
+This command runs `db:push:pg:local` (creates or syncs the tables), `db:generate:pg:local`, and then the development server at `http://localhost:3000`.
 
-### 6. Get API Keys
-Go to **Settings > API** to get the required `.env` variables:
-- **Project URL**: Set as `SUPABASE_URL` and `VITE_SUPABASE_URL`.
-- **anon public**: Set as `VITE_SUPABASE_ANON_KEY`.
-- **service_role**: Set as `SUPABASE_SERVICE_ROLE_KEY`.
+The default AI providers and models are created automatically when the server starts. `npm run db:seed:pg:local` is still available, but it does not create any account.
 
-> [!CAUTION]
-> Never share your `service_role` key with anyone or include it in frontend code (without the `VITE_` prefix).
+Use `npm run db:migrate:pg:local` (`prisma migrate dev`) if you need migration history.
 
-### 7. Configure `.env`
+### 4. Create the Administrator Account
+Open the app. On an empty database, the **Create administrator account** page appears so you can create the first SuperAdmin.
+
+:::caution
+Do not use `admin@local.dev` / `admin123` on Self-host. That combination is only an internal Desktop/CLI credential and is rejected by the Self-host login.
+:::
+
+In Docker, the image entrypoint creates the database and tables automatically. See [Deployment](../getting-started/deployment.md#yang-dilakukan-container-saat-start).
+
+---
+
+## Option B: Supabase (Legacy) {/* #opsi-b-supabase-legacy */}
+
+This mode is only for deployments that already used Supabase. Supabase mode does not support Team Workspace or notifications. New installations should use pure PostgreSQL.
+
+### Schema
+- Base tables: run the contents of `sql/supabase/schema.sql` in the Supabase **SQL Editor**.
+- Tables added later, such as comments and discussions, are in the `prisma/migrations` folder (Supabase variant).
+
+### Prisma Client
+```bash
+npm run db:generate:supabase
+```
+`npm install` also runs this command automatically.
+
+### Configure `.env`
 ```env
 DATABASE_URL="postgresql://user:pass@host:6543/db?pgbouncer=true&connection_limit=10"
 SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
+ERD_ENCRYPTION_KEY="output-of-openssl-rand-hex-32"
 ```
 
-### 8. Run the Application
+If `pgbouncer=true` and `connection_limit` are missing from the URL, the server adds them.
+
+### User Accounts
+Supabase Auth manages accounts. To keep other people from using the app, turn off **Allow new users to sign up** in **Authentication → Settings**, then create accounts through **Authentication → Users → Add User**.
+
+### Run
 ```bash
 npm run dev
 ```
 
 ---
 
-## Option B: Local PostgreSQL (Development / Self-hosted)
+## Option C: SQLite (Desktop and CLI)
 
-### 1. Install & Prepare PostgreSQL
-Make sure PostgreSQL is installed. Create a new database:
+The Desktop app and CLI create and update the SQLite database automatically. You do not need to run any commands. The SQLite database has 47 tables: the PostgreSQL tables without the Web MCP OAuth tables, plus the DB Client tables (`db_accounts`, `db_catalogs`, `db_clients`, `db_client_layouts`, `db_client_queries`, `sql_queries`).
+
+### Running Desktop Mode from Source
 ```bash
-createdb erd_builder_pro
-```
-
-### 2. Configure `.env`
-In `.env`, set `DATABASE_URL` and **comment out or remove** `SUPABASE_URL`:
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/erd_builder_pro"
-# SUPABASE_URL=   ← not needed for this mode
-# SUPABASE_SERVICE_ROLE_KEY=   ← not needed
-```
-The app will automatically detect Local PostgreSQL mode when `SUPABASE_URL` is not set.
-
-### 3. Generate Prisma Client
-```bash
-npm run db:generate:pg:local
-```
-This uses the `schema.pg.prisma` schema (Local PostgreSQL variant). Do not use `npm run db:generate:pg`, because that command selects the Supabase schema.
-
-### 4. Push Schema
-```bash
-npm run db:push:pg:local
-```
-This creates all required tables in your local database.
-
-> Prisma 7 uses `db push` to sync the schema without migration files. Use `db:migrate:pg:local` if you need migration history.
-
-### 5. Seed Data
-```bash
-npm run db:seed:pg:local
-```
-Output:
-```
-Seeding database...
-  - Self-host admin user skipped; use the one-time setup screen
-  ✓ AI Providers: OpenAI, Gemini, OpenAI Compatible
-  ✓ OpenAI models: GPT-4o, GPT-4o Mini, GPT-4 Turbo
-  ✓ Gemini models: Gemini 1.5 Pro, Gemini 1.5 Flash
-  ✓ OpenAI Compatible models: DeepSeek V4 Flash
-  ✓ Default system prompt: Simple & Direct
-
-✅ Seed complete
-```
-
-Local PostgreSQL seeding does not create default credentials. After an empty database is initialized, open the application and use the **Create administrator account** page to create the first super admin.
-
-> Do not use `admin@local.dev` / `admin123` in self-host mode. This is the Desktop/CLI bootstrap credential and is rejected by self-host login.
-
-> The seed script uses the same Prisma 7 adapter pattern. Make sure `DATABASE_URL` points to the local database and `ERD_ENCRYPTION_KEY` is configured.
-
-### 6. Run the Application
-```bash
-npm run dev:pg:local
-```
-The app will be available at `http://localhost:3000`.
-
-> Local PostgreSQL mode uses local authentication (email + password) with Prisma Session, not Supabase Auth. The super admin is created through the initial setup screen.
-
----
-
-## Option C: Desktop / Tauri (SQLite)
-
-This mode uses SQLite as the local database for the Tauri-based desktop application.
-
-### 1. Generate Prisma Client for SQLite
-```bash
-npm run db:generate:sqlite
-```
-Uses the `schema.sqlite.prisma` schema with the `@prisma/adapter-better-sqlite3` adapter.
-
-### 2. Push Schema to SQLite
-```bash
+# Create ./data.db
 npm run db:push:sqlite
-```
-This creates the `data.db` file with 19 tables:
-```
-ai_chat_messages, ai_chat_sessions, ai_models, ai_providers, ai_system_prompts,
-backups, columns, diagrams, drawings, entities, entity_changes, flowcharts,
-notes, projects, relationships, sessions, user_ai_configs, user_ai_rules, users
-```
 
-### 3. Seed Data
-```bash
-npm run db:seed:sqlite
-```
-Output:
-```
-Seeding SQLite database...
-  ✓ Admin user: admin@local.dev
-  ✓ AI Providers: OpenAI, Gemini, OpenAI Compatible
-  ✓ OpenAI models: GPT-4o, GPT-4o Mini, GPT-4 Turbo
-  ✓ Gemini models: Gemini 1.5 Pro, Gemini 1.5 Flash
-  ✓ OpenAI Compatible models: DeepSeek V4 Flash
-  ✓ Default system prompt: Simple & Direct
+# API on port 3100 + Vite on port 3098
+npm run dev:tauri:servers
 
-✅ Seed complete
+# Tauri window (requires the Rust toolchain)
+npm run dev:tauri
 ```
 
-Desktop/SQLite seeding keeps the internal bootstrap account `admin@local.dev` for local-data compatibility. Desktop/CLI use auto-login; these bootstrap credentials are not for self-host deployments and must not be used in shared deployments.
+- `npm run dev:desktop` runs only the API on port `3100` with `DATABASE_URL=file:./data.db`, ignoring the value in `.env`.
+- `npm run dev:desktop:client` runs Vite on port `3098`.
+- The built Desktop app uses port `3099`.
 
-### 4. Verify
-```bash
-sqlite3 data.db ".tables"
-# 19 tables listed
-
-sqlite3 data.db "SELECT email FROM users;"
-# admin@local.dev
-```
-
-### 5. Run the Application
-```bash
-# API + Vite mode (without Tauri shell)
-npm run dev:desktop
-
-# Full Tauri mode (requires Rust toolchain)
-npm run dev:tauri:servers   # API :3099 + Vite :3098
-npm run dev:tauri           # opens Tauri window
-```
-
-> `dev:desktop` uses `DATABASE_URL=file:./data.db` to **override** the `.env` value, so both modes (Supabase PG in `.env` and SQLite in the script) can coexist.
-
-### 6. Login Bootstrap
-Desktop/CLI auto-login through the local server without a login page. A local encryption key is created beside the database when neither `ERD_ENCRYPTION_KEY` nor `ERD_ENCRYPTION_KEY_FILE` is configured.
+`npm run db:seed:sqlite` creates the internal `admin@local.dev` account for Desktop/CLI automatic login. This account is not a credential for Self-host.
 
 ---
 
 ## Quick Script Reference
 
-| Command | Purpose | Schema | `DATABASE_URL` |
-|:---|:---|:---|:---|
-| `npm run db:generate:sqlite` | Generate Prisma Client | `schema.sqlite.prisma` | — |
-| `npm run db:push:sqlite` | Create SQLite tables | `schema.sqlite.prisma` | `file:./data.db` |
-| `npm run db:seed:sqlite` | Seed SQLite data | (via `seed.sqlite.ts`) | `file:./data.db` |
-| `npm run db:generate:pg` | Generate Supabase Prisma Client | `schema.prisma` | — |
-| `npm run db:generate:pg:local` | Generate Local PG Prisma Client | `schema.pg.prisma` | — |
-| `npm run db:push:pg:local` | Create Local PG tables | `schema.pg.prisma` | (from `.env`) |
-| `npm run db:seed:pg:local` | Seed Local PG | (via `seed.sqlite.ts`) | (from `.env`) |
-| `npm run dev` | Run Supabase mode | `schema.prisma` | (from `.env`) |
-| `npm run dev:pg:local` | Run Local PG mode | `schema.pg.prisma` | (from `.env`) |
-| `npm run dev:desktop` | Run Desktop mode | `schema.sqlite.prisma` | `file:./data.db` |
-
----
-
-## Cross-Mode Differences
-
-| Aspect | Supabase | Local PostgreSQL / Desktop |
+| Command | Purpose | Schema |
 |:---|:---|:---|
-| **ID type** | `BigInt` (via `toProjectId()`) | `Number` / `Int` |
-| **Admin status** | Managed via Supabase Auth | Super admin is created through initial setup |
-| **Auth** | Supabase Auth (JWT) | Prisma Session (local) |
-| **`uid` columns** | `@default(uuid())` in Prisma | Must be set manually via `randomUUID()` (SQLite) |
+| `npm run db:generate:pg:local` | Generate the PostgreSQL Prisma Client | `schema.pg.prisma` |
+| `npm run db:push:pg:local` | Create/sync PostgreSQL tables | `schema.pg.prisma` |
+| `npm run db:migrate:pg:local` | Create a PostgreSQL migration | `schema.pg.prisma` |
+| `npm run db:seed:pg:local` | Seed PostgreSQL data | `schema.pg.prisma` |
+| `npm run db:generate:supabase` | Generate the Supabase Prisma Client | `schema.prisma` |
+| `npm run db:generate:sqlite` | Generate the SQLite Prisma Client | `schema.sqlite.prisma` |
+| `npm run db:push:sqlite` | Create `./data.db` | `schema.sqlite.prisma` |
+| `npm run db:seed:sqlite` | Seed SQLite | `schema.sqlite.prisma` |
+| `npm run dev:pg:local` | Push the schema + run pure PostgreSQL | `schema.pg.prisma` |
+| `npm run dev` | Run the server without pushing the schema | from `DATABASE_URL` |
+| `npm run dev:desktop` | Run the Desktop-mode API (port 3100) | `schema.sqlite.prisma` |
 
 ---
 
-## Common Pitfalls
+## Common Issues
+
+### Team menu does not appear, or `Teams are available only on a self-hosted server.`
+The server is not running in pure PostgreSQL mode. Make sure `DATABASE_URL` starts with `postgresql://` and that neither `SUPABASE_URL` nor `VITE_SUPABASE_URL` is set. Teams also require an active Self-host Commercial license.
 
 ### `PrismaClient needs to be constructed with a non-empty, valid PrismaClientOptions`
-Prisma 7 requires the `adapter` option — `new PrismaClient()` without arguments will fail. Make sure the app uses the correct *driver adapter*.
+Prisma 7 requires the `adapter` option; `new PrismaClient()` without arguments fails. Make sure the app uses the matching *driver adapter*.
 
-### Schema mismatch on seed
-The seed script can fail if `DATABASE_URL` points to the wrong database. Make sure:
+### Seed or push fails because of the wrong database
+Make sure `DATABASE_URL` points to the correct database:
 - **SQLite**: `DATABASE_URL=file:./data.db`
-- **Local PG**: `DATABASE_URL` in `.env` points to your local database
+- **PostgreSQL**: `DATABASE_URL` in `.env` points to the local database
 
 ### Stale `prisma/data.db` file
-The `prisma/data.db` file is sometimes created unintentionally. For desktop mode, always use `./data.db` (project root) and delete `prisma/data.db`.
+The `prisma/data.db` file is sometimes created by accident. For Desktop mode from source, use `./data.db` in the project root and delete `prisma/data.db`.

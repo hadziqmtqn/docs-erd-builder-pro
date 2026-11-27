@@ -4,272 +4,172 @@ slug: /configuration/database-setup
 ---
 # Setup Database
 
-ERD Builder Pro mendukung **tiga mode database**. Pilih salah satu sesuai kebutuhan Anda.
+ERD Builder Pro mendukung tiga mode database. Untuk Self-host baru, gunakan **PostgreSQL murni**.
 
-| Aspek | Supabase PostgreSQL | Local PostgreSQL | Desktop (SQLite) |
+| Aspek | PostgreSQL murni | Supabase (legacy) | SQLite |
 |:---|:---|:---|:---|
-| **Cocok untuk** | Production / Cloud | Development / Self-hosted | Aplikasi Desktop / Tauri |
-| **Autentikasi** | Supabase Auth (JWT) | Lokal (email + password) | Lokal (email + password) |
-| **ID Type** | `BigInt` | `Int` | `Int` |
-| **Env vars tambahan** | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ERD_ENCRYPTION_KEY` | `ERD_ENCRYPTION_KEY` | — |
-| **Setup schema** | SQL Editor di Dashboard Supabase | `npm run db:push:pg:local` | `npm run db:push:sqlite` |
-| **Seed data** | — (via SQL Editor) | `npm run db:seed:pg:local` | `npm run db:seed:sqlite` |
-| **Generate client** | `npm run db:generate:pg` | `npm run db:generate:pg:local` | `npm run db:generate:sqlite` |
-| **Jalankan** | `npm run dev` | `npm run dev:pg:local` | `npm run dev:desktop` |
+| **Dipakai oleh** | Self-host dan Cloud | Deployment lama yang sudah memakai Supabase | Desktop dan CLI |
+| **Autentikasi** | Akun lokal (email + password); Cloud memakai SSO | Supabase Auth | Login otomatis satu pengguna |
+| **Team Workspace** | Ya (Self-host dengan lisensi Commercial) | Tidak | Tidak |
+| **Notifikasi** | Ya | Tidak | Tidak |
+| **Env tambahan** | `ERD_ENCRYPTION_KEY` | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ERD_ENCRYPTION_KEY` | Tidak ada |
+| **Membuat tabel** | `npm run db:push:pg:local` | `sql/supabase/schema.sql` di SQL Editor | Otomatis |
+| **Generate client** | `npm run db:generate:pg:local` | `npm run db:generate:supabase` | `npm run db:generate:sqlite` |
+| **Menjalankan dari source** | `npm run dev:pg:local` | `npm run dev` | `npm run dev:desktop` |
 
 ---
 
 ## Arsitektur Prisma 7 + Driver Adapter
 
-Semua mode menggunakan **Prisma 7** dengan *driver-adapter pattern*. Prisma 7 tidak lagi mendukung `datasource.url` atau *legacy query engine* — setiap koneksi **harus** dibuat dengan adapter yang sesuai:
+Semua mode menggunakan **Prisma 7** dengan *driver-adapter pattern*. Setiap koneksi dibuat dengan adapter yang sesuai:
 
 | Mode | Adapter | Package |
 |:---|:---|:---|
 | PostgreSQL | `PrismaPg` | `@prisma/adapter-pg` |
 | SQLite | `PrismaBetterSqlite3` | `@prisma/adapter-better-sqlite3` |
 
-Pemilihan adapter terjadi otomatis saat *runtime* berdasarkan `DATABASE_URL`:
+Server memilih mode saat *runtime*:
 
-- Jika `DATABASE_URL` diawali `file:` atau berakhiran `.db` → mode **SQLite**
-- Jika `DATABASE_URL` diawali `postgresql://` dan **tanpa** `SUPABASE_URL` → mode **Local PostgreSQL**
-- Jika `DATABASE_URL` diawali `postgresql://` **dengan** `SUPABASE_URL` → mode **Supabase**
+- `DATABASE_URL` kosong, diawali `file:`, atau berakhiran `.db` → **SQLite**.
+- `DATABASE_URL` diawali `postgresql://` tanpa `SUPABASE_URL` dan `VITE_SUPABASE_URL` → **PostgreSQL murni**.
+- URL database lain, atau `SUPABASE_URL`/`VITE_SUPABASE_URL` diisi → **Supabase**.
 
-Terdapat tiga *schema file* Prisma yang digunakan tergantung mode:
+Ada tiga file skema Prisma:
 
-| File Prisma | Mode | ID Type | Auth |
-|:---|:---|:---|:---|
-| `schema.prisma` | Supabase | `BigInt` | Supabase Auth |
-| `schema.pg.prisma` | Local PostgreSQL | `Int` | Lokal |
-| `schema.sqlite.prisma` | Desktop SQLite | `Int` | Lokal |
+| File Prisma | Mode | Jumlah tabel |
+|:---|:---|:---|
+| `prisma/schema.pg.prisma` | PostgreSQL murni | 44 |
+| `prisma/schema.prisma` | Supabase | 30 tabel aplikasi + tabel `auth` Supabase |
+| `prisma/schema.sqlite.prisma` | SQLite | 47 |
+
+Variabel `DB_VARIANT` (`pg`, `supabase`, atau `sqlite`) hanya memilih file skema dan folder migrasi untuk perintah Prisma CLI. Server tetap memilih mode dari `DATABASE_URL`. Struktur tabel lengkap ada di [Database Schema](../database-schema.mdx).
 
 ---
 
-## Opsi A: Supabase PostgreSQL (Production)
+## Opsi A: PostgreSQL Murni (Disarankan)
 
-### 1. Membuat Proyek Baru
-1. Masuk ke [Supabase Dashboard](https://database.new).
-2. Buat proyek baru, pilih **Region** terdekat, dan simpan **Database Password** Anda dengan aman.
-
-### 2. Inisialisasi Database (Schema)
-Anda perlu membuat tabel-tabel yang diperlukan secara manual menggunakan SQL Editor:
-1. Buka file `supabase_schema.sql` yang ada di root direktori aplikasi ERD Builder Pro.
-2. Salin seluruh isi file tersebut.
-3. Di dashboard Supabase, buka menu **SQL Editor**.
-4. Klik **New Query**, tempelkan kode yang sudah disalin, lalu klik **Run**.
-5. Pastikan semua tabel (seperti `projects`, `diagrams`, dll) berhasil dibuat.
-
-### 3. Generate Prisma Client
+### 1. Siapkan Database
 ```bash
-npm run db:generate:pg
+createdb erd_builder_pro
 ```
-Perintah ini menggenerate Prisma Client menggunakan schema `schema.prisma` (varian Supabase).
 
-### 4. Konfigurasi Autentikasi (Privat)
-Agar aplikasi Anda tetap privat dan tidak bisa digunakan oleh orang lain:
-1. Buka menu **Authentication > Settings**.
-2. Di bagian **Sign Up**, matikan (uncheck) opsi **Allow new users to sign up**.
-3. Simpan perubahan. *Sekarang orang asing tidak bisa mendaftar secara mandiri.*
+### 2. Konfigurasi `.env`
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/erd_builder_pro"
+ERD_ENCRYPTION_KEY="hasil-dari-openssl-rand-hex-32"
+```
+Biarkan semua variabel `SUPABASE_*` dan `VITE_SUPABASE_*` kosong.
 
-### 5. Mendaftarkan Akun Anda
-Setelah registrasi publik dimatikan, Anda harus membuat akun Anda sendiri secara manual:
-1. Buka menu **Authentication > Users**.
-2. Klik tombol **Add User** dan pilih **Create new user**.
-3. Masukkan **Email** dan **Password** yang ingin Anda gunakan.
-4. (Opsional) Matikan opsi "Auto-confirm user" jika Anda ingin memverifikasi email, atau biarkan menyala untuk login instan.
-5. Klik **Create User**. Gunakan akun ini untuk login ke aplikasi ERD Builder Pro Anda.
+### 3. Buat Tabel dan Jalankan
+```bash
+npm run dev:pg:local
+```
+Perintah ini menjalankan `db:push:pg:local` (membuat atau menyelaraskan tabel), `db:generate:pg:local`, lalu server pengembangan di `http://localhost:3000`.
 
-### 6. Mengambil API Keys
-Buka menu **Settings > API** untuk mengambil variabel yang diperlukan di file `.env`:
-- **Project URL**: Masukkan ke `SUPABASE_URL` dan `VITE_SUPABASE_URL`.
-- **anon public**: Masukkan ke `VITE_SUPABASE_ANON_KEY`.
-- **service_role**: Masukkan ke `SUPABASE_SERVICE_ROLE_KEY`.
+Provider dan model AI bawaan dibuat otomatis saat server mulai. `npm run db:seed:pg:local` tetap tersedia, tetapi tidak membuat akun apa pun.
 
-> [!CAUTION]
-> Jangan pernah membagikan `service_role` key Anda kepada siapa pun atau memasukkannya ke dalam kode frontend (tanpa prefix `VITE_`).
+Gunakan `npm run db:migrate:pg:local` (`prisma migrate dev`) bila Anda membutuhkan riwayat migrasi.
 
-### 7. Konfigurasi `.env`
+### 4. Buat Akun Administrator
+Buka aplikasi. Pada database kosong muncul halaman **Create administrator account** untuk membuat SuperAdmin pertama.
+
+:::caution
+Jangan gunakan `admin@local.dev` / `admin123` pada Self-host. Kombinasi tersebut hanya kredensial internal Desktop/CLI dan ditolak oleh login Self-host.
+:::
+
+Di Docker, entrypoint image sudah membuat database dan tabel secara otomatis. Lihat [Deployment](../getting-started/deployment.md#yang-dilakukan-container-saat-start).
+
+---
+
+## Opsi B: Supabase (Legacy) {/* #opsi-b-supabase-legacy */}
+
+Mode ini hanya untuk deployment yang sudah memakai Supabase sebelumnya. Mode Supabase tidak mendukung Team Workspace dan notifikasi. Instalasi baru sebaiknya memakai PostgreSQL murni.
+
+### Skema
+- Tabel dasar: jalankan isi `sql/supabase/schema.sql` di **SQL Editor** Supabase.
+- Tabel yang ditambahkan setelahnya, seperti komentar dan diskusi, ada di folder `prisma/migrations` (varian Supabase).
+
+### Prisma Client
+```bash
+npm run db:generate:supabase
+```
+`npm install` juga menjalankan perintah ini secara otomatis.
+
+### Konfigurasi `.env`
 ```env
 DATABASE_URL="postgresql://user:pass@host:6543/db?pgbouncer=true&connection_limit=10"
 SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
+ERD_ENCRYPTION_KEY="hasil-dari-openssl-rand-hex-32"
 ```
 
-### 8. Jalankan Aplikasi
+Bila `pgbouncer=true` dan `connection_limit` tidak ada di URL, server menambahkannya.
+
+### Akun Pengguna
+Supabase Auth mengelola akun. Agar aplikasi tidak bisa dipakai orang lain, matikan **Allow new users to sign up** di **Authentication → Settings**, lalu buat akun lewat **Authentication → Users → Add User**.
+
+### Menjalankan
 ```bash
 npm run dev
 ```
 
 ---
 
-## Opsi B: Local PostgreSQL (Development / Self-hosted)
+## Opsi C: SQLite (Desktop dan CLI)
 
-### 1. Install & Siapkan PostgreSQL
-Pastikan PostgreSQL sudah terinstal di mesin Anda. Buat database baru:
+Aplikasi Desktop dan CLI membuat serta memperbarui database SQLite secara otomatis. Anda tidak perlu menjalankan perintah apa pun. Database SQLite memiliki 47 tabel: tabel PostgreSQL tanpa tabel OAuth MCP Web, ditambah tabel DB Client (`db_accounts`, `db_catalogs`, `db_clients`, `db_client_layouts`, `db_client_queries`, `sql_queries`).
+
+### Menjalankan Mode Desktop dari Source
 ```bash
-createdb erd_builder_pro
-```
-
-### 2. Konfigurasi `.env`
-Di file `.env`, atur `DATABASE_URL` dan **hapus atau komentari** variabel `SUPABASE_URL`:
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/erd_builder_pro"
-# SUPABASE_URL=   ← tidak perlu untuk mode ini
-# SUPABASE_SERVICE_ROLE_KEY=   ← tidak perlu
-```
-Aplikasi akan otomatis mendeteksi mode Local PostgreSQL selama `SUPABASE_URL` tidak diisi.
-
-### 3. Generate Prisma Client
-```bash
-npm run db:generate:pg:local
-```
-Perintah ini menggunakan schema `schema.pg.prisma` (varian Local PostgreSQL). Jangan gunakan `npm run db:generate:pg`, karena perintah tersebut memilih schema Supabase.
-
-### 4. Push Schema
-```bash
-npm run db:push:pg:local
-```
-Perintah ini akan membuat semua tabel yang diperlukan di database lokal Anda.
-
-> Prisma 7 menggunakan `db push` untuk menyinkronkan schema tanpa file migrasi. Gunakan `db:migrate:pg:local` jika Anda membutuhkan riwayat migrasi.
-
-### 5. Seed Data
-```bash
-npm run db:seed:pg:local
-```
-Output:
-```
-Seeding database...
-  - Self-host admin user skipped; use the one-time setup screen
-  ✓ AI Providers: OpenAI, Gemini, OpenAI Compatible
-  ✓ OpenAI models: GPT-4o, GPT-4o Mini, GPT-4 Turbo
-  ✓ Gemini models: Gemini 1.5 Pro, Gemini 1.5 Flash
-  ✓ OpenAI Compatible models: DeepSeek V4 Flash
-  ✓ Default system prompt: Simple & Direct
-
-✅ Seed complete
-```
-
-Seed Local PostgreSQL tidak membuat kredensial default. Setelah database kosong, buka aplikasi dan gunakan halaman **Create administrator account** untuk membuat super admin pertama.
-
-> Jangan gunakan `admin@local.dev` / `admin123` pada self-host. Kombinasi tersebut adalah kredensial bootstrap Desktop/CLI dan ditolak oleh login self-host.
-
-> Seed script menggunakan Prisma 7 adapter pattern yang sama. Pastikan `DATABASE_URL` di `.env` mengarah ke database lokal Anda dan `ERD_ENCRYPTION_KEY` sudah diatur.
-
-### 6. Jalankan Aplikasi
-```bash
-npm run dev:pg:local
-```
-Aplikasi akan tersedia di `http://localhost:3000`.
-
-> Mode Local PostgreSQL menggunakan autentikasi lokal (email + password) dengan Prisma Session, bukan Supabase Auth. Super admin dibuat melalui setup awal.
-
----
-
-## Opsi C: Desktop / Tauri (SQLite)
-
-Mode ini menggunakan SQLite sebagai database lokal untuk aplikasi desktop berbasis Tauri.
-
-### 1. Generate Prisma Client untuk SQLite
-```bash
-npm run db:generate:sqlite
-```
-Menggunakan schema `schema.sqlite.prisma` dengan adapter `@prisma/adapter-better-sqlite3`.
-
-### 2. Push Schema ke SQLite
-```bash
+# Buat ./data.db
 npm run db:push:sqlite
-```
-Perintah ini membuat file `data.db` dan membuat 19 tabel:
-```
-ai_chat_messages, ai_chat_sessions, ai_models, ai_providers, ai_system_prompts,
-backups, columns, diagrams, drawings, entities, entity_changes, flowcharts,
-notes, projects, relationships, sessions, user_ai_configs, user_ai_rules, users
-```
 
-### 3. Seed Data
-```bash
-npm run db:seed:sqlite
-```
-Output:
-```
-Seeding SQLite database...
-  ✓ Admin user: admin@local.dev
-  ✓ AI Providers: OpenAI, Gemini, OpenAI Compatible
-  ✓ OpenAI models: GPT-4o, GPT-4o Mini, GPT-4 Turbo
-  ✓ Gemini models: Gemini 1.5 Pro, Gemini 1.5 Flash
-  ✓ OpenAI Compatible models: DeepSeek V4 Flash
-  ✓ Default system prompt: Simple & Direct
+# API di port 3100 + Vite di port 3098
+npm run dev:tauri:servers
 
-✅ Seed complete
+# Jendela Tauri (perlu Rust toolchain)
+npm run dev:tauri
 ```
 
-Seed Desktop/SQLite mempertahankan akun bootstrap internal `admin@local.dev` untuk kompatibilitas data lokal. Aplikasi Desktop/CLI menggunakan auto-login; kredensial bootstrap ini bukan kredensial untuk self-host dan tidak boleh dipakai dalam deployment bersama.
+- `npm run dev:desktop` menjalankan API saja di port `3100` dengan `DATABASE_URL=file:./data.db`, mengabaikan nilai di `.env`.
+- `npm run dev:desktop:client` menjalankan Vite di port `3098`.
+- Aplikasi Desktop hasil build memakai port `3099`.
 
-### 4. Verifikasi
-```bash
-sqlite3 data.db ".tables"
-# 19 tables listed
-
-sqlite3 data.db "SELECT email FROM users;"
-# admin@local.dev
-```
-
-### 5. Jalankan Aplikasi
-```bash
-# Mode API + Vite (tanpa shell Tauri)
-npm run dev:desktop
-
-# Mode Tauri penuh (perlu Rust toolchain)
-npm run dev:tauri:servers   # API :3099 + Vite :3098
-npm run dev:tauri           # membuka jendela Tauri
-```
-
-> `dev:desktop` menggunakan `DATABASE_URL=file:./data.db` dan me-*override* nilai di `.env`, sehingga kedua mode (Supabase PG di `.env` dan SQLite di script) bisa berjalan berdampingan.
-
-### 6. Login Bootstrap
-Desktop/CLI melakukan auto-login melalui server lokal tanpa halaman login. File kunci enkripsi lokal dibuat di dekat database bila `ERD_ENCRYPTION_KEY` dan `ERD_ENCRYPTION_KEY_FILE` tidak diatur.
+`npm run db:seed:sqlite` membuat akun internal `admin@local.dev` untuk login otomatis Desktop/CLI. Akun ini bukan kredensial untuk Self-host.
 
 ---
 
 ## Referensi Cepat Script
 
-| Command | Tujuan | Schema | `DATABASE_URL` |
-|:---|:---|:---|:---|
-| `npm run db:generate:sqlite` | Generate Prisma Client | `schema.sqlite.prisma` | — |
-| `npm run db:push:sqlite` | Buat tabel SQLite | `schema.sqlite.prisma` | `file:./data.db` |
-| `npm run db:seed:sqlite` | Seed data SQLite | (via `seed.sqlite.ts`) | `file:./data.db` |
-| `npm run db:generate:pg` | Generate Prisma Client Supabase | `schema.prisma` | — |
-| `npm run db:generate:pg:local` | Generate Prisma Client Local PG | `schema.pg.prisma` | — |
-| `npm run db:push:pg:local` | Buat tabel Local PG | `schema.pg.prisma` | (dari `.env`) |
-| `npm run db:seed:pg:local` | Seed Local PG | (via `seed.sqlite.ts`) | (dari `.env`) |
-| `npm run dev` | Jalankan mode Supabase | `schema.prisma` | (dari `.env`) |
-| `npm run dev:pg:local` | Jalankan mode Local PG | `schema.pg.prisma` | (dari `.env`) |
-| `npm run dev:desktop` | Jalankan mode Desktop | `schema.sqlite.prisma` | `file:./data.db` |
-
----
-
-## Perbedaan Lintas Mode
-
-| Aspek | Supabase | Local PostgreSQL / Desktop |
+| Command | Tujuan | Skema |
 |:---|:---|:---|
-| **Tipe ID** | `BigInt` (via `toProjectId()`) | `Number` / `Int` |
-| **Status Admin** | Dikelola via Supabase Auth | Super admin dibuat melalui setup awal |
-| **Auth** | Supabase Auth (JWT) | Prisma Session (lokal) |
-| **Kolom `uid`** | `@default(uuid())` di Prisma | Harus diisi manual via `randomUUID()` (SQLite) |
+| `npm run db:generate:pg:local` | Generate Prisma Client PostgreSQL | `schema.pg.prisma` |
+| `npm run db:push:pg:local` | Membuat/menyelaraskan tabel PostgreSQL | `schema.pg.prisma` |
+| `npm run db:migrate:pg:local` | Membuat migrasi PostgreSQL | `schema.pg.prisma` |
+| `npm run db:seed:pg:local` | Seed data PostgreSQL | `schema.pg.prisma` |
+| `npm run db:generate:supabase` | Generate Prisma Client Supabase | `schema.prisma` |
+| `npm run db:generate:sqlite` | Generate Prisma Client SQLite | `schema.sqlite.prisma` |
+| `npm run db:push:sqlite` | Membuat `./data.db` | `schema.sqlite.prisma` |
+| `npm run db:seed:sqlite` | Seed SQLite | `schema.sqlite.prisma` |
+| `npm run dev:pg:local` | Push skema + jalankan PostgreSQL murni | `schema.pg.prisma` |
+| `npm run dev` | Jalankan server tanpa push skema | dari `DATABASE_URL` |
+| `npm run dev:desktop` | Jalankan API mode Desktop (port 3100) | `schema.sqlite.prisma` |
 
 ---
 
 ## Masalah Umum
 
-### `PrismaClient needs to be constructed with a non-empty, valid PrismaClientOptions`
-Prisma 7 membutuhkan opsi `adapter` — `new PrismaClient()` tanpa argumen akan gagal. Pastikan aplikasi menggunakan *driver adapter* yang sesuai.
+### Menu Team tidak muncul atau `Teams are available only on a self-hosted server.`
+Server tidak berjalan dalam mode PostgreSQL murni. Pastikan `DATABASE_URL` diawali `postgresql://` dan tidak ada `SUPABASE_URL` maupun `VITE_SUPABASE_URL`. Team juga memerlukan lisensi Self-host Commercial yang aktif.
 
-### Schema mismatch saat seed
-Script seed bisa gagal jika `DATABASE_URL` mengarah ke database yang salah. Pastikan:
+### `PrismaClient needs to be constructed with a non-empty, valid PrismaClientOptions`
+Prisma 7 membutuhkan opsi `adapter`; `new PrismaClient()` tanpa argumen akan gagal. Pastikan aplikasi menggunakan *driver adapter* yang sesuai.
+
+### Seed atau push gagal karena database salah
+Pastikan `DATABASE_URL` mengarah ke database yang benar:
 - **SQLite**: `DATABASE_URL=file:./data.db`
-- **Local PG**: `DATABASE_URL` di `.env` mengarah ke database lokal
+- **PostgreSQL**: `DATABASE_URL` di `.env` mengarah ke database lokal
 
 ### File `prisma/data.db` stale
-File `prisma/data.db` kadang terbentuk secara tidak sengaja. Untuk mode desktop, gunakan `./data.db` (root proyek) dan hapus `prisma/data.db`.
+File `prisma/data.db` kadang terbentuk secara tidak sengaja. Untuk mode Desktop dari source, gunakan `./data.db` di root proyek dan hapus `prisma/data.db`.
